@@ -9,7 +9,7 @@ import { store, history } from '../store/index.js';
 
 /* Root component can only have one child component (App).
 App component handles route redirection based on the filtered path option below */
-const Root = ({ store }) => (
+const Root = () => (
   <Provider store={ store }>
     <Router history={ history }>
       <Route path='/:filter?' component={App} />
