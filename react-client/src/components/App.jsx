@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Route, Switch, withRouter, browserHistory } from 'react-router-dom';
 import $ from 'jquery';
 
-import Main from './Main.jsx';
+import Board from './Board.jsx';
 import Login from './Login.jsx';
 import Signup from './Signup.jsx';
 
