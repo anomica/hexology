@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const url = require('url');
+let path = require('path');
 const db = require('../database/index');
 const passport = require('passport');
 const session = require('express-session');
@@ -14,8 +15,7 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(express.static(__dirname + '/../app'));
-app.use(express.static(__dirname + '/../node_modules'));
+app.use(express.static(path.join(__dirname, '../react-client/dist')));
 
 app.use(bodyParser.json());
 
@@ -26,7 +26,7 @@ const isLoggedIn = (req, res, next) => {
   res.status(401).end('You must log in to do that!');
 }
 
-app.get('*', (req, res) => res.redirect('/'));
+app.get('/*', (req, res) => res.sendfile('/'));
 
 app.listen(process.env.PORT || 3000, function () {
   console.log('listening on port 3000!');
