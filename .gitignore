@@ -5,6 +5,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# React
+webpack.config.js
+bundle.js
+
 # Database config
 database/config.js
 
