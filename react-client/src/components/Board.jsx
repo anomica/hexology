@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { selectHex } from '../../src/actions/actions.js';
 
-import Sidebar from './Sidebar.jsx';
+import SidebarLeft from './Sidebar.jsx';
 
 class Board extends React.Component {
   constructor(props) {
@@ -17,6 +17,8 @@ class Board extends React.Component {
 
   render() {
     return (
+    <div>
+      <SidebarLeft />
       <div className="Board">
         <HexGrid width={1200} height={800} viewBox="-50 -50 150 150">
           <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -40, y: -15 }}>
@@ -40,6 +42,7 @@ class Board extends React.Component {
             <Hexagon onClick={() => this.props.selectHex("R")} id="R" q={1} r={4} s={0} />
           </Layout>
         </HexGrid>
+      </div>
       </div>
     );
   }

@@ -1,10 +1,10 @@
 import React from 'react';
-import { Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
+import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 
-class Sidebar extends React.Component {
+class SidebarLeft extends React.Component {
   constructor(props) {
     super(props);
 
@@ -60,4 +60,4 @@ const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({}, dispatch);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Sidebar));
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));
