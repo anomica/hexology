@@ -4,6 +4,8 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { selectHex } from '../../src/actions/actions.js';
 
+import Sidebar from './Sidebar.jsx';
+
 class Board extends React.Component {
   constructor(props) {
     super(props);
