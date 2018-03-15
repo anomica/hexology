@@ -1,3 +1,6 @@
-const selectHex = (hex) => {
-
-}
+export const selectHex = (hex) => (
+  {
+    type: 'SELECT-HEX',
+    payload: hex
+  }
+)

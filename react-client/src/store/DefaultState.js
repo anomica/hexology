@@ -26,3 +26,5 @@ const DefaultState = {
     R: ['N', 'Q']
   }
 }
+
+export default DefaultState;
