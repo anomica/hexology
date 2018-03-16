@@ -28,9 +28,10 @@ const isLoggedIn = (req, res, next) => {
 
 const coordinateGenerator = (numRows, numCols) => { // creates an array of coordinates for hexes
   let j = 0;
+  let y = 0;
   let hexes = [];
 
-  const rowGenerator = (rowIndex, firstCol) => { // creates a row in the grid
+  const rowGenerator = (rowIndex, lDiag, rDiag) => { // creates a row in the grid
     let iterations;
     let row = [];
     if (rowIndex % 2 === 0) {
@@ -40,14 +41,18 @@ const coordinateGenerator = (numRows, numCols) => { // creates an array of coord
     }
 
     for (let i = 0; i < iterations; i++) {
-      row.push([firstCol, rowIndex]);
-      firstCol++;
+      row.push([lDiag, rowIndex, rDiag]);
+      lDiag++;
+      rDiag--;
     }
     return row;
   }
 
   for (let i = 0; i < numRows; i++) {
-    hexes = hexes.concat(rowGenerator(i, j))
+    if (i % 2 !== 0) {
+      y--;
+    }
+    hexes = hexes.concat(rowGenerator(i, j, y))
     if (i % 2 !== 0) {
       j--;
     }
