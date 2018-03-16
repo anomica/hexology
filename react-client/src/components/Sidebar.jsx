@@ -10,7 +10,8 @@ class SidebarLeft extends React.Component {
     super(props);
 
     this.state = {
-      visible: true
+      visible: true,
+      newGame: false
     }
 
     this.toggleVisibility = this.toggleVisibility.bind(this);
@@ -21,6 +22,18 @@ class SidebarLeft extends React.Component {
   }
 
   render() {
+    const newGame = () => {
+      if (this.state.newGame) {
+        return (
+          <Board />
+        )
+      } else {
+        return (
+          <table height={800}>homepage</table>
+        )
+      }
+    }
+
     const { visible } = this.state;
     return (
       <div>
@@ -31,16 +44,16 @@ class SidebarLeft extends React.Component {
               <Icon name='home' />
               Home
             </Menu.Item>
-            <Menu.Item name='newgame' onClick={() => console.log('gamepad clicked')}>
+            <Menu.Item name='newgame' onClick={() => this.setState({ newGame: true })} disabled={this.state.newGame}>
               <Icon name='gamepad' />
               New Game
             </Menu.Item>
-            <Menu.Item name='camera' onClick={() => console.log('rules clicked')}>
-              <Icon name='camera' />
+            <Menu.Item name='rules' onClick={() => console.log('rules clicked')}>
+              <Icon name='book' />
               Rules
             </Menu.Item>
-            <Menu.Item name='camera' onClick={() => console.log('camera clicked')}>
-              <Icon name='camera' />
+            <Menu.Item name='login' onClick={() => console.log('login clicked')}>
+              <Icon name='user' />
               Login
             </Menu.Item>
           </Sidebar>
@@ -48,7 +61,7 @@ class SidebarLeft extends React.Component {
           <Sidebar.Pusher>
             <Segment>
               <Header as='h3'>Application Content</Header>
-              <Board />
+              {newGame()}
             </Segment>
           </Sidebar.Pusher>
 
