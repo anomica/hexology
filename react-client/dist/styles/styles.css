@@ -1,3 +1,5 @@
+/********* POLYGON STYLING ************/
+
 svg g {
   fill: white;
   stroke: black;
@@ -8,7 +10,7 @@ svg g {
   fill: aqua;
 }
 
-.neighbor {
+g.neighbor > g > polygon {
   fill: green;
 }
 

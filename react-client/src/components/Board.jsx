@@ -2,17 +2,13 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { selectHex, highlightNeighbor, drawBoard } from '../../src/actions/actions.js';
+import { selectHex, highlightNeighbors, drawBoard } from '../../src/actions/actions.js';
 import axios from 'axios';
 const uuidv4 = require('uuid/v4');
 
 class Board extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-
-    }
   }
 
   componentDidMount() {
@@ -33,21 +29,26 @@ class Board extends React.Component {
   }
 
   handleClick(e, hex) {
+    let neighbors = [];
+    let hexCs = hex.coordinates;
+    this.props.boardState.forEach(otherHex => {
+      let oHexCs = otherHex.coordinates;
+      if (oHexCs[0] === hexCs[0] && oHexCs[1] === hexCs[1]) {
+        this.props.selectedHex ? this.props.selectHex(null) : this.props.selectHex(hex.index);
+      }
+      if ((oHexCs[0] <= hexCs[0] + 1 && oHexCs[0] >= hexCs[0] - 1) &&
+          (oHexCs[1] <= hexCs[1] + 1 && oHexCs[1] >= hexCs[1] - 1) &&
+          (oHexCs[1] <= hexCs[2] + 1 && oHexCs[2] >= hexCs[2] - 1))
+      {
+        neighbors.push(otherHex.index);
+      }
+    })
+    this.props.highlightNeighbors(neighbors);
+
     e.target.classList.contains('selected') ?
     e.target.classList.remove('selected') :
     e.target.setAttribute('class', 'selected');
-
-    this.props.boardState.forEach(otherHex => {
-      if (otherHex.coordinates[0] === hex.coordinates[0] && otherHex.coordinates[1] === hex.coordinates[1]) {
-        this.props.selectHex(hex.index);
-      }
-      // if ((otherHex.coordinates[0] <= hex.coordinates[0] + 1 && otherHex.coordinates[0] >= hex.coordinates[0] - 1) &&
-      // (otherHex.coordinates[1] <= hex.coordinates[1] + 1 && otherHex.coordinates[1] >= hex.coordinates[1] - 1)) {
-      //   this.props.highlightNeighbor(otherHex.index);
-      // }
-    })
   }
-
 
   render() {
     return (
@@ -57,30 +58,16 @@ class Board extends React.Component {
             {this.props.boardState ? this.props.boardState.map(hex => {
               return <Hexagon
                 key={uuidv4()}
-                className={hex.hasResource ? 'resource' : null}
+                className={
+                  hex.hasResource ?
+                  this.props.neighbors.indexOf(hex.index) > -1 ?
+                  'neighbor' : 'resource' : null
+                }
                 onClick={(e) => this.handleClick(e, hex)}
                 q={hex.coordinates[0]}
                 r={hex.coordinates[1]}
-                s={0} />
-            }): <div></div>}
-            {/* <Hexagon onClick={() => this.props.selectHex("A")} id="A" q={} r={0} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("B")} id="B" q={1} r={0} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("C")} id="C" q={2} r={0} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("D")} id="D" q={3} r={0} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("E")} id="E" q={0} r={1} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("F")} id="F" q={1} r={1} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("G")} id="G" q={2} r={1} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("H")} id="H" q={-1} r={2} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("I")} id="I" q={0} r={2} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("J")} id="J" q={1} r={2} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("K")} id="K" q={2} r={2} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("L")} id="L" q={-1} r={3} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("M")} id="M" q={0} r={3} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("N")} id="N" q={1} r={3} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("O")} id="O" q={-2} r={4} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("P")} id="P" q={-1} r={4} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("Q")} id="Q" q={0} r={4} s={0} />
-            <Hexagon onClick={() => this.props.selectHex("R")} id="R" q={1} r={4} s={0} /> */}
+                s={hex.coordinates[2]} />
+            }): <div>Want to play with a friend? Send them this link: </div>}
           </Layout>
         </HexGrid>
       </div>
@@ -91,12 +78,13 @@ class Board extends React.Component {
 const mapStateToProps = (state) => {
   return {
     boardState: state.state.boardState,
-    neighbors: state.state.neighbors
+    neighbors: state.state.neighbors,
+    selectedHex: state.state.selectedHex
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ selectHex, highlightNeighbor, drawBoard }, dispatch)
+  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);

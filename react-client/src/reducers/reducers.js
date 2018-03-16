@@ -12,11 +12,18 @@ const reducers = (state = defaultState, action) => {
         ...state,
         boardState: action.payload
       }
-    case 'HIGHLIGHT-NEIGHBOR':
-      return {
+    case 'HIGHLIGHT-NEIGHBORS':
+      let newState;
+      state.neighbors ?
+      newState = {
         ...state,
-        neighbors: [...state.neighbors, action.payload]
-      }
+        neighbors: null
+      } :
+      newState = {
+        ...state,
+        neighbors: [...action.payload]
+      };
+      return newState;
     default: return state;
   }
 }
