@@ -8,6 +8,9 @@ module.exports = {
     filename: 'bundle.js',
     path: DIST_DIR
   },
+  node: {
+    fs: "empty"
+  },
   module : {
     loaders : [
       {

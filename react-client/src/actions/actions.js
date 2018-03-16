@@ -1,7 +1,7 @@
-export const selectHex = (coordinates) => (
+export const selectHex = (hex) => (
   {
     type: 'SELECT-HEX',
-    payload: coordinates
+    payload: hex
   }
 )
 
@@ -16,6 +16,18 @@ export const highlightOpponents = (opponents) => (
   {
     type: 'HIGHLIGHT-OPPONENTS',
     payload: opponents
+  }
+)
+
+export const moveUnits = (origin, originIndex, target, targetIndex) => (
+  {
+    type: 'MOVE-UNITS',
+    payload: {
+      origin: origin,
+      originIndex: originIndex,
+      target: target,
+      targetIndex: targetIndex
+    }
   }
 )
 
