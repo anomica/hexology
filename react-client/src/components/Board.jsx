@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { selectHex, highlightNeighbors, highlightOpponents, drawBoard } from '../../src/actions/actions.js';
+import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, drawBoard } from '../../src/actions/actions.js';
 import axios from 'axios';
 const uuidv4 = require('uuid/v4');
 
@@ -54,13 +54,21 @@ class Board extends React.Component {
     }
 
   handleClick(e, hex) {
+    if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) {
+      this.handleSelectClick(e, hex);
+    } else {
+      this.handleMoveClick(e, hex);
+    }
+  }
+
+  handleSelectClick(e, hex) {
     if (hex.player === 'player1') {
       let neighbors = [];
       let targetCs = hex.coordinates;
       this.props.boardState.forEach(otherHex => {
         let oHexCs = otherHex.coordinates;
         if (oHexCs[0] === targetCs[0] && oHexCs[1] === targetCs[1]) {
-          this.props.selectedHex ? this.props.selectHex(null) : this.props.selectHex(hex.index);
+          this.props.selectedHex.hasOwnProperty('index') ? this.props.selectHex({}) : this.props.selectHex(hex);
         }
         if ((oHexCs[0] <= targetCs[0] + 1 && oHexCs[0] >= targetCs[0] - 1) &&
         (oHexCs[1] <= targetCs[1] + 1 && oHexCs[1] >= targetCs[1] - 1) &&
@@ -74,6 +82,29 @@ class Board extends React.Component {
     }
   }
 
+  handleMoveClick(e, hex) {
+    let board = this.props.boardState;
+    let origin = this.props.selectedHex;
+    let originIndex = board.indexOf(origin);
+    let targetIndex = board.indexOf(hex);
+    let target = board[targetIndex];
+    let updatedTarget = {
+      ...target,
+      units: target.units += origin.units,
+      player: 'player1'
+    }
+    let updatedOrigin = {
+      ...origin,
+      units: 0,
+      player: null
+    }
+    if (this.props.neighbors.indexOf(hex.index) > -1) {
+      this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex);
+    } else {
+      alert('AAAAAAAA')
+    }
+  }
+
   render() {
     return (
       <div className="Board">
@@ -83,7 +114,7 @@ class Board extends React.Component {
               let targetClass = '';
               if (this.props.opponentControlled.indexOf(hex.index) > -1) {
                 targetClass += 'opponent';
-              } else if (this.props.selectedHex === hex.index) {
+              } else if (this.props.selectedHex.index === hex.index) {
                 targetClass += 'selected';
               } else if (hex.player === 'player1') {
                 targetClass += 'friendly';
@@ -121,7 +152,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents }, dispatch)
+  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);
