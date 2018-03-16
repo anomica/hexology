@@ -54,6 +54,14 @@ class Board extends React.Component {
     }
 
   handleClick(e, hex) {
+    if (!this.props.selectedHex || this.props.selectedHex === hex.index) {
+      this.handleSelectClick(e, hex);
+    } else {
+      this.handleMoveClick(e, hex);
+    }
+  }
+
+  handleSelectClick(e, hex) {
     if (hex.player === 'player1') {
       let neighbors = [];
       let targetCs = hex.coordinates;
@@ -72,6 +80,10 @@ class Board extends React.Component {
       })
       this.props.highlightNeighbors(neighbors);
     }
+  }
+
+  handleMoveClick(e, hex) {
+
   }
 
   render() {
