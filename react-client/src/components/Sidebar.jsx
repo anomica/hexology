@@ -4,6 +4,8 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import Board from './Board.jsx';
+import Rules from './Rules.jsx';
+import DefaultState from '../store/DefaultState';
 
 class SidebarLeft extends React.Component {
   constructor(props) {
@@ -25,13 +27,30 @@ class SidebarLeft extends React.Component {
     const newGame = () => {
       if (this.state.newGame) {
         return (
-          <Board />
+          <Segment>
+            <Header as='h3'>New Game</Header>
+            <Board />
+          </Segment>
         )
       } else {
         return (
-          <table height={800}>homepage</table>
+          <table height={800}>
+            <tbody>
+              <tr>
+                <td style={{verticalAlign: 'top'}}>
+                  <Header as='h3'>Welcome</Header>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         )
       }
+    }
+
+    const showRules = () => {
+      return (
+        <Rules />
+      )
     }
 
     const { visible } = this.state;
@@ -40,10 +59,6 @@ class SidebarLeft extends React.Component {
         <Button onClick={this.toggleVisibility}>Menu</Button>
         <Sidebar.Pushable as={Segment}>
           <Sidebar as={Menu} animation='push' width='thin' visible={visible} icon='labeled' vertical inverted>
-            <Menu.Item name='home' onClick={() => console.log('home clicked')}>
-              <Icon name='home' />
-              Home
-            </Menu.Item>
             <Menu.Item name='newgame' onClick={() => this.setState({ newGame: true })} disabled={this.state.newGame}>
               <Icon name='gamepad' />
               New Game
@@ -59,10 +74,8 @@ class SidebarLeft extends React.Component {
           </Sidebar>
 
           <Sidebar.Pusher>
-            <Segment>
-              <Header as='h3'>Application Content</Header>
-              {newGame()}
-            </Segment>
+            {newGame()}
+            {showRules()}
           </Sidebar.Pusher>
 
         </Sidebar.Pushable>

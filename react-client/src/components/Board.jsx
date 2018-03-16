@@ -14,13 +14,14 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-    this.createBoard();
+
+    this.createBoard(5, 4);
   }
 
-  createBoard() {
+  createBoard(rows, cols) {
     axios.post('/newBoard', {
-      numRows: 5,
-      numCols: 4
+      numRows: rows,
+      numCols: cols
     })
       .then((data) => {
         this.props.drawBoard(data.data);
@@ -29,6 +30,21 @@ class Board extends React.Component {
         console.log('error receiving new board:', err);
       });
   }
+
+
+  movePlayer(targeHex) {
+    axios.patch('/movePlayer', {
+      targetHex: targetHex,
+      boardState: this.props.boardState
+    })
+      .then(data => {
+        console.log('data:', data);
+        this.props.drawBoard(data.data);
+      })
+      .catch(err => {
+        console.log('error receiving new board:', err);
+      })
+    }
 
   handleClick(e, hex) {
     let neighbors = [];
@@ -47,12 +63,11 @@ class Board extends React.Component {
       }
     })
     this.props.highlightNeighbors(neighbors);
-
   }
 
   render() {
     return (
-      <div className="Board" style={{border: '1px solid red'}}>
+      <div className="Board">
         <HexGrid height={800} viewBox="-50 -50 150 150">
           <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -40, y: -15 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {
