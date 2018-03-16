@@ -24,7 +24,8 @@ const DefaultState = {
     P: ['L', 'M', 'O', 'Q'],
     Q: ['M', 'N', 'P', 'R'],
     R: ['N', 'Q']
-  }
+  }, 
+  boardState: null
 }
 
 export default DefaultState;
