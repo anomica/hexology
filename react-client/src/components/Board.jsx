@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { selectHex, highlightNeighbors, drawBoard } from '../../src/actions/actions.js';
+import { selectHex, highlightNeighbors, highlightOpponents, drawBoard } from '../../src/actions/actions.js';
 import axios from 'axios';
 const uuidv4 = require('uuid/v4');
 
@@ -23,6 +23,15 @@ class Board extends React.Component {
     })
       .then((data) => {
         this.props.drawBoard(data.data);
+      })
+      .then(() => {
+        let opponentControlled = [];
+        this.props.boardState.forEach(hex => {
+          if (hex.player === 'player2') {
+            opponentControlled.push(hex.index);
+          }
+        })
+        this.props.highlightOpponents(opponentControlled)
       })
       .catch(err => {
         console.log('error receiving new board:', err);
@@ -45,22 +54,24 @@ class Board extends React.Component {
     }
 
   handleClick(e, hex) {
-    let neighbors = [];
-    let targetCs = hex.coordinates;
-    this.props.boardState.forEach(otherHex => {
-      let oHexCs = otherHex.coordinates;
-      if (oHexCs[0] === targetCs[0] && oHexCs[1] === targetCs[1]) {
-        this.props.selectedHex ? this.props.selectHex(null) : this.props.selectHex(hex.index);
-      }
-      if ((oHexCs[0] <= targetCs[0] + 1 && oHexCs[0] >= targetCs[0] - 1) &&
-          (oHexCs[1] <= targetCs[1] + 1 && oHexCs[1] >= targetCs[1] - 1) &&
-          (oHexCs[2] <= targetCs[2] + 1 && oHexCs[2] >= targetCs[2] - 1) &&
-          (hex.index !== otherHex.index))
-      {
-        neighbors.push(otherHex.index);
-      }
-    })
-    this.props.highlightNeighbors(neighbors);
+    if (hex.player === 'player1') {
+      let neighbors = [];
+      let targetCs = hex.coordinates;
+      this.props.boardState.forEach(otherHex => {
+        let oHexCs = otherHex.coordinates;
+        if (oHexCs[0] === targetCs[0] && oHexCs[1] === targetCs[1]) {
+          this.props.selectedHex ? this.props.selectHex(null) : this.props.selectHex(hex.index);
+        }
+        if ((oHexCs[0] <= targetCs[0] + 1 && oHexCs[0] >= targetCs[0] - 1) &&
+        (oHexCs[1] <= targetCs[1] + 1 && oHexCs[1] >= targetCs[1] - 1) &&
+        (oHexCs[2] <= targetCs[2] + 1 && oHexCs[2] >= targetCs[2] - 1) &&
+        (hex.index !== otherHex.index))
+        {
+          neighbors.push(otherHex.index);
+        }
+      })
+      this.props.highlightNeighbors(neighbors);
+    }
   }
 
   render() {
@@ -70,12 +81,16 @@ class Board extends React.Component {
           <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -40, y: -15 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {
               let targetClass = '';
-              if (this.props.selectedHex === hex.index) {
+              if (this.props.opponentControlled.indexOf(hex.index) > -1) {
+                targetClass += 'opponent';
+              } else if (this.props.selectedHex === hex.index) {
                 targetClass += 'selected';
+              } else if (hex.player === 'player1') {
+                targetClass += 'friendly';
               } else if (this.props.neighbors.indexOf(hex.index) > -1) {
                 targetClass += 'neighbor';
               } else if (hex.hasResource) {
-                targetClass += 'resource'
+                targetClass += 'resource';
               }
               return <Hexagon
                 key={uuidv4()}
@@ -83,7 +98,11 @@ class Board extends React.Component {
                 onClick={(e) => this.handleClick(e, hex)}
                 q={hex.coordinates[0]}
                 r={hex.coordinates[1]}
-                s={hex.coordinates[2]} />
+                s={hex.coordinates[2]}>
+                <Text>
+                  {hex.units.toString()}
+                </Text>
+              </Hexagon>
             }): <div>Want to play with a friend? Send them this link: </div>}
           </Layout>
         </HexGrid>
@@ -96,12 +115,13 @@ const mapStateToProps = (state) => {
   return {
     boardState: state.state.boardState,
     neighbors: state.state.neighbors,
-    selectedHex: state.state.selectedHex
+    selectedHex: state.state.selectedHex,
+    opponentControlled: state.state.opponentControlled
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard }, dispatch)
+  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);
