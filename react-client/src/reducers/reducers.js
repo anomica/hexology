@@ -42,7 +42,11 @@ const reducers = (state = defaultState, action) => {
       let target = action.payload.target;
       return {
         ...state,
-        boardState: [...state.boardState.slice(0, originIndex), origin, ...state.boardState.slice(originIndex + 1, targetIndex), target, ...state.boardState.slice(targetIndex + 1, state.boardState.length)],
+        boardState: [...state.boardState.slice(0, originIndex),
+          origin,
+          ...state.boardState.slice(originIndex + 1, targetIndex),
+          target,
+          ...state.boardState.slice(targetIndex + 1, state.boardState.length)],
         selectedHex: {},
         neighbors: []
       }
