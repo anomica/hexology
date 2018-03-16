@@ -14,22 +14,41 @@ class SidebarLeft extends React.Component {
 
     this.state = {
       visible: true,
-      newGame: false
+      newGame: false,
+      rules: false
     }
 
     this.toggleVisibility = this.toggleVisibility.bind(this);
+    this.toggleRules = this.toggleRules.bind(this);
+    this.newBoard = this.newBoard.bind(this);
   }
 
+  // toggles sidebar
   toggleVisibility() {
     this.setState({ visible: !this.state.visible });
   }
 
+  toggleRules() {
+    // console.log('toggle rules')
+    this.setState({ rules: !this.state.rules });
+  }
+
+  newBoard() {
+    console.log('props in newbord', this.props)
+    this.props.createBoard(5, 4);
+  }
+
   render() {
-    const newGame = () => {
+    const showContent = () => {
       if (this.state.newGame) {
         return (
           <Segment>
             <Header as='h3'>New Game</Header>
+            <Segment.Group horizontal>
+              <Segment>Player 1 Stuff</Segment>
+              <Segment>Other Stuff?</Segment>
+              <Segment>Player 2 Stuff</Segment>
+            </Segment.Group>
             <Board />
           </Segment>
         )
@@ -39,7 +58,9 @@ class SidebarLeft extends React.Component {
             <tbody>
               <tr>
                 <td style={{verticalAlign: 'top'}}>
-                  <Header as='h3'>Welcome</Header>
+                  <Segment>
+                    <Header as='h3'>Welcome</Header>
+                  </Segment>
                 </td>
               </tr>
             </tbody>
@@ -48,9 +69,9 @@ class SidebarLeft extends React.Component {
       }
     }
 
-    const showRules = () => {
+    const rules = () => {
       return (
-        <Rules />
+        <div>Rules</div>
       )
     }
 
@@ -60,11 +81,15 @@ class SidebarLeft extends React.Component {
         <Button onClick={this.toggleVisibility}>Menu</Button>
         <Sidebar.Pushable as={Segment}>
           <Sidebar as={Menu} animation='push' width='thin' visible={visible} icon='labeled' vertical inverted>
-            <Menu.Item name='newgame' onClick={() => this.setState({ newGame: true })} disabled={this.state.newGame}>
+            <Menu.Item name='newgame' onClick={() => this.setState({ newGame: true })}
+            disabled={this.state.newGame}>
               <Icon name='gamepad' />
               New Game
             </Menu.Item>
-            <Menu.Item name='rules' onClick={() => console.log('rules clicked')}>
+            <Menu.Item
+              name='rules'
+              onClick={this.toggleRules}
+            >
               <Icon name='book' />
               Rules
             </Menu.Item>
@@ -75,8 +100,8 @@ class SidebarLeft extends React.Component {
           </Sidebar>
 
           <Sidebar.Pusher>
-            {newGame()}
-            {showRules()}
+            {showContent()}
+            <Rules toggle={() => this.toggleRules} />
           </Sidebar.Pusher>
 
         </Sidebar.Pushable>
