@@ -8,6 +8,11 @@ const reducers = (state = defaultState, action) => {
         ...state,
         selectedHex: action.payload
       }
+    case 'DRAW-BOARD': 
+      return {
+        ...state,
+        boardState: action.payload
+      }
     default: return state;
   }
 }

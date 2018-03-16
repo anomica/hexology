@@ -4,3 +4,10 @@ export const selectHex = (hex) => (
     payload: hex
   }
 )
+
+export const drawBoard = (boardState) => (
+  {
+    type: 'DRAW-BOARD',
+    payload: boardState
+  }
+)
