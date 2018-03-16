@@ -57,6 +57,10 @@ class Board extends React.Component {
     });
   }
 
+  sendAttackRequest() {
+
+  }
+
   handleClick(e, hex) {
     if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) {
       this.handleSelectClick(e, hex);
@@ -93,21 +97,6 @@ class Board extends React.Component {
       let originIndex = board.indexOf(origin);
       let targetIndex = board.indexOf(hex);
       let target = board[targetIndex];
-
-      if (target.player === 'player2') {
-        axios.patch('/attack', {
-          origin: origin,
-          originIndex: originIndex,
-          target: target,
-          targetIndex: targetIndex
-        })
-        .then(data => {
-          console.log(data);
-        })
-        .catch(err => {
-          console.error(err);
-        })
-      }
 
       let updatedTarget = {
         ...target,
