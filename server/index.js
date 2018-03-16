@@ -101,7 +101,7 @@ app.post('/newBoard', (req, res) => {
 });
 
 app.patch('/movePlayer', (req, res) => {
-  
+
 });
 
 app.listen(process.env.PORT || 3000, function () {

@@ -5,10 +5,17 @@ export const selectHex = (coordinates) => (
   }
 )
 
-export const highlightNeighbors = (neighbor) => (
+export const highlightNeighbors = (neighbors) => (
   {
     type: 'HIGHLIGHT-NEIGHBORS',
-    payload: neighbor
+    payload: neighbors
+  }
+)
+
+export const highlightOpponents = (opponents) => (
+  {
+    type: 'HIGHLIGHT-OPPONENTS',
+    payload: opponents
   }
 )
 

@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import Board from './Board.jsx';
 import Rules from './Rules.jsx';
+import Login from './Login.jsx';
 import DefaultState from '../store/DefaultState';
 
 class SidebarLeft extends React.Component {
