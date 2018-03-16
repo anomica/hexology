@@ -10,8 +10,7 @@ class SidebarLeft extends React.Component {
     super(props);
 
     this.state = {
-      visible: true,
-      menuVisible: false
+      visible: true
     }
 
     this.toggleVisibility = this.toggleVisibility.bind(this);
@@ -25,7 +24,7 @@ class SidebarLeft extends React.Component {
     const { visible } = this.state;
     return (
       <div>
-        <Button onClick={this.toggleVisibility}>Toggle Visibility</Button>
+        <Button onClick={this.toggleVisibility}>Menu</Button>
         <Sidebar.Pushable as={Segment}>
           <Sidebar as={Menu} animation='push' width='thin' visible={visible} icon='labeled' vertical inverted>
             <Menu.Item name='home' onClick={() => console.log('home clicked')}> {/*Login, New Game, Load, Rules*/}
@@ -36,9 +35,13 @@ class SidebarLeft extends React.Component {
               <Icon name='gamepad' />
               New Game
             </Menu.Item>
+            <Menu.Item name='camera' onClick={() => console.log('rules clicked')}>
+              <Icon name='camera' />
+              Rules
+            </Menu.Item>
             <Menu.Item name='camera' onClick={() => console.log('camera clicked')}>
               <Icon name='camera' />
-              Channels
+              Login
             </Menu.Item>
           </Sidebar>
 
