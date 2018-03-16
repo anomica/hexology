@@ -12,13 +12,14 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-    this.createBoard();
+
+    this.createBoard(5, 4);
   }
 
-  createBoard() {
+  createBoard(rows, cols) {
     axios.post('/newBoard', {
-      numRows: 5,
-      numCols: 4
+      numRows: rows,
+      numCols: cols
     })
       .then((data) => {
         this.props.drawBoard(data.data);
@@ -37,6 +38,21 @@ class Board extends React.Component {
       });
   }
 
+
+  movePlayer(targeHex) {
+    axios.patch('/movePlayer', {
+      targetHex: targetHex,
+      boardState: this.props.boardState
+    })
+      .then(data => {
+        console.log('data:', data);
+        this.props.drawBoard(data.data);
+      })
+      .catch(err => {
+        console.log('error receiving new board:', err);
+      })
+    }
+
   handleClick(e, hex) {
     if (hex.player === 'player1') {
       let neighbors = [];
@@ -54,7 +70,7 @@ class Board extends React.Component {
           neighbors.push(otherHex.index);
         }
       })
-      this.props.highlightNeighbors(neighbors);      
+      this.props.highlightNeighbors(neighbors);
     }
   }
 
