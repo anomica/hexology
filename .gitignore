@@ -7,11 +7,8 @@ yarn-error.log*
 
 # React
 webpack.config.js
-<<<<<<< HEAD
+
 react-client/dist/bundle.js
-=======
-react-client/dist/bundle.js
->>>>>>> 6f2ebc4761d865f52de69343a546a8bb2db52105
 
 # Database config
 database/config.js
