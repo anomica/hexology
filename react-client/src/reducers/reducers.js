@@ -35,6 +35,17 @@ const reducers = (state = defaultState, action) => {
         opponentControlled: [...action.payload]
       };
       return newState;
+    case 'MOVE-UNITS':
+      let originIndex = action.payload.originIndex;
+      let targetIndex = action.payload.targetIndex;
+      let origin = action.payload.origin;
+      let target = action.payload.target;
+      return {
+        ...state,
+        boardState: [...state.boardState.slice(0, originIndex), origin, ...state.boardState.slice(originIndex + 1, targetIndex), target, ...state.boardState.slice(targetIndex + 1, state.boardState.length)],
+        selectedHex: {},
+        neighbors: []
+      }
     default: return state;
   }
 }
