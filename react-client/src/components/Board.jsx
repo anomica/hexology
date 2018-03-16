@@ -39,20 +39,23 @@ class Board extends React.Component {
   }
 
 
-  movePlayer(targeHex) {
-    axios.patch('/movePlayer', {
-      targetHex: targetHex,
-      boardState: this.props.boardState,
+  sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {
+    axios.patch('/move', {
+      updatedOrigin: updatedOrigin,
+      originIndex: originIndex,
+      updatedTarget: updatedTarget,
+      targetIndex: targetIndex,
       gameIndex: this.props.gameIndex
     })
-      .then(data => {
-        console.log('data:', data);
-        this.props.drawBoard(data.data);
-      })
-      .catch(err => {
-        console.log('error receiving new board:', err);
-      })
-    }
+    .then(data => {
+      data.status === 201 ?
+      this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex) : null;
+    })
+    .catch(err => {
+      alert(err);
+      console.error(err);
+    });
+  }
 
   handleClick(e, hex) {
     if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) {
@@ -116,20 +119,7 @@ class Board extends React.Component {
         units: 0,
         player: null
       }
-      this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex);
-      axios.patch('/move', {
-        origin: origin,
-        originIndex: originIndex,
-        target: target,
-        targetIndex: targetIndex,
-        gameIndex: this.props.gameIndex
-      })
-      .then(data => {
-        console.log(data);
-      })
-      .catch(err => {
-        console.error(err);
-      });
+      this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex);
     } else {
       alert('AAAAAAAA')
     }

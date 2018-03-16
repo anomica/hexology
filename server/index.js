@@ -109,13 +109,27 @@ app.post('/newBoard', (req, res) => {
 app.patch('/move', (req, res) => {
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
   let body = req.body;
-  let origin = body.origin;
+  let updatedOrigin = body.updatedOrigin;
   let originIndex = body.originIndex;
-  let target = body.target;
+  let updatedTarget = body.updatedTarget;
   let targetIndex = body.targetIndex;
   let gameIndex = body.gameIndex;
   let board = games[gameIndex];
-  console.log(origin, originIndex, target, targetIndex, gameIndex, board);
+  let masterOrigin = board[originIndex];
+  let masterTarget = board[targetIndex];
+  let masterOrigCs = masterOrigin.coordinates;
+  let masterTarCs = masterTarget.coordinates;
+  let origCs = updatedOrigin.coordinates;
+  let tarCs = updatedTarget.coordinates;
+
+  if (masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] &&
+      masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]) {
+        games[gameIndex][originIndex] = updatedOrigin;
+        games[gameIndex][targetIndex] = updatedTarget;
+        res.status(201).end();
+      } else {
+        res.status(501).end();
+      }
 });
 
 app.get('/*', (req, res) => res.sendfile('/'));
