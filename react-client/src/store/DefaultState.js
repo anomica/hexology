@@ -6,7 +6,8 @@ const DefaultState = {
   selectedHex: null,
   boardState: null,
   winner: null,
-  neighbors: []
+  neighbors: [],
+  opponentControlled: []
 }
 
 export default DefaultState;

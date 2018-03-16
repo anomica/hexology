@@ -6,12 +6,27 @@ svg g {
   stroke-width: 2;
 }
 
-g.selected > g > polygon {
+svg g > text {
+  fill: black;
+  stroke-width: .1;
+  font-size: 8px;
+  font-family: serif;
+}
+
+g.friendly > g > polygon {
   fill: aqua;
+}
+
+g.selected > g > polygon {
+  fill: #00ffff6e;
 }
 
 g.neighbor > g > polygon {
   fill: green;
+}
+
+g.opponent > g > polygon {
+  fill: red;
 }
 
 g.resource > g > polygon {

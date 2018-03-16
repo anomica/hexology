@@ -13,7 +13,7 @@ const reducers = (state = defaultState, action) => {
         boardState: action.payload
       }
     case 'HIGHLIGHT-NEIGHBORS':
-      let newState;
+    let newState;
       state.neighbors.length ?
       newState = {
         ...state,
@@ -22,6 +22,17 @@ const reducers = (state = defaultState, action) => {
       newState = {
         ...state,
         neighbors: [...action.payload]
+      };
+      return newState;
+    case 'HIGHLIGHT-OPPONENTS':
+      state.opponentControlled.length ?
+      newState = {
+        ...state,
+        opponentControlled: []
+      } :
+      newState = {
+        ...state,
+        opponentControlled: [...action.payload]
       };
       return newState;
     default: return state;
