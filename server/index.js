@@ -181,8 +181,6 @@ const resolveCombat = (originIndex, targetIndex, gameIndex) => {
   let attackerRoll = Math.floor(Math.random() * 101 * attacker.units + (attacker.units * 5)) - 100;
   let defenderRoll = Math.floor(Math.random() * 101 * defender.units + (defender.units * 5)) - 100;
 
-  console.log('attackerRoll', attackerRoll, 'defenderRoll', defenderRoll);
-
   if (attackerRoll >= defenderRoll) {
     return 'attacker';
   } else {

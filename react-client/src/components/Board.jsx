@@ -23,6 +23,8 @@ class Board extends React.Component {
       .then((data) => {
         this.props.drawBoard(data.data.board);
         this.props.setGameIndex(data.data.gameIndex);
+        this.props.selectHex({});
+        this.props.highlightNeighbors([]);
       })
       .catch(err => {
         console.log('error receiving new board:', err);
