@@ -30,24 +30,22 @@ class Board extends React.Component {
 
   handleClick(e, hex) {
     let neighbors = [];
-    let hexCs = hex.coordinates;
+    let targetCs = hex.coordinates;
     this.props.boardState.forEach(otherHex => {
       let oHexCs = otherHex.coordinates;
-      if (oHexCs[0] === hexCs[0] && oHexCs[1] === hexCs[1]) {
+      if (oHexCs[0] === targetCs[0] && oHexCs[1] === targetCs[1]) {
         this.props.selectedHex ? this.props.selectHex(null) : this.props.selectHex(hex.index);
       }
-      if ((oHexCs[0] <= hexCs[0] + 1 && oHexCs[0] >= hexCs[0] - 1) &&
-          (oHexCs[1] <= hexCs[1] + 1 && oHexCs[1] >= hexCs[1] - 1) &&
-          (oHexCs[1] <= hexCs[2] + 1 && oHexCs[2] >= hexCs[2] - 1))
+      if ((oHexCs[0] <= targetCs[0] + 1 && oHexCs[0] >= targetCs[0] - 1) &&
+          (oHexCs[1] <= targetCs[1] + 1 && oHexCs[1] >= targetCs[1] - 1) &&
+          (oHexCs[2] <= targetCs[2] + 1 && oHexCs[2] >= targetCs[2] - 1) &&
+          (hex.index !== otherHex.index))
       {
         neighbors.push(otherHex.index);
       }
     })
     this.props.highlightNeighbors(neighbors);
 
-    e.target.classList.contains('selected') ?
-    e.target.classList.remove('selected') :
-    e.target.setAttribute('class', 'selected');
   }
 
   render() {
@@ -56,13 +54,17 @@ class Board extends React.Component {
         <HexGrid width={1200} height={800} viewBox="-50 -50 150 150">
           <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -40, y: -15 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {
+              let targetClass = '';
+              if (this.props.selectedHex === hex.index) {
+                targetClass += 'selected';
+              } else if (this.props.neighbors.indexOf(hex.index) > -1) {
+                targetClass += 'neighbor';
+              } else if (hex.hasResource) {
+                targetClass += 'resource'
+              }
               return <Hexagon
                 key={uuidv4()}
-                className={
-                  hex.hasResource ?
-                  this.props.neighbors.indexOf(hex.index) > -1 ?
-                  'neighbor' : 'resource' : null
-                }
+                className={targetClass}
                 onClick={(e) => this.handleClick(e, hex)}
                 q={hex.coordinates[0]}
                 r={hex.coordinates[1]}

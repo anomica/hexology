@@ -14,10 +14,10 @@ const reducers = (state = defaultState, action) => {
       }
     case 'HIGHLIGHT-NEIGHBORS':
       let newState;
-      state.neighbors ?
+      state.neighbors.length ?
       newState = {
         ...state,
-        neighbors: null
+        neighbors: []
       } :
       newState = {
         ...state,

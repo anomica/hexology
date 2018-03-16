@@ -10,8 +10,8 @@ webpack.config.js
 <<<<<<< HEAD
 react-client/dist/bundle.js
 =======
-bundle.js
->>>>>>> a0825601a45f0937c74cc7d735ae2b61ae7b947a
+react-client/dist/bundle.js
+>>>>>>> 6f2ebc4761d865f52de69343a546a8bb2db52105
 
 # Database config
 database/config.js

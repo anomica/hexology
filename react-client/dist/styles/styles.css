@@ -6,7 +6,7 @@ svg g {
   stroke-width: 2;
 }
 
-.selected {
+g.selected > g > polygon {
   fill: aqua;
 }
 
