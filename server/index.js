@@ -101,7 +101,7 @@ app.post('/newBoard', (req, res) => {
   // res.send(board);
 });
 
-app.post('/movePlayer', (req, res) => {
+app.patch('/movePlayer', (req, res) => {
   
 });
 
