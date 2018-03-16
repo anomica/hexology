@@ -53,6 +53,7 @@
     "react-router-redux": "^4.0.8",
     "redux": "^3.7.2",
     "semantic-ui-react": "^0.78.3",
+    "socket.io": "^2.0.4",
     "sqlite3": "^3.1.13",
     "uuid": "^3.2.1",
     "webpack": "^2.2.1"
