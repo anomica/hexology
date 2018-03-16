@@ -16,7 +16,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, '../react-client/dist')));
-
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 
 const isLoggedIn = (req, res, next) => {
@@ -61,7 +61,7 @@ const isResourceHex = () => { // decides if hex gets resource
 
 const gameInit = (numRows, numCols) => { // creates an array of hexes with properties (the board)
   let i = 0;
-  const hexes = coordinateGenerator(5, 5);
+  const hexes = coordinateGenerator(numRows, numCols);
 
   return hexes.map((letter, index) => {
     let hex = {};
@@ -89,7 +89,11 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
 app.get('/*', (req, res) => res.sendfile('/'));
 
 app.post('/newBoard', (req, res) => {
-  const board = game
+  console.log('req.body:', req.body);
+  const board = gameInit(req.body.numRows, req.body.numCols);
+  console.log('board:', board);
+  res.send(board);
+  // res.send(board);
 });
 
 app.listen(process.env.PORT || 3000, function () {
