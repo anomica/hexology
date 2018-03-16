@@ -16,13 +16,13 @@ class Board extends React.Component {
 
   componentDidMount() {
     console.log('this.props.drawBoard:', this.props.drawBoard);
-    this.createBoard();
+    this.createBoard(5, 4);
   }
 
-  createBoard() {
+  createBoard(rows, cols) {
     axios.post('/newBoard', {
-      numRows: 5,
-      numCols: 4
+      numRows: rows,
+      numCols: cols
     })
       .then((data) => {
         console.log('data:', data);
@@ -33,6 +33,19 @@ class Board extends React.Component {
       });
   }
 
+  movePlayer(targeHex) {
+    axios.patch('/movePlayer', {
+      targetHex: targetHex,
+      boardState: this.props.boardState
+    })
+      .then(data => {
+        console.log('data:', data);
+        this.props.drawBoard(data.data);
+      })
+      .catch(err => {
+        console.log('error receiving new board:', err);
+      })
+  }
 
   render() {
     return (
