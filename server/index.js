@@ -5,6 +5,7 @@ let path = require('path');
 const db = require('../database/index');
 const passport = require('passport');
 const session = require('express-session');
+const uuidv4 = require('uuid/v4');
 
 const app = express();
 // require('../server/config/passport')(passport);
@@ -71,6 +72,7 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
   return hexes.map((letter, index) => {
     let hex = {};
     hex.coordinates = letter;
+    hex.index = uuidv4();
 
     if (index === 0) {
       hex.player = 'player1';
@@ -94,11 +96,8 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
 app.get('/*', (req, res) => res.sendfile('/'));
 
 app.post('/newBoard', (req, res) => {
-  console.log('req.body:', req.body);
   const board = gameInit(req.body.numRows, req.body.numCols);
-  console.log('board:', board);
   res.send(board);
-  // res.send(board);
 });
 
 app.patch('/movePlayer', (req, res) => {
@@ -110,8 +109,3 @@ app.listen(process.env.PORT || 3000, function () {
 });
 
 // Game State starters
-
-
-
-
-
