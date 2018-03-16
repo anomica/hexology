@@ -1,0 +1,17 @@
+svg g {
+  fill: white;
+  stroke: black;
+  stroke-width: 2;
+}
+
+.selected {
+  fill: aqua;
+}
+
+.neighbor {
+  fill: green;
+}
+
+g.resource > g > polygon {
+  fill: gold;
+}

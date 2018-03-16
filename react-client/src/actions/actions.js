@@ -1,7 +1,14 @@
-export const selectHex = (hex) => (
+export const selectHex = (coordinates) => (
   {
     type: 'SELECT-HEX',
-    payload: hex
+    payload: coordinates
+  }
+)
+
+export const highlightNeighbor = (neighbor) => (
+  {
+    type: 'HIGHLIGHT-NEIGHBOR',
+    payload: neighbor
   }
 )
 
