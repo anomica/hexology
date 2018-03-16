@@ -2,7 +2,7 @@ const DefaultState = {
   playerOne: undefined,
   playerTwo: undefined,
   currentPlayerTurn: 1,
-  gameId: null,
+  gameIndex: null,
   selectedHex: {},
   boardState: null,
   winner: null,

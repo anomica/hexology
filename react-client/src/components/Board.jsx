@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, drawBoard } from '../../src/actions/actions.js';
+import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
 const uuidv4 = require('uuid/v4');
 
@@ -12,7 +12,6 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-
     this.createBoard(5, 4);
   }
 
@@ -22,7 +21,8 @@ class Board extends React.Component {
       numCols: cols
     })
       .then((data) => {
-        this.props.drawBoard(data.data);
+        this.props.drawBoard(data.data.board);
+        this.props.setGameIndex(data.data.gameIndex);
       })
       .then(() => {
         let opponentControlled = [];
@@ -42,7 +42,8 @@ class Board extends React.Component {
   movePlayer(targeHex) {
     axios.patch('/movePlayer', {
       targetHex: targetHex,
-      boardState: this.props.boardState
+      boardState: this.props.boardState,
+      gameIndex: this.props.gameIndex
     })
       .then(data => {
         console.log('data:', data);
@@ -83,23 +84,52 @@ class Board extends React.Component {
   }
 
   handleMoveClick(e, hex) {
-    let board = this.props.boardState;
-    let origin = this.props.selectedHex;
-    let originIndex = board.indexOf(origin);
-    let targetIndex = board.indexOf(hex);
-    let target = board[targetIndex];
-    let updatedTarget = {
-      ...target,
-      units: target.units += origin.units,
-      player: 'player1'
-    }
-    let updatedOrigin = {
-      ...origin,
-      units: 0,
-      player: null
-    }
     if (this.props.neighbors.indexOf(hex.index) > -1) {
+      let board = this.props.boardState;
+      let origin = this.props.selectedHex;
+      let originIndex = board.indexOf(origin);
+      let targetIndex = board.indexOf(hex);
+      let target = board[targetIndex];
+
+      if (target.player === 'player2') {
+        axios.patch('/attack', {
+          origin: origin,
+          originIndex: originIndex,
+          target: target,
+          targetIndex: targetIndex
+        })
+        .then(data => {
+          console.log(data);
+        })
+        .catch(err => {
+          console.error(err);
+        })
+      }
+
+      let updatedTarget = {
+        ...target,
+        units: target.units += origin.units,
+        player: 'player1'
+      }
+      let updatedOrigin = {
+        ...origin,
+        units: 0,
+        player: null
+      }
       this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex);
+      axios.patch('/move', {
+        origin: origin,
+        originIndex: originIndex,
+        target: target,
+        targetIndex: targetIndex,
+        gameIndex: this.props.gameIndex
+      })
+      .then(data => {
+        console.log(data);
+      })
+      .catch(err => {
+        console.error(err);
+      });
     } else {
       alert('AAAAAAAA')
     }
@@ -147,12 +177,13 @@ const mapStateToProps = (state) => {
     boardState: state.state.boardState,
     neighbors: state.state.neighbors,
     selectedHex: state.state.selectedHex,
-    opponentControlled: state.state.opponentControlled
+    opponentControlled: state.state.opponentControlled,
+    gameIndex: state.state.gameIndex
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits }, dispatch)
+  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits, setGameIndex }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);

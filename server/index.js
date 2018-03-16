@@ -20,6 +20,8 @@ app.use(express.static(path.join(__dirname, '../react-client/dist')));
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 
+let games = {};
+
 const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
@@ -93,16 +95,30 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
   });
 };
 
-app.get('/*', (req, res) => res.sendfile('/'));
-
 app.post('/newBoard', (req, res) => {
+  games = {};  // ************************THIS IS JUST FOR DEVELOPMENT, IT MAKES IT SO WE DON'T GUM UP THE SERVER WITH A TON OF OBJECTS, IN REAL LIFE WE WON'T EVEN BE STORING GAMES ON THE SERVER MOST LIKELY
   const board = gameInit(req.body.numRows, req.body.numCols);
-  res.send(board);
+  let gameIndex = uuidv4();
+  games[gameIndex] = board;
+  res.status(201).json({
+    board: board,
+    gameIndex: gameIndex
+  });
 });
 
-app.patch('/movePlayer', (req, res) => {
-
+app.patch('/move', (req, res) => {
+  // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
+  let body = req.body;
+  let origin = body.origin;
+  let originIndex = body.originIndex;
+  let target = body.target;
+  let targetIndex = body.targetIndex;
+  let gameIndex = body.gameIndex;
+  let board = games[gameIndex];
+  console.log(origin, originIndex, target, targetIndex, gameIndex, board);
 });
+
+app.get('/*', (req, res) => res.sendfile('/'));
 
 app.listen(process.env.PORT || 3000, function () {
   console.log('listening on port 3000!');
