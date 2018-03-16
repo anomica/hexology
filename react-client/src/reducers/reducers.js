@@ -12,8 +12,13 @@ const reducers = (state = defaultState, action) => {
         ...state,
         boardState: action.payload
       }
+    case 'SET-GAME-INDEX':
+      return {
+        ...state,
+        gameIndex: action.payload
+      }
     case 'HIGHLIGHT-NEIGHBORS':
-    let newState;
+      let newState;
       state.neighbors.length ?
       newState = {
         ...state,
