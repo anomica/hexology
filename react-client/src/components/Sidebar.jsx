@@ -27,7 +27,7 @@ class SidebarLeft extends React.Component {
         <Button onClick={this.toggleVisibility}>Menu</Button>
         <Sidebar.Pushable as={Segment}>
           <Sidebar as={Menu} animation='push' width='thin' visible={visible} icon='labeled' vertical inverted>
-            <Menu.Item name='home' onClick={() => console.log('home clicked')}> {/*Login, New Game, Load, Rules*/}
+            <Menu.Item name='home' onClick={() => console.log('home clicked')}>
               <Icon name='home' />
               Home
             </Menu.Item>
