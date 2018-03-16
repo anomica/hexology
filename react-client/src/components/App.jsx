@@ -7,6 +7,7 @@ import $ from 'jquery';
 import Board from './Board.jsx';
 import Login from './Login.jsx';
 import Signup from './Signup.jsx';
+import SidebarLeft from './Sidebar.jsx';
 
 class App extends React.Component {
   constructor(props) {
@@ -20,7 +21,7 @@ class App extends React.Component {
 
       <Router history={browserHistory}>
         <Switch>
-          <Route exact path='/' component={ Board } />
+          <Route exact path='/' component={ SidebarLeft } />
           <Route path='/login' component={ Login } />
           <Route path='/signup' component={ Signup } />
         </Switch>

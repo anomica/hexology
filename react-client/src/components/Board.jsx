@@ -17,10 +17,8 @@ class Board extends React.Component {
 
   render() {
     return (
-    <div>
-      <SidebarLeft />
-      <div className="Board">
-        <HexGrid width={1200} height={800} viewBox="-50 -50 150 150">
+      <div className="Board" style={{float: 'right'}}>
+        <HexGrid height={800} viewBox="-50 -50 150 150">
           <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -40, y: -15 }}>
             <Hexagon onClick={() => this.props.selectHex("A")} id="A" q={0} r={0} s={0} />
             <Hexagon onClick={() => this.props.selectHex("B")} id="B" q={1} r={0} s={0} />
@@ -42,7 +40,6 @@ class Board extends React.Component {
             <Hexagon onClick={() => this.props.selectHex("R")} id="R" q={1} r={4} s={0} />
           </Layout>
         </HexGrid>
-      </div>
       </div>
     );
   }
