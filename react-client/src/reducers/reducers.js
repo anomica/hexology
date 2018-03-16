@@ -29,17 +29,6 @@ const reducers = (state = defaultState, action) => {
         neighbors: [...action.payload]
       };
       return newState;
-    case 'HIGHLIGHT-OPPONENTS': // this can be refactored to just directly render based on hex.player when we have it set up
-      state.opponentControlled.length ?
-      newState = {
-        ...state,
-        opponentControlled: []
-      } :
-      newState = {
-        ...state,
-        opponentControlled: [...action.payload]
-      };
-      return newState;
     case 'MOVE-UNITS':
       let originIndex = action.payload.originIndex;
       let targetIndex = action.payload.targetIndex;

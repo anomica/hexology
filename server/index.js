@@ -106,7 +106,7 @@ app.post('/newBoard', (req, res) => {
   });
 });
 
-app.patch('/move', async (req, res) => {
+app.patch('/move', async (req, res, next) => {
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
   let body = req.body;
   let updatedOrigin = body.updatedOrigin;
@@ -131,7 +131,10 @@ app.patch('/move', async (req, res) => {
         await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex);
         res.status(201).end();
       } else {
-        resolveCombat();
+        let winner = await resolveCombat(originIndex, targetIndex, gameIndex);
+        winner === 'attacker' ?
+        res.status(202).end() :
+        res.status(204).end();
       }
     } else {
       await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex);
@@ -171,8 +174,18 @@ const updateHexes = (originIndex, updatedOrigin, targetIndex, updatedTarget, gam
 
 }
 
-const resolveCombat = () => {
+const resolveCombat = (originIndex, targetIndex, gameIndex) => {
+  let attacker = games[gameIndex][originIndex];
+  let defender = games[gameIndex][targetIndex];
 
+  let attackerRoll = Math.floor(Math.random() * 101 * attacker.units + (attacker.units * 5)) - 100;
+  let defenderRoll = Math.floor(Math.random() * 101 * defender.units + (defender.units * 5)) - 100;
+
+  if (attackerRoll >= defenderRoll) {
+    return 'attacker';
+  } else {
+    return 'defender';
+  }
 }
 
 app.get('/*', (req, res) => res.sendfile('/'));

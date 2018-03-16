@@ -23,15 +23,8 @@ class Board extends React.Component {
       .then((data) => {
         this.props.drawBoard(data.data.board);
         this.props.setGameIndex(data.data.gameIndex);
-      })
-      .then(() => {
-        let opponentControlled = [];
-        this.props.boardState.forEach(hex => {
-          if (hex.player === 'player2') {
-            opponentControlled.push(hex.index);
-          }
-        })
-        this.props.highlightOpponents(opponentControlled)
+        this.props.selectHex({});
+        this.props.highlightNeighbors([]);
       })
       .catch(err => {
         console.log('error receiving new board:', err);
@@ -48,8 +41,15 @@ class Board extends React.Component {
       gameIndex: this.props.gameIndex
     })
     .then(data => {
-      data.status === 201 ?
-      this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex) : null;
+      if (data.status === 201) {
+        this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex);
+      } else if (data.status === 202) {
+        alert('Player One Wins!');
+        this.createBoard(5, 4);
+      } else if (data.status === 204) {
+        alert('Player Two Wins!');
+        this.createBoard(5, 4);
+      }
     })
     .catch(err => {
       alert(err);
@@ -121,7 +121,7 @@ class Board extends React.Component {
           <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -40, y: -15 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {
               let targetClass = '';
-              if (this.props.opponentControlled.indexOf(hex.index) > -1) {
+              if (hex.player === 'player2') {
                 targetClass += 'opponent';
               } else if (this.props.selectedHex.index === hex.index) {
                 targetClass += 'selected';
