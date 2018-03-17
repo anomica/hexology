@@ -3,9 +3,10 @@ import { connect } from 'react-redux';
 import { Button, Header, Image, Modal } from 'semantic-ui-react';
 
 const Rules = (props) => {
-  console.log(props)
+  // console.log(props)
   return (
-    <Modal defaultOpen={true}>
+    <div>
+    <Modal>
       <Modal.Header>Rules</Modal.Header>
       <Modal.Content>
         <Modal.Description>
@@ -24,6 +25,7 @@ const Rules = (props) => {
         </Modal.Description>
       </Modal.Content>
     </Modal>
+    </div>
   )
 }
 

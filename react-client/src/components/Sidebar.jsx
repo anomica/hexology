@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
+import { Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
@@ -19,18 +19,12 @@ class SidebarLeft extends React.Component {
     }
 
     this.toggleVisibility = this.toggleVisibility.bind(this);
-    this.toggleRules = this.toggleRules.bind(this);
     this.newBoard = this.newBoard.bind(this);
   }
 
   // toggles sidebar
   toggleVisibility() {
     this.setState({ visible: !this.state.visible });
-  }
-
-  toggleRules() {
-    // console.log('toggle rules')
-    this.setState({ rules: !this.state.rules });
   }
 
   newBoard() {
@@ -70,9 +64,12 @@ class SidebarLeft extends React.Component {
     }
 
     const rules = () => {
-      return (
-        <div>Rules</div>
-      )
+      if (this.state.rules) {
+        // console.log('inside this.state.rules')
+        return (
+          <Rules />
+        )
+      }
     }
 
     const { visible } = this.state;
@@ -88,7 +85,7 @@ class SidebarLeft extends React.Component {
             </Menu.Item>
             <Menu.Item
               name='rules'
-              onClick={this.toggleRules}
+              onClick={() => this.setState({ rules: true })}
             >
               <Icon name='book' />
               Rules
@@ -101,7 +98,7 @@ class SidebarLeft extends React.Component {
 
           <Sidebar.Pusher>
             {showContent()}
-            <Rules toggle={() => this.toggleRules} />
+            {rules()}
           </Sidebar.Pusher>
 
         </Sidebar.Pushable>
