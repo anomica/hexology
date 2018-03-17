@@ -6,8 +6,13 @@ const db = require('../database/index');
 const passport = require('passport');
 const session = require('express-session');
 const uuidv4 = require('uuid/v4');
-
 const app = express();
+const http = require("http");
+const server = http.createServer(app);
+var cors = require('cors');
+const socketIo = require("socket.io");
+const io = socketIo(server);
+// const http = require('http').Server(app);
 // require('../server/config/passport')(passport);
 app.use(session({
   secret: process.env.SESSION_PASSWORD || 'supersecretsecret',
@@ -19,6 +24,7 @@ app.use(passport.session());
 app.use(express.static(path.join(__dirname, '../react-client/dist')));
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
+app.use(cors())
 
 let games = {};
 
@@ -95,6 +101,79 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
   });
 };
 
+
+let roomNum = 0;
+let openRooms = [];
+
+const selectRoom = () => {
+  let lowest;
+  let index;
+  let selected;
+  if (openRooms.length) {
+    openRooms.forEach((room, i) => {
+      if (!lowest) {
+        lowest = Number(room);
+        index = i
+      } else {
+        if (Number(room) < lowest) {
+          lowest = Number(room);
+          index = i;
+        }
+      }
+    });
+  }
+  selected = openRooms[index];
+  openRooms.splice(index, 1);
+  return selected;
+}
+
+const findOpenRooms = () => { // finds an open room, right now just picking the first one
+  openRooms = [];
+  // may need to create an array of open rooms 
+  // and have a setInterval to keep checking them and updating them so that no one gets stuck waiting too long
+  var rooms = io.sockets.adapter.rooms;
+  console.log('rooms:', rooms);
+  for (room in rooms) {
+    console.log('Rooms[room][sockets]', rooms[room].sockets);
+    console.log('Rooms[room][sockets].length', Object.keys(rooms[room].sockets).length);
+    let roomSize = Object.keys(rooms[room].sockets).length;
+    if (roomSize === 1 && room[0] === '*') {
+      console.log('room:', room);
+      if (!openRooms.includes(room)) {
+        openRooms.push(room);
+      }
+      return room;
+    }
+  }
+}
+
+setInterval(findOpenRooms, 1000);
+
+io.on('connection', socket => {
+  console.log('User connected');
+  console.log('socket:', socket);
+  console.log('socketid:', socket.id);
+  let room = selectRoom();
+  if (room) {
+    socket.join(room);
+    console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
+    let newGameBoard = gameInit(5, 4);
+    io.to(room).emit('newGame', newGameBoard);
+  } else {
+    socket.join('*' + roomNum);
+    roomNum++;
+    io.to(room).emit('newGame', 'waiting for another player to join');
+  }
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected')
+  })
+})
+
+
+app.get('/*', (req, res) => res.sendfile('/'));
+
+
 app.post('/newBoard', (req, res) => {
   games = {};  // ************************THIS IS JUST FOR DEVELOPMENT, IT MAKES IT SO WE DON'T GUM UP THE SERVER WITH A TON OF OBJECTS, IN REAL LIFE WE WON'T EVEN BE STORING GAMES ON THE SERVER MOST LIKELY
   const board = gameInit(req.body.numRows, req.body.numCols);
@@ -145,6 +224,8 @@ app.patch('/move', async (req, res, next) => {
   }
 });
 
+
+
 const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, cb) => {
   if (masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] &&
       masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]) {
@@ -190,7 +271,9 @@ const resolveCombat = (originIndex, targetIndex, gameIndex) => {
 
 app.get('/*', (req, res) => res.sendfile('/'));
 
-app.listen(process.env.PORT || 3000, function () {
+
+// io.listen(process.env.PORT || 3000);
+server.listen(process.env.PORT || 3000, function () {
   console.log('listening on port 3000!');
 });
 
