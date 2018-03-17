@@ -32,33 +32,75 @@ const checkUserCreds = (username) => {
 }
 
 // Create game
-// const createGame = async (game) => {
-//   return await knex('games')
-//     .insert({
-//       room_id: game.room_id,
-//       player1: game_player1,
-//       player2: game.player2,
-//       current_player: game.player1
-//     });
-//   // Create hexes
-//   await knex('hex')
-//     .insert({
-//       game_id:
-//       player:
-//       units: 
-//       has_resource:
-//     })
-// }
-// Delete game after certain amount of time has passed
-// If game has completed, update game to completed
-  // Update user wins
-  // Update user losses
-// Update player on hex if player moves to hex
-// Increase units
-// Decrease units
+const createGame = async (game) => {
+  return await knex('games')
+    .insert({
+      room_id: game.room_id,
+      player1: game.playerOne,
+      player2: game.playerTwo,
+      current_player: game.player1
+    });
+  
+    await game.board.map(hex => {
+      createHex(hex);
+    })
+}
 
+// Create hex
+const createHex = async (hex) => {
+  return await knex('hex')
+    .insert({
+      game_id: /* need to get gameIndex */ gameIndex, // ?
+      player: hex.player,
+      units: hex.units,
+      has_resource: hex.hasResource
+    })
+}
+
+// Delete game after certain amount of time has passed
+const deleteGame = () => {
+  const date = new Date();
+  // if certain amount of time has passed
+  // search for all games in the db
+    // select those games
+    // delete those games
+}
+
+// If game has completed, update game to completed
+const gameComplete = () => {
+  // if game has completed
+    // Update user wins
+    // Update user losses
+}
+
+// Update player on hex if player moves to hex
+const updateHexUser = () => {
+  // find hex user is currently on
+  // find hex user is moving to
+  // update original hex to remove the user
+  // update new hex to add the user to that hex
+}
+
+// Increase units
+const increaseUnits = () => {
+  // find hex with the resource
+  // find the hex with the current user
+    // add 10 to the units
+}
+
+// Decrease units
+const decreaseUnits = () => {
+
+}
 
 module.exports = {
   addUser,
-  checkUserCreds
+  checkUserCreds,
+  createGame,
+  createHex,
+  deleteGame,
+  gameComplete,
+  updateHexUser,
+  increaseUnits,
+  decreaseUnits
 }
