@@ -26,6 +26,8 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 app.use(cors())
 
+let games = {};
+
 const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
@@ -75,9 +77,9 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
   let i = 0;
   const hexes = coordinateGenerator(numRows, numCols);
 
-  return hexes.map((letter, index) => {
+  return hexes.map((coordinates, index) => {
     let hex = {};
-    hex.coordinates = letter;
+    hex.coordinates = coordinates;
     hex.index = uuidv4();
 
     if (index === 0) {
@@ -98,6 +100,7 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
     return hex;
   });
 };
+
 
 let roomNum = 0;
 let openRooms = [];
@@ -170,14 +173,91 @@ io.on('connection', socket => {
 
 app.get('/*', (req, res) => res.sendfile('/'));
 
+
 app.post('/newBoard', (req, res) => {
+  games = {};  // ************************THIS IS JUST FOR DEVELOPMENT, IT MAKES IT SO WE DON'T GUM UP THE SERVER WITH A TON OF OBJECTS, IN REAL LIFE WE WON'T EVEN BE STORING GAMES ON THE SERVER MOST LIKELY
   const board = gameInit(req.body.numRows, req.body.numCols);
-  res.send(board);
+  let gameIndex = uuidv4();
+  games[gameIndex] = board;
+  res.status(201).json({
+    board: board,
+    gameIndex: gameIndex
+  });
 });
 
-app.patch('/movePlayer', (req, res) => {
+app.patch('/move', async (req, res) => {
+  // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
+  let body = req.body;
+  let updatedOrigin = body.updatedOrigin;
+  let originIndex = body.originIndex;
+  let updatedTarget = body.updatedTarget;
+  let targetIndex = body.targetIndex;
+  let gameIndex = body.gameIndex;
+  let board = games[gameIndex];
+  let masterOrigin = board[originIndex];
+  let masterTarget = board[targetIndex];
+  let masterOrigCs = masterOrigin.coordinates;
+  let masterTarCs = masterTarget.coordinates;
+  let origCs = updatedOrigin.coordinates;
+  let tarCs = updatedTarget.coordinates;
 
+  let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget);
+  if (legal) {
+    res.status(201).end(); // JUST TEMPORARY , REMOVE WHEN ROUTE IS COMPLETE
+    let collision = await checkForCollision(originIndex, targetIndex, gameIndex);
+    if (collision) {
+      if (collision === 'friendly') {
+        await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex);
+        res.status(201).end();
+      } else {
+        resolveCombat();
+      }
+    } else {
+      await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex);
+      res.status(201).end();
+    }
+  } else {
+    res.status(501).end();
+  }
 });
+
+
+
+const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, cb) => {
+  if (masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] &&
+      masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]) {
+        return true;
+      } else {
+        return false;
+      }
+}
+
+const checkForCollision = (originIndex, targetIndex, gameIndex) => {
+  let game = games[gameIndex];
+  let origin = game[originIndex];
+  let target = game[targetIndex];
+
+  if (origin.player && target.player) {
+    let collision = '';
+    origin.player === target.player ? collision += 'friendly' : collision += 'opponent';
+    return collision;
+  } else {
+    return false;
+  }
+}
+
+const updateHexes = (originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex) => {
+  games[gameIndex][originIndex] = updatedOrigin;
+  games[gameIndex][targetIndex] = updatedTarget; //// THis is what will happen on an ordinary move
+
+}
+
+const resolveCombat = () => {
+
+}
+
+app.get('/*', (req, res) => res.sendfile('/'));
+
 
 // io.listen(process.env.PORT || 3000);
 server.listen(process.env.PORT || 3000, function () {

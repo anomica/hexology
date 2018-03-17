@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, drawBoard } from '../../src/actions/actions.js';
+import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -21,6 +21,7 @@ class Board extends React.Component {
     socket.on('newGame', message => {
       console.log('message:', message);
     });
+
     this.createBoard(5, 4);
   }
 
@@ -31,7 +32,8 @@ class Board extends React.Component {
       numCols: cols
     })
       .then((data) => {
-        this.props.drawBoard(data.data);
+        this.props.drawBoard(data.data.board);
+        this.props.setGameIndex(data.data.gameIndex);
       })
       .then(() => {
         let opponentControlled = [];
@@ -48,19 +50,27 @@ class Board extends React.Component {
   }
 
 
-  movePlayer(targeHex) {
-    axios.patch('/movePlayer', {
-      targetHex: targetHex,
-      boardState: this.props.boardState
+  sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {
+    axios.patch('/move', {
+      updatedOrigin: updatedOrigin,
+      originIndex: originIndex,
+      updatedTarget: updatedTarget,
+      targetIndex: targetIndex,
+      gameIndex: this.props.gameIndex
     })
-      .then(data => {
-        console.log('data:', data);
-        this.props.drawBoard(data.data);
-      })
-      .catch(err => {
-        console.log('error receiving new board:', err);
-      })
-    }
+    .then(data => {
+      data.status === 201 ?
+      this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex) : null;
+    })
+    .catch(err => {
+      alert(err);
+      console.error(err);
+    });
+  }
+
+  sendAttackRequest() {
+
+  }
 
   handleClick(e, hex) {
     if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) {
@@ -92,23 +102,24 @@ class Board extends React.Component {
   }
 
   handleMoveClick(e, hex) {
-    let board = this.props.boardState;
-    let origin = this.props.selectedHex;
-    let originIndex = board.indexOf(origin);
-    let targetIndex = board.indexOf(hex);
-    let target = board[targetIndex];
-    let updatedTarget = {
-      ...target,
-      units: target.units += origin.units,
-      player: 'player1'
-    }
-    let updatedOrigin = {
-      ...origin,
-      units: 0,
-      player: null
-    }
     if (this.props.neighbors.indexOf(hex.index) > -1) {
-      this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex);
+      let board = this.props.boardState;
+      let origin = this.props.selectedHex;
+      let originIndex = board.indexOf(origin);
+      let targetIndex = board.indexOf(hex);
+      let target = board[targetIndex];
+
+      let updatedTarget = {
+        ...target,
+        units: target.units += origin.units,
+        player: 'player1'
+      }
+      let updatedOrigin = {
+        ...origin,
+        units: 0,
+        player: null
+      }
+      this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex);
     } else {
       alert('AAAAAAAA')
     }
@@ -157,12 +168,13 @@ const mapStateToProps = (state) => {
     boardState: state.state.boardState,
     neighbors: state.state.neighbors,
     selectedHex: state.state.selectedHex,
-    opponentControlled: state.state.opponentControlled
+    opponentControlled: state.state.opponentControlled,
+    gameIndex: state.state.gameIndex
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits }, dispatch)
+  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits, setGameIndex }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);

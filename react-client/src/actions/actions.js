@@ -37,3 +37,10 @@ export const drawBoard = (boardState) => (
     payload: boardState
   }
 )
+
+export const setGameIndex = (gameIndex) => (
+  {
+    type: 'SET-GAME-INDEX',
+    payload: gameIndex
+  }
+)
