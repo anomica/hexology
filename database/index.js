@@ -7,8 +7,7 @@ const knex = require('knex')({
 });
 
 // Adds users to db if does not exist
-const addUser = async (req, username, email, password) => {
-  console.log('inside add user');
+const addUser = async (username, email, password) => {
   const existingUser = await knex.select()
     .from('users')
     .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
@@ -32,6 +31,10 @@ const checkUserCreds = (username) => {
   return knex.select()
     .from('users')
     .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
+}
+
+const findUserById = (id) => {
+  return knex('users').where('user_id', id);
 }
 
 // Create game
@@ -105,5 +108,6 @@ module.exports = {
   gameComplete,
   updateHexUser,
   increaseUnits,
-  decreaseUnits
+  decreaseUnits,
+  findUserById
 }

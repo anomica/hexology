@@ -69,23 +69,6 @@ class Board extends React.Component {
     });
   }
 
-
-  // createBoard(rows, cols) {
-  //   axios.post('/newBoard', {
-  //     numRows: rows,
-  //     numCols: cols
-  //   })
-  //     .then((data) => {
-  //       this.props.drawBoard(data.data.board);
-  //       this.props.setGameIndex(data.data.gameIndex);
-  //       this.props.selectHex({});
-  //       this.props.highlightNeighbors([]);
-  //     })
-  //     .catch(err => {
-  //       console.log('error receiving new board:', err);
-  //     });
-  // }
-
   sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {
     const move = {
       updatedOrigin: updatedOrigin,
@@ -98,31 +81,6 @@ class Board extends React.Component {
       socketId: this.state.socket.id
     }
     this.state.socket.emit('move', move);
-    // axios.patch('/move', {
-    //   updatedOrigin: updatedOrigin,
-    //   originIndex: originIndex,
-    //   updatedTarget: updatedTarget,
-    //   targetIndex: targetIndex,
-    //   gameIndex: this.props.gameIndex
-    // })
-    // .then(data => {
-    //   if (data.status === 201) {
-    //     this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex);
-    //     this.nextTurn();
-    //   } else if (data.status === 202) {
-    //     alert('Player One Wins!');
-    //     this.createBoard(5, 4);
-    //   } else if (data.status === 204) {
-    //     alert('Player Two Wins!');
-    //     this.createBoard(5, 4);
-    //   } else {
-    //     alert('CHEATING DETECTED');
-    //   }
-    // })
-    // .catch(err => {
-    //   alert(err);
-    //   console.error(err);
-    // });
   }
 
   handleClick(e, hex) {
@@ -195,7 +153,7 @@ class Board extends React.Component {
     return (
       <div className="Board">
         <HexGrid height={800} viewBox="-50 -50 150 150">
-          <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -10, y: -15 }}>
+          <Layout size={{ x: 13, y: 13 }} flat={false} spacing={1.2} origin={{ x: -15, y: -25 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {
               let targetClass = '';
               if (hex.player !== null && hex.player !== this.props.userPlayer) {
