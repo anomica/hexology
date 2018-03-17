@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, drawBoard, setGameIndex } from '../../src/actions/actions.js';
+import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -44,34 +44,33 @@ class Board extends React.Component {
       });
   }
 
-
   sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {
     axios.patch('/move', {
       updatedOrigin: updatedOrigin,
       originIndex: originIndex,
       updatedTarget: updatedTarget,
       targetIndex: targetIndex,
-      gameIndex: this.props.gameIndex
+      gameIndex: this.props.gameIndex,
+      currentPlayer: this.props.currentPlayer
     })
     .then(data => {
       if (data.status === 201) {
         this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex);
+        this.nextTurn();
       } else if (data.status === 202) {
         alert('Player One Wins!');
         this.createBoard(5, 4);
       } else if (data.status === 204) {
         alert('Player Two Wins!');
         this.createBoard(5, 4);
+      } else {
+        alert('CHEATING DETECTED');
       }
     })
     .catch(err => {
       alert(err);
       console.error(err);
     });
-  }
-
-  sendAttackRequest() {
-
   }
 
   handleClick(e, hex) {
@@ -83,7 +82,7 @@ class Board extends React.Component {
   }
 
   handleSelectClick(e, hex) {
-    if (hex.player === 'player1') {
+    if (hex.player === this.props.currentPlayer) {
       let neighbors = [];
       let targetCs = hex.coordinates;
       this.props.boardState.forEach(otherHex => {
@@ -114,7 +113,7 @@ class Board extends React.Component {
       let updatedTarget = {
         ...target,
         units: target.units += origin.units,
-        player: 'player1'
+        player: this.props.currentPlayer
       }
       let updatedOrigin = {
         ...origin,
@@ -127,19 +126,29 @@ class Board extends React.Component {
     }
   }
 
+  nextTurn() {
+    let currentPlayer = this.props.currentPlayer;
+    currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1';
+    this.props.switchPlayer(currentPlayer);
+    this.props.boardState.forEach(hex => {
+      if (hex.hasResource === true && hex.player === this.props.currentPlayer) {
+        this.props.reinforceHex(this.props.boardState.indexOf(hex));
+      }
+    })
+  }
+
   render() {
-    
     return (
       <div className="Board">
         <HexGrid height={800} viewBox="-50 -50 150 150">
-          <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -40, y: -15 }}>
+          <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -10, y: -15 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {
               let targetClass = '';
-              if (hex.player === 'player2') {
+              if (hex.player !== null && hex.player !== this.props.currentPlayer) {
                 targetClass += 'opponent';
               } else if (this.props.selectedHex.index === hex.index) {
                 targetClass += 'selected';
-              } else if (hex.player === 'player1') {
+              } else if (hex.player === this.props.currentPlayer) {
                 targetClass += 'friendly';
               } else if (this.props.neighbors.indexOf(hex.index) > -1) {
                 targetClass += 'neighbor';
@@ -170,13 +179,13 @@ const mapStateToProps = (state) => {
     boardState: state.state.boardState,
     neighbors: state.state.neighbors,
     selectedHex: state.state.selectedHex,
-    opponentControlled: state.state.opponentControlled,
-    gameIndex: state.state.gameIndex
+    gameIndex: state.state.gameIndex,
+    currentPlayer: state.state.currentPlayer
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits, setGameIndex }, dispatch)
+  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex, switchPlayer, setGameIndex }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);
