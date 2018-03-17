@@ -43,6 +43,24 @@ const reducers = (state = defaultState, action) => {
         selectedHex: {},
         neighbors: []
       }
+    case 'REINFORCE-HEX':
+      newBoardState = state.boardState.slice();
+      let hex = state.boardState[action.payload.hexIndex];
+      let reinforcedHex = {
+        ...hex,
+        units: hex.units += 10,
+        hasResource: false
+      }
+      newBoardState.splice(action.payload.hexIndex, 1, reinforcedHex);
+      return {
+        ...state,
+        boardState: newBoardState
+      }
+    case 'SWITCH-PLAYER':
+      return {
+        ...state,
+        currentPlayer: action.payload.currentPlayer
+      }
     default: return state;
   }
 }
