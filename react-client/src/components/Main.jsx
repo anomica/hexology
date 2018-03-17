@@ -15,7 +15,13 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
-    
+    axios.get('/persistUser')
+      .then(data => {
+        console.log('data from session:', data);
+      })
+      .catch(err => {
+        console.log('err from persistUser:', err);
+      })
   }
 
   render() {

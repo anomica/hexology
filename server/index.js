@@ -12,6 +12,7 @@ const server = http.createServer(app);
 var cors = require('cors');
 const socketIo = require("socket.io");
 const io = socketIo(server);
+
 // const http = require('http').Server(app);
 // require('../server/config/passport')(passport);
 app.use(session({
@@ -26,14 +27,38 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 app.use(cors())
 
-let games = {};
-
+// local Login Strategy
 const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
   res.status(401).end('You must log in to do that!');
 }
+
+app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
+  let response = {
+    email: req.body.email,
+    password: req.body.password
+  }
+  res.status(201).json(response);
+});
+
+app.post('/login', passport.authenticate('local-login'), (req, res) => {
+  res.status(201).json({
+    email: req.user.email,
+    sessionID: req.sessionID,
+    firstname: req.user.firstname,
+    lastname: req.user.lastname
+  });
+});
+
+app.post('/logout', isLoggedIn, function (req, res) {
+  req.logout();
+  res.clearCookie('connect.sid').status(200).redirect('/');
+});
+
+let games = {};
+
 
 const coordinateGenerator = (numRows, numCols) => { // creates an array of coordinates for hexes
   let j = 0;
