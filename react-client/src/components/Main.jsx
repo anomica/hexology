@@ -7,7 +7,6 @@ import axios from 'axios';
 const uuidv4 = require('uuid/v4');
 
 import SidebarLeft from './Sidebar.jsx';
-import Board from './Board.jsx';
 
 class Main extends React.Component {
   constructor(props) {
@@ -15,7 +14,7 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
-    
+
   }
 
   render() {
