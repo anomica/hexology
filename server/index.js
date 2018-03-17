@@ -155,7 +155,6 @@ const selectRoom = () => {
   }
   selected = openRooms[index];
   openRooms.splice(index, 1);
-  console.log('selected:', selected);
   return selected;
 }
 
@@ -179,11 +178,11 @@ setInterval(findOpenRooms, 1000);
 
 io.on('connection', socket => {
   console.log('User connected');
-  console.log('socket.id:', socket.id);
+  // console.log('socket.id:', socket.id);
   let room = selectRoom();
   if (room) {
     socket.join(room);
-    console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
+    // console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
     const board = gameInit(5, 4);
     let gameIndex = uuidv4();
     games[gameIndex] = board;
@@ -195,13 +194,12 @@ io.on('connection', socket => {
     io.to(room).emit('newGame', newGameBoard);
   } else {
     socket.join('*' + roomNum);
+    io.to(`*${roomNum}`).emit('newGame', 'Waiting on another player to join!');
     roomNum++;
-    io.to(room).emit('newGame', 'waiting for another player to join');
   }
-  
-  socket.on('move', data => {
-    console.log('move data:', data);
 
+  socket.on('move', data => {
+    moveUnits(data, socket);
   })
 
   socket.on('disconnect', () => {
@@ -224,14 +222,13 @@ app.post('/newBoard', (req, res) => {
   });
 });
 
-app.patch('/move', async (req, res, next) => {
+const moveUnits = async (data, socket) => {
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
-  let body = req.body;
-  let updatedOrigin = body.updatedOrigin;
-  let originIndex = body.originIndex;
-  let updatedTarget = body.updatedTarget;
-  let targetIndex = body.targetIndex;
-  let gameIndex = body.gameIndex;
+  let updatedOrigin = data.updatedOrigin;
+  let originIndex = data.originIndex;
+  let updatedTarget = data.updatedTarget;
+  let targetIndex = data.targetIndex;
+  let gameIndex = data.gameIndex;
   let board = games[gameIndex];
   let masterOrigin = board[originIndex];
   let masterTarget = board[targetIndex];
@@ -239,7 +236,9 @@ app.patch('/move', async (req, res, next) => {
   let masterTarCs = masterTarget.coordinates;
   let origCs = updatedOrigin.coordinates;
   let tarCs = updatedTarget.coordinates;
-  let currentPlayer = body.currentPlayer;
+  let currentPlayer = data.currentPlayer;
+  let room = data.room;
+  let socketId = data.socketId;
 
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget);
   if (legal) {
@@ -247,21 +246,42 @@ app.patch('/move', async (req, res, next) => {
     if (collision) {
       if (collision === 'friendly') {
         await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer);
-        res.status(201).end();
+        io.to(room).emit('move', move);
       } else {
         let winner = await resolveCombat(originIndex, targetIndex, gameIndex);
         winner === 'attacker' ?
-        res.status(202).end() :
-        res.status(204).end();
+        (() => {
+          io.to(socketId).emit('win');
+          socket.to(room).emit('lose');
+        })() :
+        (() => {
+          io.to(socketId).emit('lose');
+          socket.to(room).emit('win');
+        })();
+        const board = gameInit(5, 4);
+        gameIndex = uuidv4();
+        games[gameIndex] = board;
+        const newGameBoard = {
+          board: board,
+          gameIndex: gameIndex,
+          room: room
+        }
+        io.to(room).emit('newGame', newGameBoard);
       }
     } else {
       await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer);
-      res.status(201).end();
+      let move = {
+        originIndex: originIndex,
+        updatedOrigin: updatedOrigin,
+        targetIndex: targetIndex,
+        updatedTarget: updatedTarget
+      }
+      io.to(room).emit('move', move);
     }
   } else {
-    res.status(501).end();
+    io.to(room).emit('failure');
   }
-});
+};
 
 const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, cb) => {
   if (masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] &&
@@ -286,10 +306,11 @@ const checkForCollision = (originIndex, targetIndex, gameIndex) => {
   }
 }
 
-const updateHexes = (originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer) => {
+const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer) => {
   games[gameIndex][originIndex] = updatedOrigin;
   games[gameIndex][targetIndex] = updatedTarget; //// This is what will happen on an ordinary move
-  reinforceHexes(gameIndex, currentPlayer);
+  currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1';
+  await reinforceHexes(gameIndex, currentPlayer);
 }
 
 const resolveCombat = (originIndex, targetIndex, gameIndex) => {

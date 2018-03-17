@@ -7,6 +7,12 @@ const reducers = (state = defaultState, action) => {
         ...state,
         selectedHex: action.payload
       }
+    case 'SET-USER-PLAYER':
+      return {
+        ...state,
+        userPlayer: action.payload,
+        playerAssigned: true
+      }
     case 'DRAW-BOARD':
       return {
         ...state,
