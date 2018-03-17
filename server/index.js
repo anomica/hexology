@@ -12,6 +12,8 @@ const server = http.createServer(app);
 var cors = require('cors');
 const socketIo = require("socket.io");
 const io = socketIo(server);
+require('./auth-config.js')(passport);
+
 // const http = require('http').Server(app);
 // require('../server/config/passport')(passport);
 app.use(session({
@@ -26,14 +28,43 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 app.use(cors())
 
-let games = {};
-
+// local Login Strategy
 const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
   res.status(401).end('You must log in to do that!');
 }
+
+app.get('/persistUser', (req, res) => {
+  // console.log('req.session.passport.user:', req.session.passport.user);
+  // console.log('passport.user:', passport.user);
+  console.log('req.user:', req.user);
+  res.send(req.user);
+});
+
+app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
+  console.log('req.body', req.body);
+  console.log('req.user upon login:', req.user);
+  // let response = {
+  //   email: req.body.email,
+  //   password: req.body.password
+  // }
+  res.status(201).json(req.user);
+});
+
+app.post('/login', passport.authenticate('local-login'), (req, res) => {
+  console.log('req.user upon login:', req.user);
+  res.status(201).json(req.user);
+});
+
+app.post('/logout', isLoggedIn, function (req, res) {
+  req.logout();
+  res.clearCookie('connect.sid').status(200).redirect('/');
+});
+
+let games = {};
+
 
 const coordinateGenerator = (numRows, numCols) => { // creates an array of coordinates for hexes
   let j = 0;
