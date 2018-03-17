@@ -12,13 +12,6 @@ export const highlightNeighbors = (neighbors) => (
   }
 )
 
-export const highlightOpponents = (opponents) => (
-  {
-    type: 'HIGHLIGHT-OPPONENTS',
-    payload: opponents
-  }
-)
-
 export const moveUnits = (origin, originIndex, target, targetIndex) => (
   {
     type: 'MOVE-UNITS',
