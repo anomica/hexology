@@ -7,6 +7,7 @@ import Board from './Board.jsx';
 import Rules from './Rules.jsx';
 import Login from './Login.jsx';
 import DefaultState from '../store/DefaultState';
+import { Link } from 'react-router-dom';
 
 class SidebarLeft extends React.Component {
   constructor(props) {
@@ -18,18 +19,17 @@ class SidebarLeft extends React.Component {
       rules: false
     }
 
-    this.toggleVisibility = this.toggleVisibility.bind(this);
-    this.newBoard = this.newBoard.bind(this);
+    this.toggleMenu = this.toggleMenu.bind(this);
+    this.toggleRules = this.toggleRules.bind(this);
   }
 
   // toggles sidebar
-  toggleVisibility() {
+  toggleMenu() {
     this.setState({ visible: !this.state.visible });
   }
 
-  newBoard() {
-    console.log('props in newbord', this.props)
-    this.props.createBoard(5, 4);
+  toggleRules() {
+    this.setState({ rules: !this.state.rules });
   }
 
   render() {
@@ -54,7 +54,6 @@ class SidebarLeft extends React.Component {
                 <td style={{verticalAlign: 'top'}}>
                   <Segment>
                     <Header as='h3'>Welcome</Header>
-                    {rules()}
                   </Segment>
                 </td>
               </tr>
@@ -64,42 +63,57 @@ class SidebarLeft extends React.Component {
       }
     }
 
-    const rules = () => {
+    // Shows rules modal if rules menu item is clicked
+    const showRules = () => {
       if (this.state.rules) {
-        // console.log('inside this.state.rules')
         return (
-          <Rules toggle={this.state.rules}/>
+          <Rules open={this.state.rules} close={this.toggleRules} />
         )
       }
     }
 
     const { visible } = this.state;
+    
     return (
       <div>
-        <Button onClick={this.toggleVisibility}>Menu</Button>
+        <Button onClick={this.toggleMenu}>Menu</Button>
         <Sidebar.Pushable as={Segment}>
           <Sidebar as={Menu} animation='push' width='thin' visible={visible} icon='labeled' vertical inverted>
+
             <Menu.Item name='newgame' onClick={() => this.setState({ newGame: true })}
             disabled={this.state.newGame}>
               <Icon name='gamepad' />
               New Game
             </Menu.Item>
+
             <Menu.Item
               name='rules'
-              onClick={() => this.setState({ rules: true })}
+              onClick={() => this.setState({ rules: !this.state.rules })}
             >
               <Icon name='book' />
               Rules
             </Menu.Item>
-            <Menu.Item name='login' onClick={() => console.log('login clicked')}>
+
+            <Menu.Item
+              as={Link} to='/login'
+              name='login'
+            >
               <Icon name='user' />
               Login
+            </Menu.Item>
+
+            <Menu.Item
+              as={Link} to='/signup'
+              name='signup'
+            >
+              <Icon name='user' />
+              Signup
             </Menu.Item>
           </Sidebar>
 
           <Sidebar.Pusher>
             {showContent()}
-            {rules()}
+            {showRules()}
           </Sidebar.Pusher>
 
         </Sidebar.Pushable>

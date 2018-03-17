@@ -1,9 +1,21 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
 
 const Login = props => {
   return (
-    <h1>Login</h1>
+    <Modal defaultOpen={true} closeIcon>
+      <Modal.Header>Login</Modal.Header>
+      <Modal.Content>
+        <Modal.Description>
+        <Form>
+          <Form.Input label='Username' type='text' />
+          <Form.Input label='Password' type='password' />
+          <Button type='submit'>Submit</Button>
+        </Form>
+        </Modal.Description>
+      </Modal.Content>
+    </Modal>
   )
 }
 

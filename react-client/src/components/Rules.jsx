@@ -1,30 +1,22 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button, Header, Image, Modal } from 'semantic-ui-react';
+import { Button, Header, Image, Modal, Icon } from 'semantic-ui-react';
 
 const Rules = (props) => {
-  // console.log(props)
   return (
-    <Modal defaultOpen={true}>
+    <Modal open={props.open} onClose={props.close} closeIcon>
       <Modal.Header>Rules</Modal.Header>
       <Modal.Content>
         <Modal.Description>
-          <ol>
-            <li> Rule</li>
-            <li> Rule</li>
-            <li> Rule
-              <ol>
-                <li> Rule</li>
-                <li> Rule</li>
-                <li> Rule</li>
-              </ol>
-            </li>
-            <li> Rule</li>
-          </ol>
+        <ol>
+          <li> Rule</li>
+          <li> Rule</li>
+          <li> Rule</li>
+          <li> Rule</li>
+        </ol>
         </Modal.Description>
       </Modal.Content>
     </Modal>
-    
   )
 }
 

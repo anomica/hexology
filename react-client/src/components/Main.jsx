@@ -15,8 +15,7 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
-
-    // this.createBoard(5, 4);
+    
   }
 
   render() {
