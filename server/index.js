@@ -338,7 +338,8 @@ const reinforceHexes = (gameIndex, currentPlayer) => {
 app.get('/*', (req, res) => res.sendfile('/'));
 
 app.post('/users', (req, res) => {
-  db.addUser(req, req.body.username, req.body.email, req.body.password);
+  console.log('user req.body', req.body); // TODO: take out console log
+  db.addUser(req.body.username, req.body.email, req.body.password);
   res.end();
 })
 

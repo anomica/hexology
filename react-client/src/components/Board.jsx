@@ -25,7 +25,7 @@ class Board extends React.Component {
       socket: socketIOClient(this.state.endpoint)
     }, () => {
       this.state.socket.on('newGame', data => {
-        console.log('-------> data inside new game: ', data);
+        console.log('-------> data inside new game: ', data); // TODO: take out console log
         if (typeof data === 'string') {
           !this.props.playerAssigned && this.props.setUserPlayer('player1');
         } else {
@@ -38,18 +38,18 @@ class Board extends React.Component {
           })
           !this.props.playerAssigned && this.props.setUserPlayer('player2');
         }
-        console.log('-----> this props', this.props);
+        console.log('-----> this props', this.props); // TODO: take out console log
 
         let currentRoom = data.room.split('*').join('');
 
         axios.post('/createGame', {
-          gameIndex: 1, //  data.gameIndex TODO: update from hard coded
+          gameIndex: 1, //  data.gameIndex TODO: Update from hard coded
           room: Number(currentRoom),
           board: data.board,
           currentPlayer: this.props.currentPlayer,
           userPlayer: this.props.userPlayer
-          // playerOne: , // TODO: Need to add player 1: access player 1 through user obj
-          // playerTwo:  // TODO: Need to add player 2: access player 2 through user obj
+          // playerOne: , // TODO: Need to add player 1: Access player 1 through user obj
+          // playerTwo:  // TODO: Need to add player 2: Access player 2 through user obj
         });
 
       });
@@ -84,7 +84,7 @@ class Board extends React.Component {
   }
 
   handleClick(e, hex) {
-    console.log('handle hex click: ', hex);
+    console.log('handle hex click: ', hex); // TODO: take out console log
     if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) {
       this.handleSelectClick(e, hex);
     } else {
@@ -93,7 +93,7 @@ class Board extends React.Component {
   }
 
   handleSelectClick(e, hex) {
-    console.log('handle select click', hex);
+    console.log('handle select click', hex); //TODO: take out console log
     if (hex.player === this.props.currentPlayer && hex.player === this.props.userPlayer) {
       let neighbors = [];
       let targetCs = hex.coordinates;

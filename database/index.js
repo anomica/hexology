@@ -13,10 +13,10 @@ const addUser = async (username, email, password) => {
     .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
 
   if (existingUser.length) {
-    console.log('user exists');
+    console.log('user exists'); //TODO: take out console log
     return 'User already exists! :(';
   } else {
-    console.log('user added');
+    console.log('user added'); // TODO: take out console log
     return knex('users')
       .insert({
         username: username,
@@ -43,9 +43,9 @@ const createGame = async (game) => {
   return await knex('games')
     .insert({
       room_id: game.room,
-      player1: 1, // ?? game.playerOne TODO: update player 1 from hard coded
-      player2: 2, // ?? game.playerTwo TODO: update player 2 from hard coded
-      current_player: 1 // ?? currently game.currentPlayer is string TODO: update from hard coded
+      player1: 1, // game.playerOne TODO: update player 1 from hard coded
+      player2: 2, // game.playerTwo TODO: update player 2 from hard coded
+      current_player: 1 // currently game.currentPlayer is string TODO: update from hard coded
     });
     // await game.board.map(hex => {
     //   createHex(hex, game.gameIndex);
