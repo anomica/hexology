@@ -13,7 +13,7 @@ class Board extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      endpoint: "http://127.0.0.1:3000",
+      endpoint: "/",
       socket: null,
       room: null
     }

@@ -1,10 +1,18 @@
-const config = require('./config.js');
-const mysql = require('mysql');
+// const config = require('./config.js');
+// const mysql = require('mysql');
+const bcrypt = require('bcrypt');
+let knex;
 
-const knex = require('knex')({
-  client: 'mysql',
-  connection: config.mySql
-});
+// const knex = require('knex')({
+//   client: 'mysql',
+//   connection: config.mySql
+// });
+
+knex = require('knex')({
+  client: 'pg',
+  connection: process.env.DATABASE_URL,
+  ssl: true
+})
 
 // Adds users to db if does not exist
 const addUser = async (req, username, email, password) => {
@@ -45,7 +53,7 @@ const checkUserCreds = (username) => {
 //     .insert({
 //       game_id:
 //       player:
-//       units: 
+//       units:
 //       has_resource:
 //     })
 // }
