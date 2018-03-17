@@ -33,6 +33,7 @@ class Board extends React.Component {
         })
       });
       this.state.socket.on('move', (move) => {
+        console.log(move);
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex);
         this.nextTurn();
       })
@@ -69,7 +70,7 @@ class Board extends React.Component {
       currentPlayer: this.props.currentPlayer,
       room: this.state.room
     }
-    this.state.socket.emit('move', move);
+    this.state.socket.emit('move', move,);
     // axios.patch('/move', {
     //   updatedOrigin: updatedOrigin,
     //   originIndex: originIndex,

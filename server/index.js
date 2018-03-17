@@ -148,11 +148,11 @@ setInterval(findOpenRooms, 1000);
 
 io.on('connection', socket => {
   console.log('User connected');
-  console.log('socket.id:', socket.id);
+  // console.log('socket.id:', socket.id);
   let room = selectRoom();
   if (room) {
     socket.join(room);
-    console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
+    // console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
     const board = gameInit(5, 4);
     let gameIndex = uuidv4();
     games[gameIndex] = board;
@@ -169,7 +169,7 @@ io.on('connection', socket => {
   }
 
   socket.on('move', data => {
-    moveUnits(data, room);
+    moveUnits(data);
   })
 
   socket.on('disconnect', () => {
@@ -192,7 +192,7 @@ app.post('/newBoard', (req, res) => {
   });
 });
 
-const moveUnits = async (data, room) => {
+const moveUnits = async (data) => {
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
   let updatedOrigin = data.updatedOrigin;
   let originIndex = data.originIndex;
@@ -207,6 +207,7 @@ const moveUnits = async (data, room) => {
   let origCs = updatedOrigin.coordinates;
   let tarCs = updatedTarget.coordinates;
   let currentPlayer = data.currentPlayer;
+  let room = data.room;
 
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget);
   if (legal) {
@@ -233,7 +234,7 @@ const moveUnits = async (data, room) => {
       io.to(room).emit('move', move);
     }
   } else {
-    io.to(room).emit('failure');
+    // io.emit('failure');
   }
 };
 
