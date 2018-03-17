@@ -136,7 +136,6 @@ const findOpenRooms = () => { // finds an open room, right now just picking the 
   for (room in rooms) {
     let roomSize = Object.keys(rooms[room].sockets).length;
     if (roomSize === 1 && room[0] === '*') {
-      console.log('room:', room);
       if (!openRooms.includes(room)) {
         openRooms.push(room);
       }
@@ -149,18 +148,30 @@ setInterval(findOpenRooms, 1000);
 
 io.on('connection', socket => {
   console.log('User connected');
-  console.log('socket:', socket);
+  console.log('socket.id:', socket.id);
   let room = selectRoom();
   if (room) {
     socket.join(room);
     console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
-    let newGameBoard = gameInit(5, 4);
+    const board = gameInit(5, 4);
+    let gameIndex = uuidv4();
+    games[gameIndex] = board;
+    const newGameBoard = {
+      board: board,
+      gameIndex: gameIndex,
+      room: room
+    }
     io.to(room).emit('newGame', newGameBoard);
   } else {
     socket.join('*' + roomNum);
     roomNum++;
     io.to(room).emit('newGame', 'waiting for another player to join');
   }
+  
+  socket.on('move', data => {
+    console.log('move data:', data);
+
+  })
 
   socket.on('disconnect', () => {
     console.log('user disconnected')
