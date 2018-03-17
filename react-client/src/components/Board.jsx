@@ -7,6 +7,8 @@ import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
 
+import SidebarLeft from './Sidebar.jsx';
+
 class Board extends React.Component {
   constructor(props) {
     super(props);
@@ -126,11 +128,10 @@ class Board extends React.Component {
   }
 
   render() {
-    
     return (
       <div className="Board">
-        <HexGrid width={1200} height={800} viewBox="-50 -50 150 150">
-          <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -40, y: -15 }}>
+        <HexGrid height={800} viewBox="-50 -50 150 150">
+          <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -10, y: -15 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {
               let targetClass = '';
               if (hex.player === 'player2') {

@@ -42,7 +42,7 @@ const coordinateGenerator = (numRows, numCols) => { // creates an array of coord
 
   const rowGenerator = (rowIndex, lDiag, rDiag) => { // creates a row in the grid
     let iterations;
-    let row = []
+    let row = [];
     if (rowIndex % 2 === 0) {
       iterations = numCols;
     } else {
