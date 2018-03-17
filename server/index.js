@@ -164,8 +164,8 @@ io.on('connection', socket => {
     io.to(room).emit('newGame', newGameBoard);
   } else {
     socket.join('*' + roomNum);
+    io.to(`*${roomNum}`).emit('newGame', 'Waiting on another player to join!');
     roomNum++;
-    io.to(room).emit('newGame', 'waiting for another player to join');
   }
 
   socket.on('move', data => {
@@ -234,7 +234,7 @@ const moveUnits = async (data) => {
       io.to(room).emit('move', move);
     }
   } else {
-    // io.emit('failure');
+    io.to(room).emit('failure');
   }
 };
 

@@ -1,3 +1,10 @@
+export const setUserPlayer = (player) => (
+  {
+    type: 'SET-USER-PLAYER',
+    payload: player
+  }
+)
+
 export const selectHex = (hex) => (
   {
     type: 'SELECT-HEX',

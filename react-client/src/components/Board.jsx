@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
+import { setUserPlayer, selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -24,16 +24,20 @@ class Board extends React.Component {
       socket: socketIOClient(this.state.endpoint)
     }, () => {
       this.state.socket.on('newGame', data => {
-        this.props.drawBoard(data.board);
-        this.props.setGameIndex(data.gameIndex);
-        this.props.selectHex({});
-        this.props.highlightNeighbors([]);
-        this.setState({
-          room: data.room
-        })
+        if (typeof data === 'string') {
+          !this.props.playerAssigned && this.props.setUserPlayer('player1');
+        } else {
+          this.props.drawBoard(data.board);
+          this.props.setGameIndex(data.gameIndex);
+          this.props.selectHex({});
+          this.props.highlightNeighbors([]);
+          this.setState({
+            room: data.room
+          })
+          !this.props.playerAssigned && this.props.setUserPlayer('player2');
+        }
       });
       this.state.socket.on('move', (move) => {
-        console.log(move);
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex);
         this.nextTurn();
       })
@@ -138,7 +142,7 @@ class Board extends React.Component {
       let updatedTarget = {
         ...target,
         units: target.units += origin.units,
-        player: this.props.currentPlayer
+        player: this.props.userPlayer
       }
       let updatedOrigin = {
         ...origin,
@@ -169,11 +173,11 @@ class Board extends React.Component {
           <Layout size={{ x: 10, y: 10 }} flat={false} spacing={1.2} origin={{ x: -10, y: -15 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {
               let targetClass = '';
-              if (hex.player !== null && hex.player !== this.props.currentPlayer) {
+              if (hex.player !== null && hex.player !== this.props.userPlayer) {
                 targetClass += 'opponent';
               } else if (this.props.selectedHex.index === hex.index) {
                 targetClass += 'selected';
-              } else if (hex.player === this.props.currentPlayer) {
+              } else if (hex.player === this.props.userPlayer) {
                 targetClass += 'friendly';
               } else if (this.props.neighbors.indexOf(hex.index) > -1) {
                 targetClass += 'neighbor';
@@ -205,12 +209,14 @@ const mapStateToProps = (state) => {
     neighbors: state.state.neighbors,
     selectedHex: state.state.selectedHex,
     gameIndex: state.state.gameIndex,
-    currentPlayer: state.state.currentPlayer
+    currentPlayer: state.state.currentPlayer,
+    playerAssigned: state.state.playerAssigned,
+    userPlayer: state.state.userPlayer
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex, switchPlayer, setGameIndex }, dispatch)
+  return bindActionCreators({ setUserPlayer, selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex, switchPlayer, setGameIndex }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);

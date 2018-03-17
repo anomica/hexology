@@ -1,6 +1,8 @@
 const DefaultState = {
   playerOne: undefined,
   playerTwo: undefined,
+  playerAssigned: false,
+  userPlayer: undefined,
   currentPlayer: 'player1',
   gameIndex: null,
   selectedHex: {},
