@@ -192,14 +192,14 @@ app.patch('/move', async (req, res, next) => {
   let masterTarCs = masterTarget.coordinates;
   let origCs = updatedOrigin.coordinates;
   let tarCs = updatedTarget.coordinates;
+  let currentPlayer = body.currentPlayer;
 
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget);
   if (legal) {
-    res.status(201).end(); // JUST TEMPORARY , REMOVE WHEN ROUTE IS COMPLETE
     let collision = await checkForCollision(originIndex, targetIndex, gameIndex);
     if (collision) {
       if (collision === 'friendly') {
-        await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex);
+        await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer);
         res.status(201).end();
       } else {
         let winner = await resolveCombat(originIndex, targetIndex, gameIndex);
@@ -208,15 +208,13 @@ app.patch('/move', async (req, res, next) => {
         res.status(204).end();
       }
     } else {
-      await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex);
+      await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer);
       res.status(201).end();
     }
   } else {
     res.status(501).end();
   }
 });
-
-
 
 const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, cb) => {
   if (masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] &&
@@ -241,10 +239,10 @@ const checkForCollision = (originIndex, targetIndex, gameIndex) => {
   }
 }
 
-const updateHexes = (originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex) => {
+const updateHexes = (originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer) => {
   games[gameIndex][originIndex] = updatedOrigin;
-  games[gameIndex][targetIndex] = updatedTarget; //// THis is what will happen on an ordinary move
-
+  games[gameIndex][targetIndex] = updatedTarget; //// This is what will happen on an ordinary move
+  reinforceHexes(gameIndex, currentPlayer);
 }
 
 const resolveCombat = (originIndex, targetIndex, gameIndex) => {
@@ -259,6 +257,14 @@ const resolveCombat = (originIndex, targetIndex, gameIndex) => {
   } else {
     return 'defender';
   }
+}
+
+const reinforceHexes = (gameIndex, currentPlayer) => {
+  games[gameIndex].forEach(hex => {
+    if (hex.hasResource && hex.player === currentPlayer) {
+      hex.units += 10;
+    }
+  })
 }
 
 app.get('/*', (req, res) => res.sendfile('/'));
