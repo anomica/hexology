@@ -4,6 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
+import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
 
 import SidebarLeft from './Sidebar.jsx';
@@ -11,11 +12,21 @@ import SidebarLeft from './Sidebar.jsx';
 class Board extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      endpoint: "http://127.0.0.1:3000"
+    }
   }
 
   componentDidMount() {
+    const socket = socketIOClient(this.state.endpoint);
+    console.log('socket:', socket);
+    socket.on('newGame', message => {
+      console.log('message:', message);
+    });
+
     this.createBoard(5, 4);
   }
+
 
   createBoard(rows, cols) {
     axios.post('/newBoard', {
@@ -117,6 +128,7 @@ class Board extends React.Component {
   }
 
   render() {
+    
     return (
       <div className="Board">
         <HexGrid height={800} viewBox="-50 -50 150 150">
