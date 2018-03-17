@@ -54,6 +54,7 @@ class SidebarLeft extends React.Component {
                 <td style={{verticalAlign: 'top'}}>
                   <Segment>
                     <Header as='h3'>Welcome</Header>
+                    {rules()}
                   </Segment>
                 </td>
               </tr>
@@ -67,7 +68,7 @@ class SidebarLeft extends React.Component {
       if (this.state.rules) {
         // console.log('inside this.state.rules')
         return (
-          <Rules />
+          <Rules toggle={this.state.rules}/>
         )
       }
     }

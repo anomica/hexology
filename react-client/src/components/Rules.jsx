@@ -5,8 +5,7 @@ import { Button, Header, Image, Modal } from 'semantic-ui-react';
 const Rules = (props) => {
   // console.log(props)
   return (
-    <div>
-    <Modal>
+    <Modal defaultOpen={true}>
       <Modal.Header>Rules</Modal.Header>
       <Modal.Content>
         <Modal.Description>
@@ -25,7 +24,7 @@ const Rules = (props) => {
         </Modal.Description>
       </Modal.Content>
     </Modal>
-    </div>
+    
   )
 }
 
