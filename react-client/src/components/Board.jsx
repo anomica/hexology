@@ -111,7 +111,7 @@ class Board extends React.Component {
   }
 
   handleSelectClick(e, hex) {
-    if (hex.player === this.props.currentPlayer) {
+    if (hex.player === this.props.currentPlayer && hex.player === this.props.userPlayer) {
       let neighbors = [];
       let targetCs = hex.coordinates;
       this.props.boardState.forEach(otherHex => {
@@ -160,7 +160,7 @@ class Board extends React.Component {
     currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1';
     this.props.switchPlayer(currentPlayer);
     this.props.boardState.forEach(hex => {
-      if (hex.hasResource === true && hex.player === this.props.currentPlayer) {
+      if (hex.hasResource === true && hex.player && hex.player === currentPlayer) {
         this.props.reinforceHex(this.props.boardState.indexOf(hex));
       }
     })

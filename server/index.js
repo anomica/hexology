@@ -264,6 +264,7 @@ const checkForCollision = (originIndex, targetIndex, gameIndex) => {
 const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer) => {
   games[gameIndex][originIndex] = updatedOrigin;
   games[gameIndex][targetIndex] = updatedTarget; //// This is what will happen on an ordinary move
+  currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1';
   await reinforceHexes(gameIndex, currentPlayer);
 }
 
