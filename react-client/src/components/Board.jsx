@@ -13,64 +13,83 @@ class Board extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      endpoint: "http://127.0.0.1:3000"
+      endpoint: "http://127.0.0.1:3000",
+      socket: null,
+      room: null
     }
   }
 
   componentDidMount() {
-    const socket = socketIOClient(this.state.endpoint);
-    console.log('socket:', socket);
-    socket.on('newGame', message => {
-      console.log('message:', message);
-    });
-
-    this.createBoard(5, 4);
-  }
-
-
-  createBoard(rows, cols) {
-    axios.post('/newBoard', {
-      numRows: rows,
-      numCols: cols
-    })
-      .then((data) => {
-        this.props.drawBoard(data.data.board);
-        this.props.setGameIndex(data.data.gameIndex);
+    this.setState({
+      socket: socketIOClient(this.state.endpoint)
+    }, () => {
+      console.log('socket:', this.state.socket);
+      this.state.socket.on('newGame', data => {
+        console.log('data:', data);
+        this.props.drawBoard(data.board);
+        this.props.setGameIndex(data.gameIndex);
         this.props.selectHex({});
         this.props.highlightNeighbors([]);
-      })
-      .catch(err => {
-        console.log('error receiving new board:', err);
+        this.setState({
+          room: data.room
+        })
       });
+    });
   }
 
+
+  // createBoard(rows, cols) {
+  //   axios.post('/newBoard', {
+  //     numRows: rows,
+  //     numCols: cols
+  //   })
+  //     .then((data) => {
+  //       this.props.drawBoard(data.data.board);
+  //       this.props.setGameIndex(data.data.gameIndex);
+  //       this.props.selectHex({});
+  //       this.props.highlightNeighbors([]);
+  //     })
+  //     .catch(err => {
+  //       console.log('error receiving new board:', err);
+  //     });
+  // }
+
   sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {
-    axios.patch('/move', {
+    const move = {
       updatedOrigin: updatedOrigin,
       originIndex: originIndex,
       updatedTarget: updatedTarget,
       targetIndex: targetIndex,
       gameIndex: this.props.gameIndex,
-      currentPlayer: this.props.currentPlayer
-    })
-    .then(data => {
-      if (data.status === 201) {
-        this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex);
-        this.nextTurn();
-      } else if (data.status === 202) {
-        alert('Player One Wins!');
-        this.createBoard(5, 4);
-      } else if (data.status === 204) {
-        alert('Player Two Wins!');
-        this.createBoard(5, 4);
-      } else {
-        alert('CHEATING DETECTED');
-      }
-    })
-    .catch(err => {
-      alert(err);
-      console.error(err);
-    });
+      currentPlayer: this.props.currentPlayer,
+      room: this.state.room
+    }
+    this.state.socket.emit('move', move);
+    // axios.patch('/move', {
+    //   updatedOrigin: updatedOrigin,
+    //   originIndex: originIndex,
+    //   updatedTarget: updatedTarget,
+    //   targetIndex: targetIndex,
+    //   gameIndex: this.props.gameIndex
+    // })
+    // .then(data => {
+    //   if (data.status === 201) {
+    //     this.props.moveUnits(updatedOrigin, originIndex, updatedTarget, targetIndex);
+    //     this.nextTurn();
+    //   } else if (data.status === 202) {
+    //     alert('Player One Wins!');
+    //     this.createBoard(5, 4);
+    //   } else if (data.status === 204) {
+    //     alert('Player Two Wins!');
+    //     this.createBoard(5, 4);
+    //   } else {
+    //     alert('CHEATING DETECTED');
+    //   }
+    // })
+    // .catch(err => {
+    //   alert(err);
+    //   console.error(err);
+    // });
   }
 
   handleClick(e, hex) {

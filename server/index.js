@@ -124,6 +124,7 @@ const selectRoom = () => {
   }
   selected = openRooms[index];
   openRooms.splice(index, 1);
+  console.log('selected:', selected);
   return selected;
 }
 
@@ -146,16 +147,31 @@ const findOpenRooms = () => { // finds an open room, right now just picking the 
 setInterval(findOpenRooms, 1000);
 
 io.on('connection', socket => {
+  console.log('User connected');
+  console.log('socket.id:', socket.id);
   let room = selectRoom();
   if (room) {
     socket.join(room);
-    let newGameBoard = gameInit(5, 4);
+    console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
+    const board = gameInit(5, 4);
+    let gameIndex = uuidv4();
+    games[gameIndex] = board;
+    const newGameBoard = {
+      board: board,
+      gameIndex: gameIndex,
+      room: room
+    }
     io.to(room).emit('newGame', newGameBoard);
   } else {
     socket.join('*' + roomNum);
     roomNum++;
     io.to(room).emit('newGame', 'waiting for another player to join');
   }
+  
+  socket.on('move', data => {
+    console.log('move data:', data);
+
+  })
 
   socket.on('disconnect', () => {
     console.log('user disconnected')
