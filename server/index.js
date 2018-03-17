@@ -124,6 +124,7 @@ const selectRoom = () => {
   }
   selected = openRooms[index];
   openRooms.splice(index, 1);
+  console.log('selected:', selected);
   return selected;
 }
 
@@ -132,10 +133,7 @@ const findOpenRooms = () => { // finds an open room, right now just picking the 
   // may need to create an array of open rooms 
   // and have a setInterval to keep checking them and updating them so that no one gets stuck waiting too long
   var rooms = io.sockets.adapter.rooms;
-  console.log('rooms:', rooms);
   for (room in rooms) {
-    console.log('Rooms[room][sockets]', rooms[room].sockets);
-    console.log('Rooms[room][sockets].length', Object.keys(rooms[room].sockets).length);
     let roomSize = Object.keys(rooms[room].sockets).length;
     if (roomSize === 1 && room[0] === '*') {
       console.log('room:', room);
@@ -152,7 +150,6 @@ setInterval(findOpenRooms, 1000);
 io.on('connection', socket => {
   console.log('User connected');
   console.log('socket:', socket);
-  console.log('socketid:', socket.id);
   let room = selectRoom();
   if (room) {
     socket.join(room);
