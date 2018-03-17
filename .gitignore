@@ -12,6 +12,7 @@ react-client/dist/bundle.js
 
 # Database config
 database/config.js
+config.js
 $ Babel config
 .babelrc
 # Runtime data
