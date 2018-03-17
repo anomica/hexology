@@ -24,6 +24,24 @@ export const moveUnits = (origin, originIndex, target, targetIndex) => (
   }
 )
 
+export const reinforceHex = (hexIndex) => (
+  {
+    type: 'REINFORCE-HEX',
+    payload: {
+      hexIndex: hexIndex
+    }
+  }
+)
+
+export const switchPlayer = (currentPlayer) => (
+  {
+    type: 'SWITCH-PLAYER',
+    payload: {
+      currentPlayer: currentPlayer
+    }
+  }
+)
+
 export const drawBoard = (boardState) => (
   {
     type: 'DRAW-BOARD',
