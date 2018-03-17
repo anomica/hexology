@@ -23,9 +23,7 @@ class Board extends React.Component {
     this.setState({
       socket: socketIOClient(this.state.endpoint)
     }, () => {
-      console.log('socket:', this.state.socket);
       this.state.socket.on('newGame', data => {
-        console.log('data:', data);
         this.props.drawBoard(data.board);
         this.props.setGameIndex(data.gameIndex);
         this.props.selectHex({});
@@ -34,6 +32,13 @@ class Board extends React.Component {
           room: data.room
         })
       });
+      this.state.socket.on('move', (move) => {
+        this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex);
+        this.nextTurn();
+      })
+      this.state.socket.on('failure', () => {
+        alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
+      })
     });
   }
 

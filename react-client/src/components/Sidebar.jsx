@@ -40,7 +40,9 @@ class SidebarLeft extends React.Component {
             <Header as='h3'>New Game</Header>
             <Segment.Group horizontal>
               <Segment>Player 1 Stuff</Segment>
-              <Segment>Other Stuff?</Segment>
+              <Segment style={{textAlign: 'center'}}><strong>{this.props.currentPlayer ?
+                  `${this.props.currentPlayer}'s turn` :
+                  `Waiting for player 2 to join!`}</strong></Segment>
               <Segment>Player 2 Stuff</Segment>
             </Segment.Group>
             <Board />
@@ -73,7 +75,7 @@ class SidebarLeft extends React.Component {
     }
 
     const { visible } = this.state;
-    
+
     return (
       <div>
         <Button onClick={this.toggleMenu}>Menu</Button>
@@ -124,7 +126,7 @@ class SidebarLeft extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-
+    currentPlayer: state.state.currentPlayer
   }
 }
 
