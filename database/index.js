@@ -8,13 +8,16 @@ const knex = require('knex')({
 
 // Adds users to db if does not exist
 const addUser = async (req, username, email, password) => {
+  console.log('inside add user');
   const existingUser = await knex.select()
     .from('users')
     .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
 
   if (existingUser.length) {
+    console.log('user exists');
     return 'User already exists! :(';
   } else {
+    console.log('user added');
     return knex('users')
       .insert({
         username: username,
@@ -33,25 +36,25 @@ const checkUserCreds = (username) => {
 
 // Create game
 const createGame = async (game) => {
+  console.log('game', game)
   return await knex('games')
     .insert({
-      room_id: game.room_id,
-      player1: game.playerOne,
-      player2: game.playerTwo,
-      current_player: game.player1
+      room_id: game.room,
+      player1: 1, // ?? game.playerOne TODO: update player 1 from hard coded
+      player2: 2, // ?? game.playerTwo TODO: update player 2 from hard coded
+      current_player: 1 // ?? currently game.currentPlayer is string TODO: update from hard coded
     });
-  
-    await game.board.map(hex => {
-      createHex(hex);
-    })
+    // await game.board.map(hex => {
+    //   createHex(hex, game.gameIndex);
+    // })
 }
 
 // Create hex
-const createHex = async (hex) => {
+const createHex = async (hex, gameIndex) => {
   return await knex('hex')
     .insert({
-      game_id: /* need to get gameIndex */ gameIndex, // ?
-      player: hex.player,
+      game_id: gameIndex, // TODO: Check gameIndex matches one on server
+      player: 1, // TODO: Update from hardcoded to user ID from user obj
       units: hex.units,
       has_resource: hex.hasResource
     })

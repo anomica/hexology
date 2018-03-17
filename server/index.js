@@ -306,6 +306,18 @@ const reinforceHexes = (gameIndex, currentPlayer) => {
 
 app.get('/*', (req, res) => res.sendfile('/'));
 
+app.post('/users', (req, res) => {
+  db.addUser(req, req.body.username, req.body.email, req.body.password);
+  res.end();
+})
+
+app.post('/createGame', async (req, res) => {
+  await db.createGame(req.body);
+  await req.body.board.map(hex => {
+    db.createHex(hex, 1) // TODO: Update game ID from hard coded value
+  });
+  res.end();
+});
 
 // io.listen(process.env.PORT || 3000);
 server.listen(process.env.PORT || 3000, function () {
