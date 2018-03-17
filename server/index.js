@@ -124,7 +124,6 @@ const selectRoom = () => {
   }
   selected = openRooms[index];
   openRooms.splice(index, 1);
-  console.log('selected:', selected);
   return selected;
 }
 
@@ -169,7 +168,7 @@ io.on('connection', socket => {
   }
 
   socket.on('move', data => {
-    moveUnits(data);
+    moveUnits(data, socket);
   })
 
   socket.on('disconnect', () => {
@@ -192,7 +191,7 @@ app.post('/newBoard', (req, res) => {
   });
 });
 
-const moveUnits = async (data) => {
+const moveUnits = async (data, socket) => {
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
   let updatedOrigin = data.updatedOrigin;
   let originIndex = data.originIndex;
@@ -208,6 +207,7 @@ const moveUnits = async (data) => {
   let tarCs = updatedTarget.coordinates;
   let currentPlayer = data.currentPlayer;
   let room = data.room;
+  let socketId = data.socketId;
 
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget);
   if (legal) {
@@ -215,13 +215,27 @@ const moveUnits = async (data) => {
     if (collision) {
       if (collision === 'friendly') {
         await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer);
-        // res.status(201).end();
+        io.to(room).emit('move', move);
       } else {
         let winner = await resolveCombat(originIndex, targetIndex, gameIndex);
-        winner === 'attacker'
-        // ?
-        // res.status(202).end() :
-        // res.status(204).end();
+        winner === 'attacker' ?
+        (() => {
+          io.to(socketId).emit('win');
+          socket.to(room).emit('lose');
+        })() :
+        (() => {
+          io.to(socketId).emit('lose');
+          socket.to(room).emit('win');
+        })();
+        const board = gameInit(5, 4);
+        gameIndex = uuidv4();
+        games[gameIndex] = board;
+        const newGameBoard = {
+          board: board,
+          gameIndex: gameIndex,
+          room: room
+        }
+        io.to(room).emit('newGame', newGameBoard);
       }
     } else {
       await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer);

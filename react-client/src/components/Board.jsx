@@ -41,6 +41,12 @@ class Board extends React.Component {
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex);
         this.nextTurn();
       })
+      this.state.socket.on('win', () => {
+        alert('You win!');
+      })
+      this.state.socket.on('lose', () => {
+        alert('You lose!');
+      })
       this.state.socket.on('failure', () => {
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       })
@@ -71,10 +77,11 @@ class Board extends React.Component {
       updatedTarget: updatedTarget,
       targetIndex: targetIndex,
       gameIndex: this.props.gameIndex,
+      room: this.state.room,
       currentPlayer: this.props.currentPlayer,
-      room: this.state.room
+      socketId: this.state.socket.id
     }
-    this.state.socket.emit('move', move,);
+    this.state.socket.emit('move', move);
     // axios.patch('/move', {
     //   updatedOrigin: updatedOrigin,
     //   originIndex: originIndex,
