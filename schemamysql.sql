@@ -20,7 +20,6 @@ DROP TABLE IF EXISTS games;
 
 CREATE TABLE games (
   game_id INT NOT NULL AUTO_INCREMENT,
-  game_index VARCHAR(60) NOT NULL,
   room_id INT NOT NULL,
   player1 INT NOT NULL,
   player2 INT NOT NULL,
