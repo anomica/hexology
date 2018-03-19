@@ -92,15 +92,58 @@ const reducers = (state = defaultState, action) => {
         }
       }
     case 'SWORDSMEN':
-      let playerResources;
+      let playerResources, hexIndex;
       action.payload.player === 'player1' ?
       playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      newBoardState = state.boardState.slice();
+      newBoardState.forEach(hex => {
+        if (hex.player === action.payload.player) {
+          hex.swordsmen += 10;
+        }
+      })
       return {
         ...state,
+        boardState: newBoardState,
         [playerResources]: {
           ...state[playerResources],
           gold: state[playerResources].gold -= 10,
           metal: state[playerResources].metal -= 10
+        }
+      }
+    case 'ARCHERS':
+      action.payload.player === 'player1' ?
+      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      newBoardState = state.boardState.slice();
+      newBoardState.forEach(hex => {
+        if (hex.player === action.payload.player) {
+          hex.archers += 10;
+        }
+      })
+      return {
+        ...state,
+        boardState: newBoardState,
+        [playerResources]: {
+          ...state[playerResources],
+          gold: state[playerResources].gold -= 10,
+          metal: state[playerResources].wood -= 20
+        }
+      }
+    case 'KNIGHTS':
+      action.payload.player === 'player1' ?
+      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      newBoardState = state.boardState.slice();
+      newBoardState.forEach(hex => {
+        if (hex.player === action.payload.player) {
+          hex.knights += 10;
+        }
+      })
+      return {
+        ...state,
+        boardState: newBoardState,
+        [playerResources]: {
+          gold: state[playerResources].gold -= 20,
+          metal: state[playerResources].metal -= 20,
+          wood: state[playerResources].wood -= 20
         }
       }
     case 'SWITCH-PLAYER':

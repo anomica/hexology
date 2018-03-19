@@ -66,7 +66,7 @@ class UnitShop extends React.Component {
           <Popup.Header>Spend your resources on new units!</Popup.Header>
         </Popup>
 
-        <Modal open={this.state.open} className={'unitShop'} size={'mini'}
+        <Modal open={this.state.open} className={'unitShop'} size={'small'}
           style={{textAlign: 'center'}} closeIcon onClose={this.close.bind(this)}>
           <Modal.Header>Unit Shop</Modal.Header>
           <Modal.Content>
