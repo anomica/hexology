@@ -39,11 +39,35 @@ class SidebarLeft extends React.Component {
           <Segment>
             <Header as='h3'>New Game</Header>
             <Segment.Group horizontal>
-              <Segment>Player 1 Stuff</Segment>
-              <Segment style={{textAlign: 'center'}}><strong>{this.props.currentPlayer ?
+                {this.props.playerOneResources.hasOwnProperty('wood') ?
+                  <Segment>
+                    <strong>Player One Resources</strong>
+                    <li>
+                      <ul>Gold: {this.props.playerOneResources.gold}</ul>
+                      <ul>Wood: {this.props.playerOneResources.wood}</ul>
+                      <ul>Metal: {this.props.playerOneResources.metal}</ul>
+                    </li>
+                </Segment> :
+                <Segment>
+                  <strong>Player One has joined!</strong>
+                </Segment>
+                }
+              <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources.hasOwnProperty('wood') ?
                   `${this.props.currentPlayer}'s turn` :
-                  `Waiting for player 2 to join!`}</strong></Segment>
-              <Segment>Player 2 Stuff</Segment>
+                  `Game will begin when both players have joined.`}</strong></Segment>
+                {this.props.playerTwoResources.hasOwnProperty('wood') ?
+                <Segment>
+                  <strong>Player Two Resources</strong>
+                  <li>
+                    <ul>Gold: {this.props.playerTwoResources.gold}</ul>
+                    <ul>Wood: {this.props.playerTwoResources.wood}</ul>
+                    <ul>Metal: {this.props.playerTwoResources.metal}</ul>
+                  </li>
+              </Segment> :
+              <Segment>
+                <strong>Waiting for player two to join...</strong>
+              </Segment>
+              }
             </Segment.Group>
             <Board />
           </Segment>
@@ -126,7 +150,9 @@ class SidebarLeft extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-    currentPlayer: state.state.currentPlayer
+    currentPlayer: state.state.currentPlayer,
+    playerOneResources: state.state.playerOneResources,
+    playerTwoResources: state.state.playerTwoResources
   }
 }
 
