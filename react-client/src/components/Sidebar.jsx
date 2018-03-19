@@ -39,9 +39,9 @@ class SidebarLeft extends React.Component {
           <Segment>
             <Header as='h3'>New Game</Header>
             <Segment.Group horizontal>
-                {this.props.playerOneResources.hasOwnProperty('wood') ?
+                {this.props.playerOneResources.hasOwnProperty('wood') ? // player resources starts as empty object before game init, so check for any resource
                   <Segment>
-                    <strong>Player One Resources</strong>
+                    <strong>Player One Resources</strong> // if game has started, display p1 resources
                     <ul>
                       <li>Gold: {this.props.playerOneResources.gold}</li>
                       <li>Wood: {this.props.playerOneResources.wood}</li>
@@ -49,10 +49,10 @@ class SidebarLeft extends React.Component {
                     </ul>
                 </Segment> :
                 <Segment>
-                  <strong>Player One has joined!</strong>
+                  <strong>Player One has joined!</strong> // otherwise, display generic message
                 </Segment>
                 }
-              <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources.hasOwnProperty('wood') ?
+              <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources.hasOwnProperty('wood') ? // if no p2, then game has not started
                   `${this.props.currentPlayer}'s turn` :
                   `Game will begin when both players have joined.`}</strong></Segment>
                 {this.props.playerTwoResources.hasOwnProperty('wood') ?
