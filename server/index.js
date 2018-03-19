@@ -197,7 +197,19 @@ io.on('connection', socket => {
     // console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
     const board = gameInit(5, 4);
     let gameIndex = uuidv4();
-    games[gameIndex] = board;
+    games[gameIndex] = {
+      board: board,
+      playerOneResources: {
+        gold: 0,
+        wood: 0,
+        metal: 0
+      },
+      playerTwoResources: {
+        gold: 0,
+        wood: 0,
+        metal: 0
+      }
+    };
     const newGameBoard = {
       board: board,
       gameIndex: gameIndex,
@@ -227,7 +239,19 @@ app.post('/newBoard', (req, res) => {
   games = {};  // ************************THIS IS JUST FOR DEVELOPMENT, IT MAKES IT SO WE DON'T GUM UP THE SERVER WITH A TON OF OBJECTS, IN REAL LIFE WE WON'T EVEN BE STORING GAMES ON THE SERVER MOST LIKELY
   const board = gameInit(req.body.numRows, req.body.numCols);
   let gameIndex = uuidv4();
-  games[gameIndex] = board;
+  games[gameIndex] = {
+    board: board,
+    playerOneResources: {
+      gold: 0,
+      wood: 0,
+      metal: 0
+    },
+    playerTwoResources: {
+      gold: 0,
+      wood: 0,
+      metal: 0
+    }
+  };
   res.status(201).json({
     board: board,
     gameIndex: gameIndex
@@ -241,7 +265,7 @@ const moveUnits = async (data, socket) => {
   let updatedTarget = data.updatedTarget;
   let targetIndex = data.targetIndex;
   let gameIndex = data.gameIndex;
-  let board = games[gameIndex];
+  let board = games[gameIndex].board;
   let masterOrigin = board[originIndex];
   let masterTarget = board[targetIndex];
   let masterOrigCs = masterOrigin.coordinates;
@@ -272,7 +296,19 @@ const moveUnits = async (data, socket) => {
         })();
         const board = gameInit(5, 4);
         gameIndex = uuidv4();
-        games[gameIndex] = board;
+        games[gameIndex] = {
+          board: board,
+          playerOneResources: {
+            gold: 0,
+            wood: 0,
+            metal: 0
+          },
+          playerTwoResources: {
+            gold: 0,
+            wood: 0,
+            metal: 0
+          }
+        };
         const newGameBoard = {
           board: board,
           gameIndex: gameIndex,
@@ -305,7 +341,7 @@ const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs,
 }
 
 const checkForCollision = (originIndex, targetIndex, gameIndex) => {
-  let game = games[gameIndex];
+  let game = games[gameIndex].board;
   let origin = game[originIndex];
   let target = game[targetIndex];
 
@@ -319,15 +355,15 @@ const checkForCollision = (originIndex, targetIndex, gameIndex) => {
 }
 
 const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer) => {
-  games[gameIndex][originIndex] = updatedOrigin;
-  games[gameIndex][targetIndex] = updatedTarget; //// This is what will happen on an ordinary move
+  games[gameIndex].board[originIndex] = updatedOrigin;
+  games[gameIndex].board[targetIndex] = updatedTarget; //// This is what will happen on an ordinary move
   currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1';
   await reinforceHexes(gameIndex, currentPlayer);
 }
 
 const resolveCombat = (originIndex, targetIndex, gameIndex) => {
-  let attacker = games[gameIndex][originIndex];
-  let defender = games[gameIndex][targetIndex];
+  let attacker = games[gameIndex].board[originIndex];
+  let defender = games[gameIndex].board[targetIndex];
 
   let attackerRoll = Math.floor(Math.random() * 101 * attacker.units + (attacker.units * 5)) - 100;
   let defenderRoll = Math.floor(Math.random() * 101 * defender.units + (defender.units * 5)) - 100;
@@ -340,13 +376,19 @@ const resolveCombat = (originIndex, targetIndex, gameIndex) => {
 }
 
 const reinforceHexes = (gameIndex, currentPlayer) => {
-  games[gameIndex].forEach(hex => {
-    if (hex.hasGold && hex.player === currentPlayer) {
-      hex.units += 10;
-    } else if (hex.hasWood && hex.player === currentPlayer) {
-      hex.units += 10;
-    } else if (hex.hasMetal && hex.player === currentPlayer) {
-      hex.units += 10;
+  let playerResources;
+  currentPlayer === 'player1' ?
+  playerResources = games[gameIndex].playerOneResources :
+  playerResources =  games[gameIndex].playerTwoResources;
+  games[gameIndex].board.forEach(hex => {
+    if (hex.player === currentPlayer) {
+      if (hex.hasGold) {
+        playerResources.gold += 10;
+      } else if (hex.hasWood) {
+        playerResources.wood += 10;
+      } else if (hex.hasMetal) {
+        playerResources.metal += 10;
+      }
     }
   })
 }
