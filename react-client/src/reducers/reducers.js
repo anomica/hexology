@@ -16,7 +16,17 @@ const reducers = (state = defaultState, action) => {
     case 'DRAW-BOARD':
       return {
         ...state,
-        boardState: action.payload
+        boardState: action.payload,
+        playerOneResources: {
+          gold: 0,
+          wood: 0,
+          metal: 0
+        },
+        playerTwoResources: {
+          gold: 0,
+          wood: 0,
+          metal: 0
+        }
       }
     case 'SET-GAME-INDEX':
       return {
@@ -52,15 +62,34 @@ const reducers = (state = defaultState, action) => {
     case 'REINFORCE-HEX':
       newBoardState = state.boardState.slice();
       let hex = state.boardState[action.payload.hexIndex];
+      let playerOne = state.playerOneResources;
+      let playerTwo = state.playerTwoResources;
+      let resource = action.payload.resourceType;
       let reinforcedHex = {
         ...hex,
-        units: hex.units += 10,
-        hasResource: false
+        hasGold: false,
+        hasWood: false,
+        hasMetal: false
       }
       newBoardState.splice(action.payload.hexIndex, 1, reinforcedHex);
-      return {
-        ...state,
-        boardState: newBoardState
+      if (state.currentPlayer === 'player1') {
+        return {
+          ...state,
+          boardState: newBoardState,
+          playerOneResources: {
+            ...playerOne,
+            [resource]: playerOne[resource] += 10
+          }
+        }
+      } else if (state.currentPlayer === 'player2') {
+        return {
+          ...state,
+          boardState: newBoardState,
+          playerTwoResources: {
+            ...playerTwo,
+            [resource]: playerTwo[resource] += 10
+          }
+        }
       }
     case 'SWITCH-PLAYER':
       return {
