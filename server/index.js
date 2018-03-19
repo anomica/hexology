@@ -343,6 +343,10 @@ const reinforceHexes = (gameIndex, currentPlayer) => {
   games[gameIndex].forEach(hex => {
     if (hex.hasGold && hex.player === currentPlayer) {
       hex.units += 10;
+    } else if (hex.hasWood && hex.player === currentPlayer) {
+      hex.units += 10;
+    } else if (hex.hasMetal && hex.player === currentPlayer) {
+      hex.units += 10;
     }
   })
 }

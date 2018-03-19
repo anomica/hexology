@@ -42,11 +42,11 @@ class SidebarLeft extends React.Component {
                 {this.props.playerOneResources.hasOwnProperty('wood') ?
                   <Segment>
                     <strong>Player One Resources</strong>
-                    <li>
-                      <ul>Gold: {this.props.playerOneResources.gold}</ul>
-                      <ul>Wood: {this.props.playerOneResources.wood}</ul>
-                      <ul>Metal: {this.props.playerOneResources.metal}</ul>
-                    </li>
+                    <ul>
+                      <li>Gold: {this.props.playerOneResources.gold}</li>
+                      <li>Wood: {this.props.playerOneResources.wood}</li>
+                      <li>Metal: {this.props.playerOneResources.metal}</li>
+                    </ul>
                 </Segment> :
                 <Segment>
                   <strong>Player One has joined!</strong>
@@ -58,11 +58,11 @@ class SidebarLeft extends React.Component {
                 {this.props.playerTwoResources.hasOwnProperty('wood') ?
                 <Segment>
                   <strong>Player Two Resources</strong>
-                  <li>
-                    <ul>Gold: {this.props.playerTwoResources.gold}</ul>
-                    <ul>Wood: {this.props.playerTwoResources.wood}</ul>
-                    <ul>Metal: {this.props.playerTwoResources.metal}</ul>
-                  </li>
+                  <ul>
+                    <li>Gold: {this.props.playerTwoResources.gold}</li>
+                    <li>Wood: {this.props.playerTwoResources.wood}</li>
+                    <li>Metal: {this.props.playerTwoResources.metal}</li>
+                  </ul>
               </Segment> :
               <Segment>
                 <strong>Waiting for player two to join...</strong>
