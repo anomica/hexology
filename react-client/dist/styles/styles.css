@@ -21,7 +21,7 @@ svg g:hover {
 svg g > text {
   fill: black;
   stroke-width: .1;
-  font-size: 6px;
+  font-size: 5px;
   font-family: serif;
 }
 
@@ -31,6 +31,10 @@ g.friendly > g > polygon {
 
 g.selected > g > polygon {
   fill: #00ffff6e;
+}
+
+g.neighbor > g >text {
+  cursor: url(https://png.icons8.com/ios/50/000000/armored-boot-filled.png), auto;
 }
 
 g.neighbor > g > polygon {

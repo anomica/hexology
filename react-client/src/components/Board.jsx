@@ -106,12 +106,16 @@ class Board extends React.Component {
 
       let updatedTarget = {
         ...target,
-        units: target.units += origin.units,
+        swordsmen: target.swordsmen += origin.swordsmen,
+        archers: target.archers += origin.archers,
+        knights: target.knights += origin.knights,
         player: this.props.userPlayer
       }
       let updatedOrigin = {
         ...origin,
-        units: 0,
+        swordsmen: 0,
+        archers: 0,
+        knights: 0,
         player: null
       }
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex);
@@ -167,7 +171,10 @@ class Board extends React.Component {
                 r={hex.coordinates[1]}
                 s={hex.coordinates[2]}>
                 <Text>
-                  {hex.units.toString()}
+                  {/*<img src="https://png.icons8.com/metro/50/000000/sword.png"/>*/}
+                  {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
+                  {/*<img src="https://png.icons8.com/windows/50/000000/archer.png"/>*/}
+                  {/*<img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>*/}
                 </Text>
               </Hexagon>
             }): <div>Want to play with a friend? Send them this link: </div>}

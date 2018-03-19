@@ -1,7 +1,6 @@
 import defaultState from '../../src/store/DefaultState.js';
 
 const reducers = (state = defaultState, action) => {
-  console.log(action);
   switch(action.type) {
     case 'SELECT-HEX':
       return {

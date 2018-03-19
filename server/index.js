@@ -112,16 +112,18 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
     let hex = {};
     hex.coordinates = coordinates;
     hex.index = uuidv4();
+    hex.swordsmen = 0;
+    hex.archers = 0;
+    hex.knights = 0;
 
     if (index === 0) {
       hex.player = 'player1';
-      hex.units = 10;
+      hex.swordsmen = 10;
     } else if (index === hexes.length - 1) {
       hex.player = 'player2';
-      hex.units = 10;
+      hex.swordsmen = 10;
     } else {
       hex.player = null;
-      hex.units = 0;
     }
     if (isResourceHex() && index !== 0 && index !== hexes.length - 1) {
       let resourceType = Math.floor(Math.random() * 3) + 1;
@@ -365,8 +367,8 @@ const resolveCombat = (originIndex, targetIndex, gameIndex) => {
   let attacker = games[gameIndex].board[originIndex];
   let defender = games[gameIndex].board[targetIndex];
 
-  let attackerRoll = Math.floor(Math.random() * 101 * attacker.units + (attacker.units * 5)) - 100;
-  let defenderRoll = Math.floor(Math.random() * 101 * defender.units + (defender.units * 5)) - 100;
+  let attackerRoll = Math.floor(Math.random() * 101 * attacker.swordsmen + (attacker.swordsmen * 5)) - 100;
+  let defenderRoll = Math.floor(Math.random() * 101 * defender.swordsmen + (defender.swordsmen * 5)) - 100;
 
   if (attackerRoll >= defenderRoll) {
     return 'attacker';
