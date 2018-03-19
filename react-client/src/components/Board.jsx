@@ -139,7 +139,7 @@ class Board extends React.Component {
 
   render() {
     return (
-      <div className="Board">
+      <div className="Board flex">
         <HexGrid height={800} viewBox="-50 -50 150 150">
           <Layout size={{ x: 13, y: 13 }} flat={false} spacing={1.2} origin={{ x: -15, y: -25 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {

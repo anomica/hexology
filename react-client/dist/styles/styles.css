@@ -21,7 +21,7 @@ svg g:hover {
 svg g > text {
   fill: black;
   stroke-width: .1;
-  font-size: 8px;
+  font-size: 6px;
   font-family: serif;
 }
 
@@ -37,6 +37,10 @@ g.neighbor > g > polygon {
   fill: #00ff00;
 }
 
+g.neighbor > g > polygon:hover {
+  cursor: url(https://png.icons8.com/ios/50/000000/armored-boot-filled.png), auto;
+}
+
 g.opponent > g > polygon {
   fill: red;
 }
@@ -48,6 +52,18 @@ g.gold > g > polygon {
 g.wood > g > polygon {
   fill: green;
 }
+
 g.metal > g > polygon {
   fill: gray;
+}
+
+.flex {
+  display: flex;
+}
+
+
+.unitType {
+  clear: both;
+  padding: 15px !important;
+  margin: 10px !important;
 }

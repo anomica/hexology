@@ -6,6 +6,7 @@ import { withRouter } from 'react-router';
 import Board from './Board.jsx';
 import Rules from './Rules.jsx';
 import Login from './Login.jsx';
+import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
 
@@ -53,8 +54,12 @@ class SidebarLeft extends React.Component {
                 </Segment>
                 }
               <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources.hasOwnProperty('wood') ?
-                  `${this.props.currentPlayer}'s turn` :
-                  `Game will begin when both players have joined.`}</strong></Segment>
+                `${this.props.currentPlayer}'s turn` :
+                `Game will begin when both players have joined.`}</strong>
+              {this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
+                  <UnitShop>Shop</UnitShop> : null
+                }
+              </Segment>
                 {this.props.playerTwoResources.hasOwnProperty('wood') ?
                 <Segment>
                   <strong>Player Two Resources</strong>
@@ -151,6 +156,7 @@ class SidebarLeft extends React.Component {
 const mapStateToProps = (state) => {
   return {
     currentPlayer: state.state.currentPlayer,
+    userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources
   }
