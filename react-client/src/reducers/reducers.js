@@ -1,6 +1,7 @@
 import defaultState from '../../src/store/DefaultState.js';
 
 const reducers = (state = defaultState, action) => {
+  console.log(action);
   switch(action.type) {
     case 'SELECT-HEX':
       return {
@@ -18,14 +19,14 @@ const reducers = (state = defaultState, action) => {
         ...state,
         boardState: action.payload,
         playerOneResources: {
-          gold: 0,
-          wood: 0,
-          metal: 0
+          gold: 10,
+          wood: 10,
+          metal: 10
         },
         playerTwoResources: {
-          gold: 0,
-          wood: 0,
-          metal: 0
+          gold: 10,
+          wood: 10,
+          metal: 10
         }
       }
     case 'SET-GAME-INDEX':
@@ -89,6 +90,18 @@ const reducers = (state = defaultState, action) => {
             ...playerTwo,
             [resource]: playerTwo[resource] += 10
           }
+        }
+      }
+    case 'SWORDSMEN':
+      let playerResources;
+      action.payload.player === 'player1' ?
+      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      return {
+        ...state,
+        [playerResources]: {
+          ...state[playerResources],
+          gold: state[playerResources].gold -= 10,
+          metal: state[playerResources].metal -= 10
         }
       }
     case 'SWITCH-PLAYER':

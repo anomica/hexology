@@ -35,9 +35,6 @@ g.selected > g > polygon {
 
 g.neighbor > g > polygon {
   fill: #00ff00;
-}
-
-g.neighbor > g > polygon:hover {
   cursor: url(https://png.icons8.com/ios/50/000000/armored-boot-filled.png), auto;
 }
 
@@ -66,4 +63,5 @@ g.metal > g > polygon {
   clear: both;
   padding: 15px !important;
   margin: 10px !important;
+  cursor: pointer;
 }

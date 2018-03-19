@@ -56,7 +56,7 @@ class SidebarLeft extends React.Component {
               <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources.hasOwnProperty('wood') ?
                 `${this.props.currentPlayer}'s turn` :
                 `Game will begin when both players have joined.`}</strong>
-              {this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
+                {this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
                   <UnitShop>Shop</UnitShop> : null
                 }
               </Segment>
