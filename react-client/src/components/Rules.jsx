@@ -9,10 +9,11 @@ const Rules = (props) => {
       <Modal.Content>
         <Modal.Description>
         <ol>
-          <li> Rule</li>
-          <li> Rule</li>
-          <li> Rule</li>
-          <li> Rule</li>
+          <li>Players take turns moving around the board.</li>
+          <li>Your hexes are filled in blue; your opponent's are red.</li>
+          <li>To move, click on your hex. You will see all possible moves in green. Click on one of them to move.</li>
+          <li>If you begin a turn on a resource hex, marked with yellow, you will consume that resource and get 10 units.</li>
+          <li>When you encounter an opponent, the computer will roll some dice, add modifiers for unit quantity, and inform you of the winner!</li>
         </ol>
         </Modal.Description>
       </Modal.Content>
