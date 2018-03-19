@@ -124,9 +124,21 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
       hex.units = 0;
     }
     if (isResourceHex() && index !== 0 && index !== hexes.length - 1) {
-      hex.hasResource = true;
+      let resourceType = Math.floor(Math.random() * 3) + 1;
+      hex.hasGold = false;
+      hex.hasWood = false;
+      hex.hasMetal = false;
+      if (resourceType === 1) {
+        hex.hasGold = true;
+      } else if (resourceType === 2) {
+        hex.hasWood = true;
+      } else {
+        hex.hasMetal = true;
+      }
     } else {
-      hex.hasResource = false;
+      hex.hasGold = false;
+      hex.hasWood = false;
+      hex.hasMetal = false;
     }
     return hex;
   });
@@ -329,7 +341,7 @@ const resolveCombat = (originIndex, targetIndex, gameIndex) => {
 
 const reinforceHexes = (gameIndex, currentPlayer) => {
   games[gameIndex].forEach(hex => {
-    if (hex.hasResource && hex.player === currentPlayer) {
+    if (hex.hasGold && hex.player === currentPlayer) {
       hex.units += 10;
     }
   })

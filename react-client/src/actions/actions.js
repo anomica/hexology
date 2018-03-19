@@ -31,11 +31,12 @@ export const moveUnits = (origin, originIndex, target, targetIndex) => (
   }
 )
 
-export const reinforceHex = (hexIndex) => (
+export const reinforceHex = (hexIndex, resourceType) => (
   {
     type: 'REINFORCE-HEX',
     payload: {
-      hexIndex: hexIndex
+      hexIndex: hexIndex,
+      resourceType: resourceType
     }
   }
 )

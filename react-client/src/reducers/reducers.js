@@ -55,7 +55,9 @@ const reducers = (state = defaultState, action) => {
       let reinforcedHex = {
         ...hex,
         units: hex.units += 10,
-        hasResource: false
+        hasGold: false,
+        hasWood: false,
+        hasMetal: false
       }
       newBoardState.splice(action.payload.hexIndex, 1, reinforcedHex);
       return {

@@ -125,7 +125,7 @@ class Board extends React.Component {
     currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1';
     this.props.switchPlayer(currentPlayer);
     this.props.boardState.forEach(hex => {
-      if (hex.hasResource === true && hex.player && hex.player === currentPlayer) {
+      if (hex.hasGold === true && hex.player && hex.player === currentPlayer) {
         this.props.reinforceHex(this.props.boardState.indexOf(hex));
       }
     })
@@ -146,8 +146,12 @@ class Board extends React.Component {
                 targetClass += 'friendly';
               } else if (this.props.neighbors.indexOf(hex.index) > -1) {
                 targetClass += 'neighbor';
-              } else if (hex.hasResource) {
-                targetClass += 'resource';
+              } else if (hex.hasGold) {
+                targetClass += 'gold';
+              } else if (hex.hasWood) {
+                targetClass += 'wood';
+              } else if (hex.hasMetal) {
+                targetClass += 'metal';
               }
               return <Hexagon
                 key={uuidv4()}
