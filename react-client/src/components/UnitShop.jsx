@@ -20,6 +20,10 @@ class UnitShop extends React.Component {
     this.setState({ open: false });
   }
 
+  buyUnitsServerRequest(buy) {
+    return this.props.socket.emit('buy', buy);
+  }
+
   buySwordsmen() {
     let resources;
     this.props.userPlayer === 'player1' ?
@@ -27,7 +31,15 @@ class UnitShop extends React.Component {
     resources = this.props.playerTwoResources;
 
     if (resources.gold >= 10 && resources.metal >= 10) {
-      this.props.swordsmen(this.props.userPlayer);
+      this.buyUnitsServerRequest({
+        type: 'swordsmen',
+        player: this.props.userPlayer,
+        gameIndex: this.props.gameIndex,
+        socketId: this.props.socket.id
+      });
+      this.props.socket.on('swordsmen', () => {
+        this.props.swordsmen(this.props.userPlayer);
+      });
     } else {
       alert('Not enough resources!');
     }
@@ -40,7 +52,15 @@ class UnitShop extends React.Component {
     resources = this.props.playerTwoResources;
 
     if (resources.gold >= 10 && resources.wood >= 20) {
-      this.props.archers(this.props.userPlayer);
+      this.buyUnitsServerRequest({
+        type: 'archers',
+        player: this.props.userPlayer,
+        gameIndex: this.props.gameIndex,
+        socketId: this.props.socket.id
+      });
+      this.props.socket.on('archers', () => {
+        this.props.archers(this.props.userPlayer);
+      });
     } else {
       alert('Not enough resources!');
     }
@@ -53,7 +73,15 @@ class UnitShop extends React.Component {
     resources = this.props.playerTwoResources;
 
     if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
-      this.props.knights(this.props.userPlayer);
+      this.buyUnitsServerRequest({
+        type: 'knights',
+        player: this.props.userPlayer,
+        gameIndex: this.props.gameIndex,
+        socketId: this.props.socket.id
+      });
+      this.props.socket.on('knights', () => {
+        this.props.knights(this.props.userPlayer);
+      });
     } else {
       alert('Not enough resources!');
     }
@@ -96,10 +124,13 @@ class UnitShop extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
+    socket: state.state.socket,
+    room: state.state.room,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
     currentPlayer: state.state.currentPlayer,
-    userPlayer: state.state.userPlayer
+    userPlayer: state.state.userPlayer,
+    gameIndex: state.state.gameIndex
   }
 }
 
