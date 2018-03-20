@@ -59,7 +59,7 @@ class UnitShop extends React.Component {
         socketId: this.props.socket.id
       });
       this.props.socket.on('purchased', () => {
-        this.props.swordsmen(this.props.userPlayer);
+        this.props.archers(this.props.userPlayer);
       });
     } else {
       alert('Not enough resources!');
@@ -73,7 +73,15 @@ class UnitShop extends React.Component {
     resources = this.props.playerTwoResources;
 
     if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
-      this.props.knights(this.props.userPlayer);
+      this.buyUnitsServer({
+        type: 'knights',
+        player: this.props.userPlayer,
+        gameIndex: this.props.gameIndex,
+        socketId: this.props.socket.id
+      });
+      this.props.socket.on('purchased', () => {
+        this.props.knights(this.props.userPlayer);
+      });
     } else {
       alert('Not enough resources!');
     }

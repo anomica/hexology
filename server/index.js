@@ -430,7 +430,19 @@ const buyUnits = (type, player, gameIndex, socketId) => {
       io.to(socketId).emit('not enough resources');
     }
   } else if (type === 'knights') {
-
+    if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
+      resources.gold -= 20;
+      resources.wood -= 20;
+      resources.metal -= 20;
+      game.board.forEach(hex => {
+        if (hex.player === player) {
+          hex.knights += 10;
+        }
+      })
+      io.to(socketId).emit('purchased');
+    } else {
+      io.to(socketId).emit('not enough resources');
+    }
   }
 }
 
