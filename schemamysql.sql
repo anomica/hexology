@@ -24,14 +24,14 @@ CREATE TABLE games (
   room_id INT NOT NULL,
   player1 INT NOT NULL,
 
-  player1_gold INT DEFAULT 0,
-  player1_wood INT DEFAULT 0,
-  player1_metal INT DEFAULT 0,
+  p1_gold INT DEFAULT 10,
+  p1_wood INT DEFAULT 10,
+  p1_metal INT DEFAULT 10,
 
   player2 INT NOT NULL,
-  player2_gold INT DEFAULT 0,
-  player2_wood INT DEFAULT 0,
-  player2_metal INT DEFAULT 0,
+  p2_gold INT DEFAULT 10,
+  p2_wood INT DEFAULT 10,
+  p2_metal INT DEFAULT 10,
 
   current_player INT DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -52,7 +52,7 @@ CREATE TABLE hex (
   coordinate_1 INT NOT NULL,
   coordinate_2 INT NOT NULL,
   player INT DEFAULT NULL,
-  units INT NOT NULL,
+  -- units INT NOT NULL,
   -- has_resource BOOLEAN DEFAULT FALSE,
 
   has_gold BOOLEAN DEFAULT FALSE,

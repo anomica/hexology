@@ -45,32 +45,17 @@ const createGame = (room, board, gameIndex) => {
     .insert({
       game_index: gameIndex,
       room_id: roomNum,
-      player1: 1, // TODO: update player 1 from hard coded
-      player2: 2, // TODO: update player 2 from hard coded
+      player1: 1,
+      player2: 2,
       current_player: 1 // TODO: update from hard coded
-    })
+      // game_index: gameIndex, room_id: roomNum, player1: 1, player2: 2, current_player: 1 // TODO: update player 1 from hard coded // TODO: update player 2 from hard coded // TODO: update from hard coded
+      })
     .returning('game_id')
     .then(gameId => {
       board.map(hex => {
         createHex(hex, gameId);
       });
     });
-}
-
-const getGame = (room, gameIndex) => {
-  let roomNum = room.split('*').join('');
-  return knex('games')
-    .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
-}
-
-const getHexes = (room, gameIndex) => {
-  let roomNum = room.split('*').join('');
-
-  return knex
-    .column(knex.raw(`hex.*`))
-    .select()
-    .from(knex.raw(`hex, games`))
-    .where(knex.raw(`${roomNum} = games.room_id AND '${gameIndex}' = game_index AND hex.game_id = games.game_id`));
 }
 
 // Create hexes for a new game
@@ -81,10 +66,38 @@ const createHex = async (hex, gameId) => {
     .insert({
       hex_index: hex.index,
       game_id: gameId,
+      coordinate_0: hex.coordinates[0],
+      coordinate_1: hex.coordinates[1],
+      coordinate_2: hex.coordinates[2],
       player: playerOnHex,
-      units: hex.units,
-      has_resource: hex.hasResource
+      has_gold: hex.hasGold,
+      has_wood: hex.hasWood,
+      has_metal: hex.hasMetal,
+      swordsmen: hex.swordsmen,
+      archers: hex.archers,
+      knights: hex.knights
+      // hex_index: hex.index,
+      // game_id: gameId,
+      // player: playerOnHex,
+      // units: hex.units,
+      // has_resource: hex.hasResource
     })
+}
+
+const getGame = (room, gameIndex) => {
+  let roomNum = room.split('*').join('');
+  return knex('games')
+    .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+}
+
+const getGameBoard = (room, gameIndex) => {
+  let roomNum = room.split('*').join('');
+
+  return knex
+    .column(knex.raw(`hex.*`))
+    .select()
+    .from(knex.raw(`hex, games`))
+    .where(knex.raw(`${roomNum} = games.room_id AND '${gameIndex}' = game_index AND hex.game_id = games.game_id`));
 }
 
 const getOldGames = async () => {
@@ -176,5 +189,5 @@ module.exports = {
   getOldGames,
   deleteHex,
   getGame,
-  getHexes
+  getGameBoard
 };

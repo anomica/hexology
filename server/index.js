@@ -186,19 +186,16 @@ const findOpenRooms = () => { // finds an open room, right now just picking the 
 
 setInterval(findOpenRooms, 1000);
 
-io.on('connection', socket => { // initialize socket on user connection
+io.on('connection', async (socket) => { // initialize socket on user connection
   console.log('User connected');
   // console.log('socket.id:', socket.id);
-  let room = selectRoom();
+  let room = await selectRoom();
   if (room) { // if there is an existing room with one player,
     socket.join(room);
     // console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
-    const board = gameInit(5, 4);
+    const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
 
-    await db.createGame(room, board, gameIndex);
-
-    // let hexes = await db.getHexes(room, gameIndex);
     
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
@@ -218,6 +215,13 @@ io.on('connection', socket => { // initialize socket on user connection
       gameIndex: gameIndex,
       room: room
     }
+    
+    await db.createGame(room, board, gameIndex);
+    
+    let gameBoard = await db.getGameBoard(room, gameIndex);
+
+    // console.log('--------> hexes', currentHexes)
+
     io.to(room).emit('newGame', newGameBoard); // send game board to user
   } else { // otherwise
     socket.join('*' + roomNum); // create a new room
@@ -435,11 +439,11 @@ app.get('/*', (req, res) => res.sendfile('/'));
 
 // //////////////////////////////////////////////////
 // // TODO: Take out this section
-// app.post('/users', (req, res) => {
-//   console.log('user req.body', req.body); // TODO: take out console log
-//   db.addUser(req.body.username, req.body.email, req.body.password);
-//   res.end();
-// })
+app.post('/users', (req, res) => {
+  console.log('user req.body', req.body); // TODO: take out console log
+  db.addUser(req.body.username, req.body.email, req.body.password);
+  res.end();
+})
 // //////////////////////////////////////////////////
 
 /***************************** Creates game *****************************/
