@@ -20,8 +20,7 @@ class Board extends React.Component {
       open: false,
       tempSwordsman: null,
       tempArchers: null,
-      tempKnights: null,
-      isValid: false
+      tempKnights: null
     }
   }
 
@@ -70,21 +69,10 @@ class Board extends React.Component {
         tempSwordsman: 0
       })
     }
-    console.log('this.props.selectedHex:', this.props.selectedHex);
     let hex = this.props.selectedHex;
-    if (hex.swordsmen < this.state.tempSwordsman) {
+    if (hex.swordsmen < this.state.tempSwordsman || hex.archers < this.state.tempArchers || hex.knights < this.state.tempKnights) {
       resetState();
-      alert('you must enter a lower number than your current swordsman')
-      return false;
-    }
-    if (hex.archers < this.state.tempArchers) {
-      resetState();
-      alert('you must enter a lower number than your current archers');
-      return false;
-    }
-    if (hex.knights < this.state.tempKnights) {
-      resetState();
-      alert('you must enter a lower number than your current knights');
+      alert('you cannot enter a number higher of units than you currently have');
       return false;
     }
     this.setState({
@@ -126,7 +114,8 @@ class Board extends React.Component {
 
   handleMoveClick(e, hex) { // if move click,,
     // need to first check if player has units to move
-    if (this.props.neighbors.indexOf(hex.index) > -1) { // check if clicked hex is a neighbor
+    if (this.props.neighbors.indexOf(hex.index) > -1 && (this.state.tempArchers > 0 || 
+      this.state.tempKnights > 0 || this.state.tempSwordsman > 0)) { // check if clicked hex is a neighbor
       let board = this.props.boardState;
       let origin = this.props.selectedHex;
       let originIndex = board.indexOf(origin); // grab index of hex in board state array for replacement in reducer
@@ -145,11 +134,12 @@ class Board extends React.Component {
         swordsmen: origin.swordsmen -= this.state.tempSwordsman,
         archers: origin.archers -= this.state.tempArchers,
         knights: origin.knights -= this.state.tempKnights,
-        player: null
       }
 
-      console.log('updatedTarget;', updatedTarget);
-      console.log('updatedOrigin:', updatedOrigin);
+      if (updatedOrigin.swordsmen === 0 && updatedOrigin.archers === 0 && updatedOrigin.knights === 0) {
+        updatedOrigin.player = null
+      }
+      
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex); // send information to be sent over socket
     } else { //  if selected hex is not a neighbor,
       alert('AAAAAAAA') // alert player they can't move there
@@ -239,26 +229,6 @@ class Board extends React.Component {
                 </Form.Group>
                 <Divider hidden />
               </Form>
-              {/* <Label color='blue' image className={'unitType'} onClick={this.buySwordsmen.bind(this)}>
-                <img src="https://png.icons8.com/metro/50/000000/sword.png" />
-                Move Swoardsman
-              </Label>
-              <Label color='green' image className={'unitType'} onClick={this.buyArchers.bind(this)}>
-                <img src="https://png.icons8.com/windows/50/000000/archer.png" />
-                Archer
-                <div class="ui input">
-                    <input type="text" placeholder="number...">
-                </div>
-                <Label.Detail>Cost: 10 gold, 20 wood</Label.Detail>
-              </Label>
-              <Label color='grey' image className={'unitType'} onClick={this.buyKnights.bind(this)}>
-                <img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
-                Knight
-                <div class="ui input">
-                      <input type="text" placeholder="number...">
-                </div>
-                <Label.Detail>Cost: 20 gold, 20 metal, 20 wood</Label.Detail>
-              </Label> */}
             </Modal.Description>
           </Modal.Content>
           <Modal.Actions>
