@@ -125,7 +125,7 @@ const reducers = (state = defaultState, action) => {
         [playerResources]: {
           ...state[playerResources],
           gold: state[playerResources].gold -= 10,
-          metal: state[playerResources].wood -= 20
+          wood: state[playerResources].wood -= 20
         }
       }
     case 'KNIGHTS':

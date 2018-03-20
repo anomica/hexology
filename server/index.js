@@ -367,8 +367,8 @@ const resolveCombat = (originIndex, targetIndex, gameIndex) => {
   let attacker = games[gameIndex].board[originIndex];
   let defender = games[gameIndex].board[targetIndex];
 
-  let attackerRoll = Math.floor(Math.random() * 101 * attacker.swordsmen + (attacker.swordsmen * 5)) - 100;
-  let defenderRoll = Math.floor(Math.random() * 101 * defender.swordsmen + (defender.swordsmen * 5)) - 100;
+  let attackerRoll = Math.floor(Math.random() * 10 + (attacker.swordsmen) + (attacker.archers * 2) + (attacker.knights * 4));
+  let defenderRoll = Math.floor(Math.random() * 10 + (attacker.swordsmen) + (attacker.archers * 2) + (attacker.knights * 4));
 
   if (attackerRoll >= defenderRoll) {
     return 'attacker';
