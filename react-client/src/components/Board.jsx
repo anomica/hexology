@@ -92,12 +92,16 @@ class Board extends React.Component {
 
       let updatedTarget = { // create copy of target hex
         ...target,
-        units: target.units += origin.units, // where users are combined if friendly *********** have to add logic to check if friendly
-        player: this.props.userPlayer // set hex player to player who moves in
+        swordsmen: target.swordsmen += origin.swordsmen,
+        archers: target.archers += origin.archers,
+        knights: target.knights += origin.knights,
+        player: this.props.userPlayer
       }
       let updatedOrigin = { // reinitialize hex they left
         ...origin,
-        units: 0,
+        swordsmen: 0,
+        archers: 0,
+        knights: 0,
         player: null
       }
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex); // send information to be sent over socket
@@ -139,7 +143,7 @@ class Board extends React.Component {
 
   render() {
     return (
-      <div className="Board">
+      <div className="Board flex">
         <HexGrid height={800} viewBox="-50 -50 150 150">
           <Layout size={{ x: 13, y: 13 }} flat={false} spacing={1.2} origin={{ x: -15, y: -25 }}>
             {this.props.boardState ? this.props.boardState.map(hex => {
@@ -167,7 +171,10 @@ class Board extends React.Component {
                 r={hex.coordinates[1]}
                 s={hex.coordinates[2]}>
                 <Text>
-                  {hex.units.toString()}
+                  {/*<img src="https://png.icons8.com/metro/50/000000/sword.png"/>*/}
+                  {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
+                  {/*<img src="https://png.icons8.com/windows/50/000000/archer.png"/>*/}
+                  {/*<img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>*/}
                 </Text>
               </Hexagon>
             }): <div>Want to play with a friend? Send them this link: </div>}

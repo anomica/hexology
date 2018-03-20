@@ -112,16 +112,18 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
     let hex = {};
     hex.coordinates = coordinates;
     hex.index = uuidv4();
+    hex.swordsmen = 0;
+    hex.archers = 0;
+    hex.knights = 0;
 
     if (index === 0) {
       hex.player = 'player1';
-      hex.units = 10;
+      hex.swordsmen = 10;
     } else if (index === hexes.length - 1) {
       hex.player = 'player2';
-      hex.units = 10;
+      hex.swordsmen = 10;
     } else {
       hex.player = null;
-      hex.units = 0;
     }
     if (isResourceHex() && index !== 0 && index !== hexes.length - 1) { // for resource hexes that are not starting hexes for either player,
       let resourceType = Math.floor(Math.random() * 3) + 1; // roll a d3
@@ -360,9 +362,11 @@ const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarge
 const resolveCombat = (originIndex, targetIndex, gameIndex) => { // if combat,
   let attacker = games[gameIndex].board[originIndex]; // get attacking hex
   let defender = games[gameIndex].board[targetIndex]; // and defending hex
+  console.log('Attacker: ', attacker.swordsmen, attacker.archers, attacker.knights)
+  console.log('Defender: ', defender.swordsmen, defender.archers, defender.knights)
 
-  let attackerRoll = Math.floor(Math.random() * 101 * attacker.units + (attacker.units * 5)) - 100; // roll dice as modified by number of units
-  let defenderRoll = Math.floor(Math.random() * 101 * defender.units + (defender.units * 5)) - 100;
+  let attackerRoll = Math.floor(Math.random() * 10 + (attacker.swordsmen) + (attacker.archers * 2) + (attacker.knights * 4));
+  let defenderRoll = Math.floor(Math.random() * 10 + (attacker.swordsmen) + (attacker.archers * 2) + (attacker.knights * 4));
 
   if (attackerRoll >= defenderRoll) { // and determine winner, tie goes to attacker
     return 'attacker';
@@ -380,13 +384,13 @@ const reinforceHexes = (gameIndex, currentPlayer) => {
     if (hex.player === currentPlayer) { // if hex is owned by current player,
       if (hex.hasGold) { // check if resource hex
         playerResources.gold += 10; // add resource to player
-        games[gameIndex.board][targetHex].hasGold = false; // and use up resources on hex
+        hex.hasGold = false; // and use up resources on hex
       } else if (hex.hasWood) {
         playerResources.wood += 10;
-        games[gameIndex.board][targetHex].hasWood = false; // and use up resources on hex
+        hex.hasWood = false; // and use up resources on hex
       } else if (hex.hasMetal) {
         playerResources.metal += 10;
-        games[gameIndex.board][targetHex].hasMetal = false; // and use up resources on hex
+        hex.hasMetal = false; // and use up resources on hex
       }
     }
   })

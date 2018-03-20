@@ -6,6 +6,7 @@ import { withRouter } from 'react-router';
 import Board from './Board.jsx';
 import Rules from './Rules.jsx';
 import Login from './Login.jsx';
+import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
 
@@ -39,9 +40,9 @@ class SidebarLeft extends React.Component {
           <Segment>
             <Header as='h3'>New Game</Header>
             <Segment.Group horizontal>
-                {this.props.playerOneResources.hasOwnProperty('wood') ? // player resources starts as empty object before game init, so check for any resource
+                {this.props.playerOneResources.hasOwnProperty('wood') ?
                   <Segment>
-                    <strong>Player One Resources</strong> // if game has started, display p1 resources
+                    <strong>Player One Resources</strong>
                     <ul>
                       <li>Gold: {this.props.playerOneResources.gold}</li>
                       <li>Wood: {this.props.playerOneResources.wood}</li>
@@ -49,12 +50,16 @@ class SidebarLeft extends React.Component {
                     </ul>
                 </Segment> :
                 <Segment>
-                  <strong>Player One has joined!</strong> // otherwise, display generic message
+                  <strong>Player One has joined!</strong>
                 </Segment>
                 }
-              <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources.hasOwnProperty('wood') ? // if no p2, then game has not started
-                  `${this.props.currentPlayer}'s turn` :
-                  `Game will begin when both players have joined.`}</strong></Segment>
+              <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources.hasOwnProperty('wood') ?
+                `${this.props.currentPlayer}'s turn` :
+                `Game will begin when both players have joined.`}</strong>
+                {this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
+                  <UnitShop>Shop</UnitShop> : null
+                }
+              </Segment>
                 {this.props.playerTwoResources.hasOwnProperty('wood') ?
                 <Segment>
                   <strong>Player Two Resources</strong>
@@ -151,6 +156,7 @@ class SidebarLeft extends React.Component {
 const mapStateToProps = (state) => {
   return {
     currentPlayer: state.state.currentPlayer,
+    userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources
   }

@@ -41,6 +41,33 @@ export const reinforceHex = (hexIndex, resourceType) => (
   }
 )
 
+export const swordsmen = (player) => (
+  {
+    type: 'SWORDSMEN',
+    payload: {
+      player: player
+    }
+  }
+)
+
+export const archers = (player) => (
+  {
+    type: 'ARCHERS',
+    payload: {
+      player: player
+    }
+  }
+)
+
+export const knights = (player) => (
+  {
+    type: 'KNIGHTS',
+    payload: {
+      player: player
+    }
+  }
+)
+
 export const switchPlayer = (currentPlayer) => (
   {
     type: 'SWITCH-PLAYER',

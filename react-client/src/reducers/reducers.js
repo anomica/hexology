@@ -17,15 +17,15 @@ const reducers = (state = defaultState, action) => {
       return {
         ...state,
         boardState: action.payload,
-        playerOneResources: { // used to track player resources during game (verified against server record)
-          gold: 0,
-          wood: 0,
-          metal: 0
+        playerOneResources: {
+          gold: 10,
+          wood: 10,
+          metal: 10
         },
         playerTwoResources: {
-          gold: 0,
-          wood: 0,
-          metal: 0
+          gold: 10,
+          wood: 10,
+          metal: 10
         }
       }
     case 'SET-GAME-INDEX':
@@ -91,7 +91,62 @@ const reducers = (state = defaultState, action) => {
           }
         }
       }
-    case 'SWITCH-PLAYER': // switch player between turns
+    case 'SWORDSMEN':
+      let playerResources, hexIndex;
+      action.payload.player === 'player1' ?
+      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      newBoardState = state.boardState.slice();
+      newBoardState.forEach(hex => {
+        if (hex.player === action.payload.player) {
+          hex.swordsmen += 10;
+        }
+      })
+      return {
+        ...state,
+        boardState: newBoardState,
+        [playerResources]: {
+          ...state[playerResources],
+          gold: state[playerResources].gold -= 10,
+          metal: state[playerResources].metal -= 10
+        }
+      }
+    case 'ARCHERS':
+      action.payload.player === 'player1' ?
+      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      newBoardState = state.boardState.slice();
+      newBoardState.forEach(hex => {
+        if (hex.player === action.payload.player) {
+          hex.archers += 10;
+        }
+      })
+      return {
+        ...state,
+        boardState: newBoardState,
+        [playerResources]: {
+          ...state[playerResources],
+          gold: state[playerResources].gold -= 10,
+          wood: state[playerResources].wood -= 20
+        }
+      }
+    case 'KNIGHTS':
+      action.payload.player === 'player1' ?
+      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      newBoardState = state.boardState.slice();
+      newBoardState.forEach(hex => {
+        if (hex.player === action.payload.player) {
+          hex.knights += 10;
+        }
+      })
+      return {
+        ...state,
+        boardState: newBoardState,
+        [playerResources]: {
+          gold: state[playerResources].gold -= 20,
+          metal: state[playerResources].metal -= 20,
+          wood: state[playerResources].wood -= 20
+        }
+      }
+    case 'SWITCH-PLAYER':
       return {
         ...state,
         currentPlayer: action.payload.currentPlayer
