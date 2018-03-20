@@ -1,3 +1,17 @@
+export const setSocket = (socket) => (
+  {
+    type: 'SET-SOCKET',
+    payload: socket
+  }
+)
+
+export const setRoom = (room) => (
+  {
+    type: 'SET-ROOM',
+    payload: room
+  }
+)
+
 export const setUserPlayer = (player) => (
   {
     type: 'SET-USER-PLAYER',

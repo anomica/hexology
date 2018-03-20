@@ -2,8 +2,8 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { setUserPlayer, selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import { Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
+import { setSocket, setRoom, setUserPlayer, selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -26,10 +26,10 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-    this.setState({
-      socket: socketIOClient(this.state.endpoint) // set socket connection
-    }, () => {
-      this.state.socket.on('newGame', data => {
+    (async () => {
+      let socket = await socketIOClient("http://127.0.0.1:3000");
+      this.props.setSocket(socket);
+      this.props.socket.on('newGame', data => {
         if (typeof data === 'string') { // server sends string if player is first player to join room
           !this.props.playerAssigned && this.props.setUserPlayer('player1'); // so for that client, they should be assigned to player 1
         } else {
@@ -37,26 +37,24 @@ class Board extends React.Component {
           this.props.setGameIndex(data.gameIndex); // if so, set game index
           this.props.selectHex({}); // initialize selected hex
           this.props.highlightNeighbors([]); // and neighbors
-          this.setState({
-            room: data.room
-          })
+          this.props.setRoom(data.room);
           !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
         }
       });
-      this.state.socket.on('move', (move) => { // when socket receives result of move request,
+      this.props.socket.on('move', (move) => { // when socket receives result of move request,
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
-      })
-      this.state.socket.on('win', () => {
+      });
+      this.props.socket.on('win', () => {
         alert('You win!');
-      })
-      this.state.socket.on('lose', () => {
+      });
+      this.props.socket.on('lose', () => {
         alert('You lose!');
-      })
-      this.state.socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
+      });
+      this.props.socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
-      })
-    });
+      });
+    })();
   }
 
   close() {
@@ -65,21 +63,32 @@ class Board extends React.Component {
 
   validateTroopAmounts() {
     // check current hex and make sure the ammounts arent greater
+    const resetState = () => {
+      this.setState({
+        tempArchers: 0,
+        tempKnights: 0,
+        tempSwordsman: 0
+      })
+    }
     console.log('this.props.selectedHex:', this.props.selectedHex);
     let hex = this.props.selectedHex;
     if (hex.swordsmen < this.state.tempSwordsman) {
+      resetState();
+      alert('you must enter a lower number than your current swordsman')
       return false;
     }
     if (hex.archers < this.state.tempArchers) {
+      resetState();
+      alert('you must enter a lower number than your current archers');
       return false;
     }
     if (hex.knights < this.state.tempKnights) {
+      resetState();
+      alert('you must enter a lower number than your current knights');
       return false;
     }
     this.setState({
       open: false
-    }, () => {
-      return true;
     })
   }
 
@@ -154,11 +163,11 @@ class Board extends React.Component {
       updatedTarget: updatedTarget,
       targetIndex: targetIndex,
       gameIndex: this.props.gameIndex,
-      room: this.state.room,
+      room: this.props.room,
       currentPlayer: this.props.currentPlayer,
-      socketId: this.state.socket.id // including socket id, to route personal message if necessary
+      socketId: this.props.socket.id // including socket id, to route personal message if necessary
     }
-    this.state.socket.emit('move', move); // and dispatch to socket
+    this.props.socket.emit('move', move); // and dispatch to socket
   }
 
   nextTurn() { // after move completes,
@@ -224,9 +233,9 @@ class Board extends React.Component {
             <Modal.Description>
               <Form size={'small'} key={'small'}>
                 <Form.Group widths='equal'>
-                  <Form.Field onChange={(e) => {this.setState({ tempSwordsman: e.target.value })}} label='Swordsman' control='input' placeholder='number' />
-                  <Form.Field onChange={(e) => {this.setState({ tempArchers: e.target.value })}} label='Archers' control='input' placeholder='number' />
-                  <Form.Field onChange={(e) => {this.setState({ tempKnights: e.target.value })}} label='Knights' control='input' placeholder='number' />
+                  <Form.Field onChange={(e) => {this.setState({ tempSwordsman: Number(e.target.value) })}} label='Swordsman' control='input' placeholder='number' />
+                  <Form.Field onChange={(e) => {this.setState({ tempArchers: Number(e.target.value) })}} label='Archers' control='input' placeholder='number' />
+                  <Form.Field onChange={(e) => {this.setState({ tempKnights: Number(e.target.value) })}} label='Knights' control='input' placeholder='number' />
                 </Form.Group>
                 <Divider hidden />
               </Form>
@@ -263,6 +272,8 @@ class Board extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
+    socket: state.state.socket,
+    room: state.state.room,
     boardState: state.state.boardState,
     neighbors: state.state.neighbors,
     selectedHex: state.state.selectedHex,
@@ -274,7 +285,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setUserPlayer, selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex, switchPlayer, setGameIndex }, dispatch)
+  return bindActionCreators({ setSocket, setRoom, setUserPlayer, selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex, switchPlayer, setGameIndex }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);
