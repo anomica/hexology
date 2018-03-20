@@ -39,13 +39,13 @@ const isLoggedIn = (req, res, next) => {
 app.get('/persistUser', (req, res) => {
   // console.log('req.session.passport.user:', req.session.passport.user);
   // console.log('passport.user:', passport.user);
-  console.log('req.user:', req.user);
+  // console.log('req.user:', req.user);
   res.send(req.user);
 });
 
 app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
-  console.log('req.body', req.body);
-  console.log('req.user upon login:', req.user);
+  // console.log('req.body', req.body);
+  // console.log('req.user upon login:', req.user);
   // let response = {
   //   email: req.body.email,
   //   password: req.body.password
@@ -198,14 +198,14 @@ io.on('connection', socket => { // initialize socket on user connection
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
       playerOneResources: { // p1 resources,
-        gold: 0,
-        wood: 0,
-        metal: 0
+        gold: 10,
+        wood: 10,
+        metal: 10
       },
       playerTwoResources: { // and p2 resources
-        gold: 0,
-        wood: 0,
-        metal: 0
+        gold: 10,
+        wood: 10,
+        metal: 10
       }
     };
     const newGameBoard = {
@@ -224,6 +224,10 @@ io.on('connection', socket => { // initialize socket on user connection
     moveUnits(data, socket); // pass move data and socket to function to assess move
   })
 
+  socket.on('buy', data => {
+    buyUnits(data.type, data.player, data.gameIndex, data.socketId);
+  })
+
   socket.on('disconnect', () => {
     console.log('user disconnected')
   })
@@ -240,14 +244,14 @@ app.post('/newBoard', (req, res) => {
   games[gameIndex] = {
     board: board,
     playerOneResources: {
-      gold: 0,
-      wood: 0,
-      metal: 0
+      gold: 10,
+      wood: 10,
+      metal: 10
     },
     playerTwoResources: {
-      gold: 0,
-      wood: 0,
-      metal: 0
+      gold: 10,
+      wood: 10,
+      metal: 10
     }
   };
   res.status(201).json({
@@ -297,14 +301,14 @@ const moveUnits = async (data, socket) => {
         games[gameIndex] = {
           board: board,
           playerOneResources: {
-            gold: 0,
-            wood: 0,
-            metal: 0
+            gold: 10,
+            wood: 10,
+            metal: 10
           },
           playerTwoResources: {
-            gold: 0,
-            wood: 0,
-            metal: 0
+            gold: 10,
+            wood: 10,
+            metal: 10
           }
         };
         const newGameBoard = {
@@ -394,6 +398,29 @@ const reinforceHexes = (gameIndex, currentPlayer) => {
       }
     }
   })
+}
+
+const buyUnits = (type, player, gameIndex, socketId) => {
+  let game = games[gameIndex], resources;
+  player === 'player1' ? resources = game.playerOneResources : resources = game.playerTwoResources;
+  if (type === 'swordsmen') {
+    if (resources.gold >= 10 && resources.metal >= 10) {
+      resources.gold -= 10;
+      resources.metal -= 10;
+      game.board.forEach(hex => {
+        if (hex.player === player) {
+          hex.swordsmen += 10;
+        }
+      })
+      io.to(socketId).emit('purchased');
+    } else {
+      io.to(socketId).emit('not enough resources');
+    }
+  } else if (type === 'archers') {
+
+  } else if (type === 'knights') {
+
+  }
 }
 
 app.get('/*', (req, res) => res.sendfile('/'));
