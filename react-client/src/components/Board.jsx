@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
+import { Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
 import { setSocket, setRoom, setUserPlayer, selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
@@ -15,7 +16,11 @@ class Board extends React.Component {
     this.state = {
       endpoint: "http://127.0.0.1:3000", // local host on local build, should be "/" for heroku deployment as sockets are hosted on root
       socket: null,
-      room: null
+      room: null,
+      open: false,
+      tempSwordsman: null,
+      tempArchers: null,
+      tempKnights: null
     }
   }
 
@@ -51,6 +56,30 @@ class Board extends React.Component {
     })();
   }
 
+  close() {
+    this.setState({ open: false });
+  }
+
+  validateTroopAmounts() {
+    // check current hex and make sure the ammounts arent greater
+    const resetState = () => {
+      this.setState({
+        tempArchers: 0,
+        tempKnights: 0,
+        tempSwordsman: 0
+      })
+    }
+    let hex = this.props.selectedHex;
+    if (hex.swordsmen < this.state.tempSwordsman || hex.archers < this.state.tempArchers || hex.knights < this.state.tempKnights) {
+      resetState();
+      alert('you cannot enter a number higher of units than you currently have');
+      return false;
+    }
+    this.setState({
+      open: false
+    })
+  }
+
   handleClick(e, hex) {
     if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) { // since selected hex is either empty object or hex, check if hex is selected and if click is on selected hex
       this.handleSelectClick(e, hex); // if either of these, reoute to select click function
@@ -76,32 +105,41 @@ class Board extends React.Component {
           neighbors.push(otherHex.index); // mark as neighor and put in neighbors array
         }
       })
-      this.props.highlightNeighbors(neighbors); // dispatch neighbors array to reducer
+      this.props.highlightNeighbors(neighbors); // dispatch neighbors array to reducer\
+      this.setState({
+        open: true
+      })
     }
   }
 
   handleMoveClick(e, hex) { // if move click,,
-    if (this.props.neighbors.indexOf(hex.index) > -1) { // check if clicked hex is a neighbor
+    // need to first check if player has units to move
+    if (this.props.neighbors.indexOf(hex.index) > -1 && (this.state.tempArchers > 0 || 
+      this.state.tempKnights > 0 || this.state.tempSwordsman > 0)) { // check if clicked hex is a neighbor
       let board = this.props.boardState;
       let origin = this.props.selectedHex;
       let originIndex = board.indexOf(origin); // grab index of hex in board state array for replacement in reducer
       let targetIndex = board.indexOf(hex); // same for target
       let target = board[targetIndex];
-
+    
       let updatedTarget = { // create copy of target hex
         ...target,
-        swordsmen: target.swordsmen += origin.swordsmen,
-        archers: target.archers += origin.archers,
-        knights: target.knights += origin.knights,
+        swordsmen: target.swordsmen += this.state.tempSwordsman,
+        archers: target.archers += this.state.tempArchers,
+        knights: target.knights += this.state.tempKnights,
         player: this.props.userPlayer
       }
       let updatedOrigin = { // reinitialize hex they left
         ...origin,
-        swordsmen: 0,
-        archers: 0,
-        knights: 0,
-        player: null
+        swordsmen: origin.swordsmen -= this.state.tempSwordsman,
+        archers: origin.archers -= this.state.tempArchers,
+        knights: origin.knights -= this.state.tempKnights,
       }
+
+      if (updatedOrigin.swordsmen === 0 && updatedOrigin.archers === 0 && updatedOrigin.knights === 0) {
+        updatedOrigin.player = null
+      }
+      
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex); // send information to be sent over socket
     } else { //  if selected hex is not a neighbor,
       alert('AAAAAAAA') // alert player they can't move there
@@ -178,6 +216,25 @@ class Board extends React.Component {
             }): <div>Want to play with a friend? Send them this link: </div>}
           </Layout>
         </HexGrid>
+        <Modal open={this.state.open} size={'small'}
+          style={{ textAlign: 'center' }} closeIcon onClose={this.close.bind(this)}>
+          <Modal.Header>Move Troops</Modal.Header>
+          <Modal.Content>
+            <Modal.Description>
+              <Form size={'small'} key={'small'}>
+                <Form.Group widths='equal'>
+                  <Form.Field onChange={(e) => {this.setState({ tempSwordsman: Number(e.target.value) })}} label='Swordsman' control='input' placeholder='number' />
+                  <Form.Field onChange={(e) => {this.setState({ tempArchers: Number(e.target.value) })}} label='Archers' control='input' placeholder='number' />
+                  <Form.Field onChange={(e) => {this.setState({ tempKnights: Number(e.target.value) })}} label='Knights' control='input' placeholder='number' />
+                </Form.Group>
+                <Divider hidden />
+              </Form>
+            </Modal.Description>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Submit</Button>
+          </Modal.Actions>
+        </Modal>
       </div>
     );
   }
