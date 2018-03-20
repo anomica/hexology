@@ -20,7 +20,7 @@ class UnitShop extends React.Component {
     this.setState({ open: false });
   }
 
-  buyUnitsServer(buy) {
+  buyUnitsServerRequest(buy) {
     return this.props.socket.emit('buy', buy);
   }
 
@@ -31,13 +31,13 @@ class UnitShop extends React.Component {
     resources = this.props.playerTwoResources;
 
     if (resources.gold >= 10 && resources.metal >= 10) {
-      this.buyUnitsServer({
+      this.buyUnitsServerRequest({
         type: 'swordsmen',
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
         socketId: this.props.socket.id
       });
-      this.props.socket.on('purchased', () => {
+      this.props.socket.on('swordsmen', () => {
         this.props.swordsmen(this.props.userPlayer);
       });
     } else {
@@ -52,13 +52,13 @@ class UnitShop extends React.Component {
     resources = this.props.playerTwoResources;
 
     if (resources.gold >= 10 && resources.wood >= 20) {
-      this.buyUnitsServer({
+      this.buyUnitsServerRequest({
         type: 'archers',
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
         socketId: this.props.socket.id
       });
-      this.props.socket.on('purchased', () => {
+      this.props.socket.on('archers', () => {
         this.props.archers(this.props.userPlayer);
       });
     } else {
@@ -73,13 +73,13 @@ class UnitShop extends React.Component {
     resources = this.props.playerTwoResources;
 
     if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
-      this.buyUnitsServer({
+      this.buyUnitsServerRequest({
         type: 'knights',
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
         socketId: this.props.socket.id
       });
-      this.props.socket.on('purchased', () => {
+      this.props.socket.on('knights', () => {
         this.props.knights(this.props.userPlayer);
       });
     } else {

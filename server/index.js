@@ -412,7 +412,7 @@ const buyUnits = (type, player, gameIndex, socketId) => {
           hex.swordsmen += 10;
         }
       })
-      io.to(socketId).emit('purchased');
+      io.to(socketId).emit('swordsmen');
     } else {
       io.to(socketId).emit('not enough resources');
     }
@@ -425,7 +425,7 @@ const buyUnits = (type, player, gameIndex, socketId) => {
           hex.archers += 10;
         }
       })
-      io.to(socketId).emit('purchased');
+      io.to(socketId).emit('archers');
     } else {
       io.to(socketId).emit('not enough resources');
     }
@@ -439,7 +439,7 @@ const buyUnits = (type, player, gameIndex, socketId) => {
           hex.knights += 10;
         }
       })
-      io.to(socketId).emit('purchased');
+      io.to(socketId).emit('knights');
     } else {
       io.to(socketId).emit('not enough resources');
     }
