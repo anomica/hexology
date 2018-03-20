@@ -31,11 +31,39 @@ export const moveUnits = (origin, originIndex, target, targetIndex) => (
   }
 )
 
-export const reinforceHex = (hexIndex) => (
+export const reinforceHex = (hexIndex, resourceType) => (
   {
     type: 'REINFORCE-HEX',
     payload: {
-      hexIndex: hexIndex
+      hexIndex: hexIndex,
+      resourceType: resourceType
+    }
+  }
+)
+
+export const swordsmen = (player) => (
+  {
+    type: 'SWORDSMEN',
+    payload: {
+      player: player
+    }
+  }
+)
+
+export const archers = (player) => (
+  {
+    type: 'ARCHERS',
+    payload: {
+      player: player
+    }
+  }
+)
+
+export const knights = (player) => (
+  {
+    type: 'KNIGHTS',
+    payload: {
+      player: player
     }
   }
 )

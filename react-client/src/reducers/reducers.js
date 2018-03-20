@@ -2,12 +2,12 @@ import defaultState from '../../src/store/DefaultState.js';
 
 const reducers = (state = defaultState, action) => {
   switch(action.type) {
-    case 'SELECT-HEX':
+    case 'SELECT-HEX': // select hex on user click
       return {
         ...state,
         selectedHex: action.payload
       }
-    case 'SET-USER-PLAYER':
+    case 'SET-USER-PLAYER': // part of game init, when users log in they get player 1 or player 2
       return {
         ...state,
         userPlayer: action.payload,
@@ -16,7 +16,17 @@ const reducers = (state = defaultState, action) => {
     case 'DRAW-BOARD':
       return {
         ...state,
-        boardState: action.payload
+        boardState: action.payload,
+        playerOneResources: {
+          gold: 10,
+          wood: 10,
+          metal: 10
+        },
+        playerTwoResources: {
+          gold: 10,
+          wood: 10,
+          metal: 10
+        }
       }
     case 'SET-GAME-INDEX':
       return {
@@ -25,42 +35,116 @@ const reducers = (state = defaultState, action) => {
       }
     case 'HIGHLIGHT-NEIGHBORS':
       let newState;
-      state.neighbors.length ?
+      state.neighbors.length ? // if there are neighbors selected,
       newState = {
         ...state,
-        neighbors: []
+        neighbors: [] // reinitialize the neighbors array
       } :
       newState = {
         ...state,
-        neighbors: [...action.payload]
+        neighbors: [...action.payload] // otherwise, add the current hex's users
       };
       return newState;
     case 'MOVE-UNITS':
-      let originIndex = action.payload.originIndex;
+      let originIndex = action.payload.originIndex; //  store indices of hexes in question for creating array copies
       let targetIndex = action.payload.targetIndex;
-      let origin = action.payload.origin;
+      let origin = action.payload.origin; // updated versions of hex moved from and hex moved to
       let target = action.payload.target;
-      let newBoardState = state.boardState.slice();
-      newBoardState.splice(originIndex, 1, origin);
+      let newBoardState = state.boardState.slice(); // create clean copy of board state
+      newBoardState.splice(originIndex, 1, origin); // replace each of origin and target with updated copies in array
       newBoardState.splice(targetIndex, 1, target);
       return {
         ...state,
-        boardState: newBoardState,
-        selectedHex: {},
-        neighbors: []
+        boardState: newBoardState, // insert board state with updated hexes
+        selectedHex: {}, // initialize selected hex
+        neighbors: [] // and neighbor array
       }
     case 'REINFORCE-HEX':
       newBoardState = state.boardState.slice();
       let hex = state.boardState[action.payload.hexIndex];
-      let reinforcedHex = {
+      let playerOne = state.playerOneResources;
+      let playerTwo = state.playerTwoResources;
+      let resource = action.payload.resourceType;
+      let reinforcedHex = { // since resource gets used up, its resource should be set to 0
         ...hex,
-        units: hex.units += 10,
-        hasResource: false
+        hasGold: false,
+        hasWood: false,
+        hasMetal: false
       }
-      newBoardState.splice(action.payload.hexIndex, 1, reinforcedHex);
+      newBoardState.splice(action.payload.hexIndex, 1, reinforcedHex); // replace hex with used up resource hex
+      if (state.currentPlayer === 'player1') { // for player 1,
+        return {
+          ...state,
+          boardState: newBoardState,
+          playerOneResources: {
+            ...playerOne,
+            [resource]: playerOne[resource] += 10 // add ten to whichever resource is necessary
+          }
+        }
+      } else if (state.currentPlayer === 'player2') { // same, but for player 2
+        return {
+          ...state,
+          boardState: newBoardState,
+          playerTwoResources: {
+            ...playerTwo,
+            [resource]: playerTwo[resource] += 10
+          }
+        }
+      }
+    case 'SWORDSMEN':
+      let playerResources, hexIndex;
+      action.payload.player === 'player1' ?
+      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      newBoardState = state.boardState.slice();
+      newBoardState.forEach(hex => {
+        if (hex.player === action.payload.player) {
+          hex.swordsmen += 10;
+        }
+      })
       return {
         ...state,
-        boardState: newBoardState
+        boardState: newBoardState,
+        [playerResources]: {
+          ...state[playerResources],
+          gold: state[playerResources].gold -= 10,
+          metal: state[playerResources].metal -= 10
+        }
+      }
+    case 'ARCHERS':
+      action.payload.player === 'player1' ?
+      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      newBoardState = state.boardState.slice();
+      newBoardState.forEach(hex => {
+        if (hex.player === action.payload.player) {
+          hex.archers += 10;
+        }
+      })
+      return {
+        ...state,
+        boardState: newBoardState,
+        [playerResources]: {
+          ...state[playerResources],
+          gold: state[playerResources].gold -= 10,
+          wood: state[playerResources].wood -= 20
+        }
+      }
+    case 'KNIGHTS':
+      action.payload.player === 'player1' ?
+      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      newBoardState = state.boardState.slice();
+      newBoardState.forEach(hex => {
+        if (hex.player === action.payload.player) {
+          hex.knights += 10;
+        }
+      })
+      return {
+        ...state,
+        boardState: newBoardState,
+        [playerResources]: {
+          gold: state[playerResources].gold -= 20,
+          metal: state[playerResources].metal -= 20,
+          wood: state[playerResources].wood -= 20
+        }
       }
     case 'SWITCH-PLAYER':
       return {
