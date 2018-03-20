@@ -25,7 +25,6 @@ class Board extends React.Component {
       socket: socketIOClient(this.state.endpoint)
     }, () => {
       this.state.socket.on('newGame', data => {
-        console.log('-------> data inside new game: ', data); // TODO: take out console log
         if (typeof data === 'string') {
           !this.props.playerAssigned && this.props.setUserPlayer('player1');
         } else {
@@ -38,20 +37,6 @@ class Board extends React.Component {
           })
           !this.props.playerAssigned && this.props.setUserPlayer('player2');
         }
-        console.log('-----> this props', this.props); // TODO: take out console log
-
-        let currentRoom = data.room.split('*').join('');
-
-        axios.post('/createGame', {
-          gameIndex: 1, //  data.gameIndex TODO: Update from hard coded
-          room: Number(currentRoom),
-          board: data.board,
-          currentPlayer: this.props.currentPlayer,
-          userPlayer: this.props.userPlayer
-          // playerOne: , // TODO: Need to add player 1: Access player 1 through user obj
-          // playerTwo:  // TODO: Need to add player 2: Access player 2 through user obj
-        });
-
       });
       this.state.socket.on('move', (move) => {
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex);
@@ -59,9 +44,11 @@ class Board extends React.Component {
       })
       this.state.socket.on('win', () => {
         alert('You win!');
+        console.log('WINNERRRRRRRR', this.props.userPlayer);
       })
       this.state.socket.on('lose', () => {
         alert('You lose!');
+        console.log('LOSERRRRRRR', this.props.userPlayer);
       })
       this.state.socket.on('failure', () => {
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
@@ -84,7 +71,6 @@ class Board extends React.Component {
   }
 
   handleClick(e, hex) {
-    console.log('handle hex click: ', hex); // TODO: take out console log
     if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) {
       this.handleSelectClick(e, hex);
     } else {
@@ -93,7 +79,6 @@ class Board extends React.Component {
   }
 
   handleSelectClick(e, hex) {
-    console.log('handle select click', hex); //TODO: take out console log
     if (hex.player === this.props.currentPlayer && hex.player === this.props.userPlayer) {
       let neighbors = [];
       let targetCs = hex.coordinates;
@@ -114,8 +99,8 @@ class Board extends React.Component {
     }
   }
 
-  handleMoveClick(e, hex) {
-    if (this.props.neighbors.indexOf(hex.index) > -1) {
+  async handleMoveClick (e, hex) {
+    if (await this.props.neighbors.indexOf(hex.index) > -1) {
       let board = this.props.boardState;
       let origin = this.props.selectedHex;
       let originIndex = board.indexOf(origin);
@@ -132,7 +117,7 @@ class Board extends React.Component {
         units: 0,
         player: null
       }
-      this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex);
+      await this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex);
     } else {
       alert('AAAAAAAA')
     }

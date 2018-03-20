@@ -1,5 +1,6 @@
 const config = require('./config.js');
 const mysql = require('mysql');
+const moment = require('moment');
 
 const knex = require('knex')({
   client: 'mysql',
@@ -13,10 +14,10 @@ const addUser = async (username, email, password) => {
     .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
 
   if (existingUser.length) {
-    console.log('user exists'); //TODO: take out console log
+    console.log('user exists');
     return 'User already exists! :(';
   } else {
-    console.log('user added'); // TODO: take out console log
+    console.log('user added');
     return knex('users')
       .insert({
         username: username,
@@ -37,66 +38,129 @@ const findUserById = (id) => {
   return knex('users').where('user_id', id);
 }
 
-// Create game
-const createGame = async (game) => {
-  console.log('game', game)
-  return await knex('games')
+// Saves new game to the database
+const createGame = (room, board, gameIndex) => {
+  let roomNum = room.split('*').join(''); // removes '*' from room
+  return knex('games')
     .insert({
-      room_id: game.room,
-      player1: 1, // game.playerOne TODO: update player 1 from hard coded
-      player2: 2, // game.playerTwo TODO: update player 2 from hard coded
-      current_player: 1 // currently game.currentPlayer is string TODO: update from hard coded
+      game_index: gameIndex,
+      room_id: roomNum,
+      player1: 1, // TODO: update player 1 from hard coded
+      player2: 2, // TODO: update player 2 from hard coded
+      current_player: 1 // TODO: update from hard coded
+    })
+    .returning('game_id')
+    .then(gameId => {
+      board.map(hex => {
+        createHex(hex, gameId);
+      });
     });
-    // await game.board.map(hex => {
-    //   createHex(hex, game.gameIndex);
-    // })
 }
 
-// Create hex
-const createHex = async (hex, gameIndex) => {
+const getGame = (room, gameIndex) => {
+  let roomNum = room.split('*').join('');
+  return knex('games')
+    .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+}
+
+const getHexes = (room, gameIndex) => {
+  let roomNum = room.split('*').join('');
+
+  return knex
+    .column(knex.raw(`hex.*`))
+    .select()
+    .from(knex.raw(`hex, games`))
+    .where(knex.raw(`${roomNum} = games.room_id AND '${gameIndex}' = game_index AND hex.game_id = games.game_id`));
+}
+
+// Create hexes for a new game
+const createHex = async (hex, gameId) => {
+  let playerOnHex = await hex.player ? hex.player[hex.player.length - 1] : null;
+
   return await knex('hex')
     .insert({
-      game_id: gameIndex, // TODO: Check gameIndex matches one on server
-      player: 1, // TODO: Update from hardcoded to user ID from user obj
+      hex_index: hex.index,
+      game_id: gameId,
+      player: playerOnHex,
       units: hex.units,
       has_resource: hex.hasResource
     })
 }
 
-// Delete game after certain amount of time has passed
-const deleteGame = () => {
-  const date = new Date();
-  // if certain amount of time has passed
-  // search for all games in the db
-    // select those games
-    // delete those games
+const getOldGames = async () => {
+  let today = await moment(new Date()).format('YYYY-MM-DD 23:59:59');
+  let yesterday = await moment(new Date()).subtract(1, 'days').format('YYYY-MM-DD 00:00:00');
+
+  return await knex('games').select()
+    .where(knex.raw(`created_at NOT BETWEEN '${yesterday}' AND '${today}'`))
+    .returning('game_id')
 }
 
-// If game has completed, update game to completed
-const gameComplete = () => {
-  // if game has completed
-    // Update user wins
-    // Update user losses
+// Marks game as completed if more than one day has passed
+const deleteGames = async (gameId) => {
+  return await knex('games')
+    .where(knex.raw(`${gameId} = game_id`))
+    .update(`game_completed`, 1)
+    // .del();
 }
 
-// Update player on hex if player moves to hex
-const updateHexUser = () => {
-  // find hex user is currently on
-  // find hex user is moving to
-  // update original hex to remove the user
-  // update new hex to add the user to that hex
+// Marks hexes with remove flag set to true if game is deleted
+const deleteHex = (gameId) => {
+  // console.log('IN DELETE HEX', gameId);
+  return knex('hex')
+    .where(`game_id`, gameId)
+    .update('remove_hex', 1)
 }
 
-// Increase units
-const increaseUnits = () => {
-  // find hex with the resource
-  // find the hex with the current user
-    // add 10 to the units
+// TODO: THIS
+// Updates game to 'completed' status upon game completion
+const gameComplete = async (game) => {
+  console.log('DATABASE ---> Game Complete'); //TODO: take out console log
+  await knex('games')
+    .where(`room_id`, game.room) // TODO: check game ID
+    .update(`game_completed`, 1)
+
+  let winner = game.playerOne; // TODO: update with winner id
+  let loser = game.playerTwo; // TODO: update with loser id
+  
+  // Updates user table for the winner
+  await knex('users')
+    .where(`room_id = ${game.room} and user_id =${winner}`)
+    .increment(`wins`, 1)
+
+  // Updates user table for the loser
+  await knex('users')
+    .where(`room_id = ${game.room} and user_id =${loser}`)
+    .increment(`losses`, 1)
 }
 
-// Decrease units
-const decreaseUnits = () => {
+// Update origin hex and new hex when player moves
+const updateHex = async (oldOrigin, updatedOrigin, newOrigin) => {
+  let currentPlayer = await oldOrigin.player[oldOrigin.player.length - 1];
 
+  await knex('hex')
+    .where(knex.raw(`${currentPlayer} = player AND '${oldOrigin.index}' = hex_index`))
+    .update({
+      player: null,
+      has_resource: updatedOrigin.hasResource,
+      units: updatedOrigin.units
+    })
+
+  await knex('hex')
+    .where(knex.raw(`'${newOrigin.index}' = hex_index`))
+    .update({
+      player: currentPlayer,
+      has_resource: 0,
+      units: oldOrigin.units
+    })
+}
+
+// Increases the user's units
+const increaseUnits = async (hex) => {
+  // console.log('DATABASE: INSIDE INCREASE UNITS');
+  return await knex('hex')
+    .where(knex.raw(`'${hex.index}' = hex_index`))
+    .update('units', hex.units)
 }
 
 module.exports = {
@@ -104,10 +168,13 @@ module.exports = {
   checkUserCreds,
   createGame,
   createHex,
-  deleteGame,
+  deleteGames,
   gameComplete,
-  updateHexUser,
+  updateHex,
+  findUserById,
   increaseUnits,
-  decreaseUnits,
-  findUserById
-}
+  getOldGames,
+  deleteHex,
+  getGame,
+  getHexes
+};
