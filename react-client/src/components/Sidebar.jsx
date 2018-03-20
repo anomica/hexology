@@ -140,7 +140,25 @@ class SidebarLeft extends React.Component {
               <Icon name='user' />
               Signup
             </Menu.Item>
+
+            <Menu.Item>
+              <strong>Hex Legend</strong>
+              <p></p>
+              <p>Units on Hex:</p>
+              <ul style={{marginLeft: '-40px', listStyleType: 'none'}}>
+                <li>Swordsmen (+1)</li>
+                <li>Archers (+2)</li>
+                <li>Knights (+3)</li>
+              </ul>
+              <p>Resources:</p>
+              <ul style={{marginLeft: '-40px', listStyleType: 'none'}}>
+                <li style={{color: 'gold'}}>Gold</li>
+                <li style={{color: 'green'}}>Wood</li>
+                <li style={{color: 'grey'}}>Metal</li>
+              </ul>
+            </Menu.Item>
           </Sidebar>
+
 
           <Sidebar.Pusher>
             {showContent()}
