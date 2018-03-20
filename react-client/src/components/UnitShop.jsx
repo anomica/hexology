@@ -52,7 +52,15 @@ class UnitShop extends React.Component {
     resources = this.props.playerTwoResources;
 
     if (resources.gold >= 10 && resources.wood >= 20) {
-      this.props.archers(this.props.userPlayer);
+      this.buyUnitsServer({
+        type: 'archers',
+        player: this.props.userPlayer,
+        gameIndex: this.props.gameIndex,
+        socketId: this.props.socket.id
+      });
+      this.props.socket.on('purchased', () => {
+        this.props.swordsmen(this.props.userPlayer);
+      });
     } else {
       alert('Not enough resources!');
     }
