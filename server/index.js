@@ -215,7 +215,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       room: room
     }
     
-    await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
+    // await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
 
     await io.to(room).emit('newGame', newGameBoard); // send game board to user
   } else { // otherwise
@@ -273,27 +273,29 @@ const moveUnits = async (data, socket) => {
   let gameIndex = data.gameIndex; // game index to find in storage
   let room = data.room; // room to send move to
 
-  // let board = games[gameIndex].board; // game board found using above index
-  let board = await db.getGameBoard(room, gameIndex); // gets game board from db using above index
+  let board = games[gameIndex].board; // game board found using above index
+  console.log('board:', board);
+  // let board = await db.getGameBoard(room, gameIndex); // gets game board from db using above index
 
   // console.log('////////////////// BOARD /////////////////', board[0], '////////////////// END OF BOARD /////////////////');
 
   let masterOrigin = board[originIndex]; // origin to be updated/checked against
   let masterTarget = board[targetIndex]; // same for target
-
-  // let masterOrigCs = masterOrigin.coordinates; // coordinates of those masters
-  let masterOrigCs = [masterOrigin.coordinate_0, masterOrigin.coordinate_1, masterOrigin.coordinate_2]; // coordinates of those masters
-
-  // let masterTarCs = masterTarget.coordinates;
-  let masterTarCs = [masterTarget.coordinate_0, masterTarget.coordinate_1, masterTarget.coordinate_2]; // coordinates of those masters
+  console.log('masetrOrigin:', masterOrigin);
+  console.log('masterTarget:', masterTarget);
+  let masterOrigCs = masterOrigin.coordinates; // coordinates of those masters
+  // let masterOrigCs = [masterOrigin.coordinate_0, masterOrigin.coordinate_1, masterOrigin.coordinate_2]; // coordinates of those masters
+  console.log('masetrOriginCs', masterOrigCs);
+  let masterTarCs = masterTarget.coordinates;
+  // let masterTarCs = [masterTarget.coordinate_0, masterTarget.coordinate_1, masterTarget.coordinate_2]; // coordinates of those masters
 
   let origCs = updatedOrigin.coordinates; // as well as coordinates of the ones sent by user
   let tarCs = updatedTarget.coordinates;
 
   let currentPlayer = data.currentPlayer; // player whose turn it is
   let socketId = data.socketId; // socket to send back response if necessary
-
-
+   
+  console.log('args before calling:', masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget)
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget); // assess legality of move
   console.log('legal:', legal);
   if (legal) { // if legal move,
@@ -303,7 +305,7 @@ const moveUnits = async (data, socket) => {
         // if collision and collision is friendly,
         await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room, board); // update hexes without combat occuring
 
-        await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
+        // await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
 
         await io.to(room).emit('move', move); // then send back okay to move units
       } else {
@@ -354,8 +356,8 @@ const moveUnits = async (data, socket) => {
         targetIndex: targetIndex, 
         updatedTarget: updatedTarget
       };
-
-      await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
+      console.log('move:'. move);
+      // await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
 
       // console.log('-------- master origin: ', masterOrigin)
       // console.log('-------- updated target: ', updatedTarget)
@@ -370,9 +372,13 @@ const moveUnits = async (data, socket) => {
 };
 
 const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb) => { // to check move legality,
+  console.log('args:', masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb);
   let isLegal = false;
   if (masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] && // make sure all coordinates match between origin
-      masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2] ) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
+      masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]  ) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
+        console.log('masterOrigin.archers, updatedOrigin.archers + updatedTarget.archers', masterOrigin.archers, updatedOrigin.archers + updatedTarget.archers)
+        console.log(' masterOrigin.knights, updatedOrigin.knights + updatedTarget.knights', masterOrigin.knights, updatedOrigin.knights + updatedTarget.knights)
+        console.log('asterOrigin.swordsmen, updatedOrigin.swordsmen + updatedTarget.swordsmen', masterOrigin.swordsmen, updatedOrigin.swordsmen + updatedTarget.swordsmen)
         if (masterOrigin.archers === updatedOrigin.archers + updatedTarget.archers && 
         masterOrigin.knights === updatedOrigin.knights + updatedTarget.knights && 
         masterOrigin.swordsmen === updatedOrigin.swordsmen + updatedTarget.swordsmen) {
@@ -388,8 +394,8 @@ const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs,
 }
 
 const checkForCollision = async (originIndex, targetIndex, gameIndex, room) => {
-  // let game = games[gameIndex].board;
-  let game = await db.getGameBoard(room, gameIndex);
+  let game = games[gameIndex].board;
+  // let game = await db.getGameBoard(room, gameIndex);
 
   let origin = game[originIndex];
   let target = game[targetIndex];
