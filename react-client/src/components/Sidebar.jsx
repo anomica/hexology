@@ -50,7 +50,8 @@ class SidebarLeft extends React.Component {
       sidebar: {
         position: 'fixed',
         height: '100%',
-        width: '20%'
+        width: this.props.menuVisible ? '20%' : '0%',
+        minWidth: '360px'
       }
     }
 

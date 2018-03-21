@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Image, Feed, Label, Button } from 'semantic-ui-react';
+import { Segment, Image, Feed, Label, Button } from 'semantic-ui-react';
 
 const RoomsList = props => {
   if (props.rooms) {
@@ -11,21 +11,23 @@ const RoomsList = props => {
         <h3>Currently Open Rooms: </h3>
         {Object.keys(props.rooms).map((room, id) => {
           room = props.rooms[room];
-          console.log(room);
           return (
             <Feed key={id}>
               <Feed.Content>
                 <Feed.Label>New Game</Feed.Label>
                 <Feed.Meta>Players: {room.length}/2</Feed.Meta>
               </Feed.Content>
-              <Button>Join Game</Button>
+              {room.length === 1 ?
+                <Button color="green">Join Game</Button> :
+                <Button color="red" disabled>Game Full</Button>
+              }
             </Feed>
           )
         })}
       </Feed>
     )
   } else {
-    return null;
+    return <Segment>No available games. Start your own!</Segment>;
   }
 }
 

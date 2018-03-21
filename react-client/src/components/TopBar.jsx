@@ -19,8 +19,10 @@ const TopBar = props => {
 
   return (
     <Segment className={'topBar'} secondary floated={'right'} raised>
-      <Header as='h3'>Hexology: you are {props.userPlayer === 'player1' ? 'player one' : 'player two'}!</Header>
-      <Button onClick={exitGame}>Exit Game</Button>
+      <Header as='h1'>Hexology</Header>
+      <Button style={{right: '10px', top: '20px', position: 'absolute'}} onClick={exitGame}>Exit Game</Button>
+      <Header as='h4' style={{marginTop: '-10px'}}>You are {props.userPlayer === 'player1' ? 'player one' : 'player two'}!</Header>
+      {props.boardState ? null : <Segment>Want to play with a friend? Send them this link: TO BE ADDED</Segment>}
       <Segment.Group horizontal>
         {props.playerOneResources && props.playerOneResources.hasOwnProperty('wood') ?
           <Segment>
@@ -64,6 +66,7 @@ const mapStateToProps = state => {
   return {
     socket: state.state.socket,
     userPlayer: state.state.userPlayer,
+    boardState: state.state.boardState,
     currentPlayer: state.state.currentPlayer,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources

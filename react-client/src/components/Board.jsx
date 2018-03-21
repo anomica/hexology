@@ -218,7 +218,7 @@ class Board extends React.Component {
                     {/*<img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>*/}
                   </Text>
                 </Hexagon>
-              }): <div>Want to play with a friend? Send them this link: </div>}
+              }): <div></div>}
             </Layout>
           </HexGrid>
           <Modal open={this.state.open} size={'small'}
