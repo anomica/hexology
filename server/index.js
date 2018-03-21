@@ -63,8 +63,7 @@ app.post('/logout', isLoggedIn, function (req, res) {
   res.clearCookie('connect.sid').status(200).redirect('/');
 });
 
-let games = {};
-
+let games = {}; // TODO: TAKE THIS OUT
 
 const coordinateGenerator = (numRows, numCols) => { // creates an array of coordinates for hexes
   let j = 0;
@@ -142,7 +141,6 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
   });
 };
 
-
 let roomNum = 0;
 let openRooms = [];
 
@@ -195,8 +193,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     // console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
-
     
+    //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
       playerOneResources: { // p1 resources,
@@ -210,6 +208,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
         metal: 10
       }
     };
+
     const newGameBoard = {
       board: board,
       gameIndex: gameIndex,
@@ -217,10 +216,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     }
     
     await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
-    
-    let gameBoard = await db.getGameBoard(room, gameIndex); // returns the hexes for the current game
 
-    io.to(room).emit('newGame', newGameBoard); // send game board to user
+    await io.to(room).emit('newGame', newGameBoard); // send game board to user
   } else { // otherwise
     socket.join('*' + roomNum); // create a new room
     io.to(`*${roomNum}`).emit('newGame', 'Waiting on another player to join!'); // and send back a string to initialize for player 1
@@ -322,12 +319,18 @@ const moveUnits = async (data, socket) => {
           // TODO: Mark game as completed
         })();
 
-        // TODO: mark game as completed (await)
+        // TODO: mark game as completed
 
         const board = await gameInit(5, 4); // the reinit board
         gameIndex = uuidv4();
+
         games[gameIndex] = { board: board, playerOneResources: { gold: 10, wood: 10, metal: 10 }, playerTwoResources: { gold: 10, wood: 10, metal: 10 } };
-        const newGameBoard = { board: board, gameIndex: gameIndex, room: room };
+
+        const newGameBoard = {
+          board: board,
+          gameIndex: gameIndex,
+          room: room
+        };
 
         await db.createGame(room, board, gameIndex); // Creates and saves new game to the db
 
@@ -532,46 +535,14 @@ const buyUnits = (type, player, gameIndex, socketId) => {
 
 app.get('/*', (req, res) => res.sendfile('/'));
 
-// //////////////////////////////////////////////////
-// // TODO: Take out this section
+//////////////////////////////////////////////////
+// TODO: Take out this section - JUST FOR TESTING
 app.post('/users', (req, res) => {
-  console.log('user req.body', req.body); // TODO: take out console log
+  console.log('user req.body', req.body);
   db.addUser(req.body.username, req.body.email, req.body.password);
   res.end();
 })
-// //////////////////////////////////////////////////
-
-/***************************** Creates game *****************************/
-// app.post('/createGame', async (req, res) => {
-//   await db.createGame(req.body);
-//   res.end();
-// });
-
-/***************************** Deletes old games *****************************/
-// app.patch('/deleteGames', async (req, res) => {
-//   console.log('SERVER --> Delete game'); // TODO: delete console log
-//   let oldGames = await db.getOldGames();
-//   for (let i = 0; i < oldGames.length; i++) {
-//     await db.deleteHex(oldGames[i].game_id);  
-//     await db.deleteGames(oldGames[i].game_id);
-//   }
-//   res.end();
-// });
-
-// /***************************** Updates game if completed *****************************/
-// app.patch('/gameComplete', (req, res) => {
-//   console.log('SERVER ---> Game Completed'); //TODO: delete console log
-//   console.log('reqbody game:', req.body); //TODO: delete console log
-//   db.gameComplete(req.body);
-//   res.end();
-// });
-
-/***************************** Updates hex when player has moved *****************************/
-// app.patch('/hex', (req, res) => {
-//   console.log('SERVER --> HEX PATCH REQ:', req.body); // TODO: delete console log
-//   db.updateHex(req.body.oldOrigin, req.body.updatedOrigin, req.body.newOrigin);
-//   res.end();
-// });
+//////////////////////////////////////////////////
 
 // io.listen(process.env.PORT || 3000);
 server.listen(process.env.PORT || 3000, function () {
