@@ -1,3 +1,10 @@
+export const setRooms = (rooms) => (
+  {
+    type: 'SET-ROOMS',
+    payload: rooms
+  }
+)
+
 export const setSocket = (socket) => (
   {
     type: 'SET-SOCKET',
@@ -9,6 +16,18 @@ export const setRoom = (room) => (
   {
     type: 'SET-ROOM',
     payload: room
+  }
+)
+
+export const menuToggle = () => (
+  {
+    type: 'MENU-TOGGLE'
+  }
+)
+
+export const exitGame = () => (
+  {
+    type: 'EXIT-GAME'
   }
 )
 

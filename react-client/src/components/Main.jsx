@@ -1,12 +1,14 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { selectHex, highlightNeighbors, highlightOpponents, moveUnits, drawBoard } from '../../src/actions/actions.js';
+import { setRooms, menuToggle } from '../../src/actions/actions.js';
+import { Button } from 'semantic-ui-react';
+
 import axios from 'axios';
 const uuidv4 = require('uuid/v4');
 
 import SidebarLeft from './Sidebar.jsx';
+import RoomsList from './RoomsList.jsx';
 
 class Main extends React.Component {
   constructor(props) {
@@ -32,12 +34,21 @@ class Main extends React.Component {
       .catch(err => {
         console.log('err from persistUser:', err);
       })
+    axios.get('/rooms')
+      .then(rooms => {
+        this.props.setRooms(rooms.data);
+      })
+      .catch(err => {
+        console.error('error retrieving rooms: ', err);
+      })
   }
 
   render() {
     return (
       <div>
+        <Button onClick={this.props.menuToggle}>Menu</Button>
         <SidebarLeft />
+        <RoomsList />
       </div>
     );
   }
@@ -49,7 +60,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({}, dispatch)
+  return bindActionCreators({ setRooms, menuToggle }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);

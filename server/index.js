@@ -142,6 +142,9 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
   });
 };
 
+app.get('/rooms', (req, res) => {
+  res.status(200).json(io.sockets.adapter.rooms);
+});
 
 let roomNum = 0;
 let openRooms = [];
@@ -229,7 +232,7 @@ io.on('connection', socket => { // initialize socket on user connection
   })
 
   socket.on('disconnect', () => {
-    console.log('user disconnected')
+    console.log('user disconnected');
   })
 })
 
@@ -446,7 +449,7 @@ const buyUnits = (type, player, gameIndex, socketId) => {
   }
 }
 
-app.get('/*', (req, res) => res.sendfile('/'));
+app.get('/*', (req, res) => res.sendFile('/'));
 
 
 // io.listen(process.env.PORT || 3000);

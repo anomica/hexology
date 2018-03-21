@@ -9,6 +9,7 @@ import Login from './Login.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
+import { exitGame } from '../../src/actions/actions.js';
 
 class SidebarLeft extends React.Component {
   constructor(props) {
@@ -34,66 +35,6 @@ class SidebarLeft extends React.Component {
   }
 
   render() {
-    const showContent = () => {
-      if (this.state.newGame) {
-        return (
-          <Segment>
-            <Header as='h3'>New Game</Header>
-            <Segment.Group horizontal>
-                {this.props.playerOneResources.hasOwnProperty('wood') ?
-                  <Segment>
-                    <strong>Player One Resources</strong>
-                    <ul>
-                      <li>Gold: {this.props.playerOneResources.gold}</li>
-                      <li>Wood: {this.props.playerOneResources.wood}</li>
-                      <li>Metal: {this.props.playerOneResources.metal}</li>
-                    </ul>
-                </Segment> :
-                <Segment>
-                  <strong>Player One has joined!</strong>
-                </Segment>
-                }
-              <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources.hasOwnProperty('wood') ?
-                `${this.props.currentPlayer}'s turn` :
-                `Game will begin when both players have joined.`}</strong>
-                {this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
-                  <UnitShop>Shop</UnitShop> : null
-                }
-              </Segment>
-                {this.props.playerTwoResources.hasOwnProperty('wood') ?
-                <Segment>
-                  <strong>Player Two Resources</strong>
-                  <ul>
-                    <li>Gold: {this.props.playerTwoResources.gold}</li>
-                    <li>Wood: {this.props.playerTwoResources.wood}</li>
-                    <li>Metal: {this.props.playerTwoResources.metal}</li>
-                  </ul>
-              </Segment> :
-              <Segment>
-                <strong>Waiting for player two to join...</strong>
-              </Segment>
-              }
-            </Segment.Group>
-            <Board />
-          </Segment>
-        )
-      } else {
-        return (
-          <table height={800}>
-            <tbody>
-              <tr>
-                <td style={{verticalAlign: 'top'}}>
-                  <Segment>
-                    <Header as='h3'>Welcome</Header>
-                  </Segment>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        )
-      }
-    }
-
     // Shows rules modal if rules menu item is clicked
     const showRules = () => {
       if (this.state.rules) {
@@ -103,18 +44,27 @@ class SidebarLeft extends React.Component {
       }
     }
 
-    const { visible } = this.state;
+    const { menuVisible } = this.props;
+
+    let styles = {
+      sidebar: {
+        position: 'fixed',
+        height: '100%',
+        width: '20%'
+      }
+    }
 
     return (
-      <div>
-        <Button onClick={this.toggleMenu}>Menu</Button>
-        <Sidebar.Pushable as={Segment}>
-          <Sidebar as={Menu} animation='push' width='thin' visible={visible} icon='labeled' vertical inverted>
+      <div style={styles.sidebar}>
+        <Sidebar.Pushable>
+          <Sidebar style={{bottom: 0}} as={Menu} animation='push' width='thin' visible={menuVisible} icon='labeled' vertical inverted>
 
-            <Menu.Item name='newgame' onClick={() => this.setState({ newGame: true })}
-            disabled={this.state.newGame}>
+            <Menu.Item
+              as={Link} to='/game'
+              name='game'
+            >
               <Icon name='gamepad' />
-              New Game
+              Start New Game
             </Menu.Item>
 
             <Menu.Item
@@ -161,7 +111,6 @@ class SidebarLeft extends React.Component {
 
 
           <Sidebar.Pusher>
-            {showContent()}
             {showRules()}
           </Sidebar.Pusher>
 
@@ -173,6 +122,8 @@ class SidebarLeft extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
+    socket: state.state.socket,
+    menuVisible: state.state.menuVisible,
     currentPlayer: state.state.currentPlayer,
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
@@ -181,7 +132,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({}, dispatch);
+  return bindActionCreators({ exitGame }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));

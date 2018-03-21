@@ -2,6 +2,11 @@ import defaultState from '../../src/store/DefaultState.js';
 
 const reducers = (state = defaultState, action) => {
   switch(action.type) {
+    case 'SET-ROOMS':
+      return {
+        ...state,
+        rooms: action.payload
+      }
     case 'SET-SOCKET':
       return {
         ...state,
@@ -11,6 +16,17 @@ const reducers = (state = defaultState, action) => {
       return {
         ...state,
         room: action.payload
+      }
+    case 'MENU-TOGGLE':
+      return {
+        ...state,
+        menuVisible: !state.menuVisible
+      }
+    case 'EXIT-GAME':
+      return {
+        ...state,
+        socket: null,
+        room: null
       }
     case 'SELECT-HEX': // select hex on user click
       return {
