@@ -9,6 +9,7 @@ import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
 
 import SidebarLeft from './Sidebar.jsx';
+import DefaultState from '../store/DefaultState.js';
 
 class Board extends React.Component {
   constructor(props) {
