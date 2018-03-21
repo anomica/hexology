@@ -215,7 +215,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       room: room
     }
     
-    await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
+    // await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
 
     await io.to(room).emit('newGame', newGameBoard); // send game board to user
   } else { // otherwise
@@ -273,68 +273,80 @@ const moveUnits = async (data, socket) => {
   let gameIndex = data.gameIndex; // game index to find in storage
   let room = data.room; // room to send move to
 
-  // let board = games[gameIndex].board; // game board found using above index
-  let board = await db.getGameBoard(room, gameIndex); // gets game board from db using above index
+  let board = games[gameIndex].board; // game board found using above index
+  console.log('board:', board);
+  // let board = await db.getGameBoard(room, gameIndex); // gets game board from db using above index
 
   // console.log('////////////////// BOARD /////////////////', board[0], '////////////////// END OF BOARD /////////////////');
 
   let masterOrigin = board[originIndex]; // origin to be updated/checked against
   let masterTarget = board[targetIndex]; // same for target
-
-  // let masterOrigCs = masterOrigin.coordinates; // coordinates of those masters
-  let masterOrigCs = [masterOrigin.coordinate_0, masterOrigin.coordinate_1, masterOrigin.coordinate_2]; // coordinates of those masters
-
-  // let masterTarCs = masterTarget.coordinates;
-  let masterTarCs = [masterTarget.coordinate_0, masterTarget.coordinate_1, masterTarget.coordinate_2]; // coordinates of those masters
+  console.log('masetrOrigin:', masterOrigin);
+  console.log('masterTarget:', masterTarget);
+  let masterOrigCs = masterOrigin.coordinates; // coordinates of those masters
+  // let masterOrigCs = [masterOrigin.coordinate_0, masterOrigin.coordinate_1, masterOrigin.coordinate_2]; // coordinates of those masters
+  console.log('masetrOriginCs', masterOrigCs);
+  let masterTarCs = masterTarget.coordinates;
+  // let masterTarCs = [masterTarget.coordinate_0, masterTarget.coordinate_1, masterTarget.coordinate_2]; // coordinates of those masters
 
   let origCs = updatedOrigin.coordinates; // as well as coordinates of the ones sent by user
   let tarCs = updatedTarget.coordinates;
 
   let currentPlayer = data.currentPlayer; // player whose turn it is
   let socketId = data.socketId; // socket to send back response if necessary
-
-  let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget); // assess legality of move
-  if (legal) {
-    // if legal move,
-    let collision = await checkForCollision(originIndex, targetIndex, gameIndex, room); // check for collision
+   
+  console.log('args before calling:', masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget)
+  let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget); // assess legality of move
+  console.log('legal:', legal);
+  if (legal) { // if legal move,
+    let collision = await checkForCollision(originIndex, targetIndex, gameIndex); // check for collision
     if (collision) {
       if (collision === 'friendly') {
         // if collision and collision is friendly,
         await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room, board); // update hexes without combat occuring
 
-        await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
+        // await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
 
         await io.to(room).emit('move', move); // then send back okay to move units
       } else {
-        let winner = await resolveCombat(originIndex, targetIndex, gameIndex, room); //otherwise, roll for combat
-        winner === 'attacker' ? (() => { // if attacker wins,
-          io.to(socketId).emit('win');
-          socket.to(room).emit('lose');
-
-          // TODO: Mark game as completed
-        })() : (() => {
-          // and vice versa
-          io.to(socketId).emit('lose');
-          socket.to(room).emit('win');
-          // TODO: Mark game as completed
+        let result = await resolveCombat(originIndex, targetIndex, gameIndex, updatedOrigin, updatedTarget, currentPlayer); //otherwise, roll for combat
+        console.log('result:', result);
+        result.isOver ? // if attacker wins, need to change hexes and send back board
+        (() => {
+          io.to(socketId).emit('win'); // the attacker gets a personal win message
+          socket.to(room).emit('lose'); // while the rest of the room (defender) gets lose message
+        })() :
+        (() => { // and vice versa
+          let move = {
+            updatedOrigin: result.updatedOrigin,
+            updatedTarget: result.updatedTarget,
+            originIndex: originIndex,
+            targetIndex: targetIndex
+          }
+          io.to(room).emit('move', move);
         })();
+        // const board = gameInit(5, 4); // the reinit board
+        // gameIndex = uuidv4();
+        // games[gameIndex] = {
+        //   board: board,
+        //   playerOneResources: {
+        //     gold: 10,
+        //     wood: 10,
+        //     metal: 10
+        //   },
+        //   playerTwoResources: {
+        //     gold: 10,
+        //     wood: 10,
+        //     metal: 10
+        //   }
+        // };
+        // const newGameBoard = {
+        //   board: board,
+        //   gameIndex: gameIndex,
+        //   room: room
+        // }
+        // io.to(room).emit('newGame', newGameBoard);
 
-        // TODO: mark game as completed
-
-        const board = await gameInit(5, 4); // the reinit board
-        gameIndex = uuidv4();
-
-        games[gameIndex] = { board: board, playerOneResources: { gold: 10, wood: 10, metal: 10 }, playerTwoResources: { gold: 10, wood: 10, metal: 10 } };
-
-        const newGameBoard = {
-          board: board,
-          gameIndex: gameIndex,
-          room: room
-        };
-
-        await db.createGame(room, board, gameIndex); // Creates and saves new game to the db
-
-        await io.to(room).emit('newGame', newGameBoard);
       }
     } else {
       await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room, board); // if move is to unoccupied hex, execute move
@@ -344,8 +356,8 @@ const moveUnits = async (data, socket) => {
         targetIndex: targetIndex, 
         updatedTarget: updatedTarget
       };
-
-      await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
+      console.log('move:'. move);
+      // await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
 
       // console.log('-------- master origin: ', masterOrigin)
       // console.log('-------- updated target: ', updatedTarget)
@@ -359,25 +371,31 @@ const moveUnits = async (data, socket) => {
   }
 };
 
-const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, cb) => { // to check move legality,
-  // TODO: delete console log
-  // console.log('-------------------- check legal move')
-  // console.log('master orig cs: ', masterOrigCs);
-  // console.log('orig cs: ', origCs)
-  // console.log('master tar cs: ', masterTarCs)
-  // console.log('tar cs: ', tarCs)
-
+const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb) => { // to check move legality,
+  console.log('args:', masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb);
+  let isLegal = false;
   if (masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] && // make sure all coordinates match between origin
-      masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2] ) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
-        return true;
+      masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]  ) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
+        console.log('masterOrigin.archers, updatedOrigin.archers + updatedTarget.archers', masterOrigin.archers, updatedOrigin.archers + updatedTarget.archers)
+        console.log(' masterOrigin.knights, updatedOrigin.knights + updatedTarget.knights', masterOrigin.knights, updatedOrigin.knights + updatedTarget.knights)
+        console.log('asterOrigin.swordsmen, updatedOrigin.swordsmen + updatedTarget.swordsmen', masterOrigin.swordsmen, updatedOrigin.swordsmen + updatedTarget.swordsmen)
+        if (masterOrigin.archers === updatedOrigin.archers + updatedTarget.archers && 
+        masterOrigin.knights === updatedOrigin.knights + updatedTarget.knights && 
+        masterOrigin.swordsmen === updatedOrigin.swordsmen + updatedTarget.swordsmen) {
+          isLegal = true;
+          console.log('isLegal:', isLegal);
+          return true;
+        } else {
+          return false;
+        }
       } else {
         return false;
       }
 }
 
 const checkForCollision = async (originIndex, targetIndex, gameIndex, room) => {
-  // let game = games[gameIndex].board;
-  let game = await db.getGameBoard(room, gameIndex);
+  let game = games[gameIndex].board;
+  // let game = await db.getGameBoard(room, gameIndex);
 
   let origin = game[originIndex];
   let target = game[targetIndex];
@@ -403,26 +421,115 @@ const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarge
   await reinforceHexes(gameIndex, currentPlayer, targetIndex, room, board); // then check to see if there are reinforcements
 }
 
-const resolveCombat = async (originIndex, targetIndex, gameIndex, room) => { // if combat,
-  let board = await db.getGameBoard(room, gameIndex);
 
-  // let attacker = games[gameIndex].board[originIndex]; // get attacking hex
-  let attacker = board[originIndex]; // get attacking hex
+const resolveCombat = (originIndex, targetIndex, gameIndex, updatedOrigin, updatedTarget, currentPlayer) => { // if combat,
+  let attacker = updatedTarget // get attacking hex
+  let defender = games[gameIndex].board[targetIndex]; // and defending hex
+  let attackerPlayer = attacker.player;
+  let defenderPlayer = defender.player;
+  let attackerDidWin;
+
+// Stephanie's changes retrieving from DB
+// const resolveCombat = async (originIndex, targetIndex, gameIndex, room) => { // if combat, 
+//   let board = await db.getGameBoard(room, gameIndex);
+
+//   // let attacker = games[gameIndex].board[originIndex]; // get attacking hex
+//   let attacker = board[originIndex]; // get attacking hex
   
-  // let defender = games[gameIndex].board[targetIndex]; // and defending hex
-  let defender = board[targetIndex]; // and defending hex
+//   // let defender = games[gameIndex].board[targetIndex]; // and defending hex
+//   let defender = board[targetIndex]; // and defending hex
+
 
   console.log('Attacker: ', attacker.swordsmen, attacker.archers, attacker.knights)
   console.log('Defender: ', defender.swordsmen, defender.archers, defender.knights)
 
-  let attackerRoll = Math.floor(Math.random() * 10 + (attacker.swordsmen) + (attacker.archers * 2) + (attacker.knights * 4));
-  let defenderRoll = Math.floor(Math.random() * 10 + (attacker.swordsmen) + (attacker.archers * 2) + (attacker.knights * 4));
+  let swordsMenKnight = attacker.swordsmen - defender.knights;
+  let knightsArchers = attacker.knights - defender.archers;
+  let archerSwordsmen = attacker.archers - defender.swordsmen;
+  let attackerSwordsmen;
+  let attackerKnights;
+  let attackerArchers;
+  let defenderSwordsmen;
+  let defenderKnights;
+  let defenderArchers;
 
-  if (attackerRoll >= defenderRoll) { // and determine winner, tie goes to attacker
-    return 'attacker';
+  if (swordsMenKnight > 0) {
+    attackerSwordsmen = swordsMenKnight;
+    defenderKnights = 0;
   } else {
-    return 'defender';
+    attackerSwordsmen = 0;
+    defenderKnights = Math.abs(attackerSwordsmen);
   }
+
+  if (knightsArchers > 0) {
+    attackerKnights = knightsArchers;
+    let defenderArchers = 0;
+  } else {
+    attackerKnights = 0;
+    defenderArchers = Math.abs(knightsArchers);
+  }
+
+  if (archerSwordsmen > 0) {
+    attackerArchers = archerSwordsmen;
+    defenderSwordsmen = 0;
+  } else {
+    attackerArchers = 0;
+    defenderSwordsmen = Math.abs(archerSwordsmen);
+  }
+
+  let defendingArmy = defenderSwordsmen + defenderArchers + defenderKnights;
+  let attackingArmy = attackerArchers + attackerSwordsmen + attackerKnights;
+
+  if (defendingArmy > attackingArmy) { 
+    updatedOrigin = { // reinitialize hex they left
+      ...updatedOrigin,
+      swordsmen: updatedOrigin.swordsmen + attackerSwordsmen,
+      archers: updatedOrigin.knights + attackerKnights,
+      knights: updatedOrigin.archers + attackerArchers,
+      player: attackerPlayer
+    }
+    updatedTarget = {
+      ...updatedTarget,
+      swordsmen: defenderSwordsmen,
+      knights: defenderKnights,
+      archers: defenderArchers,
+      player: defenderPlayer
+    }
+    console.log('updatedOrigin:', updatedOrigin);
+    console.log('updatedTarget:', updatedTarget);
+  } else { // tie goes to attacker
+    attackerDidWin = true;
+    updatedTarget = {
+      ...updatedTarget,
+      swordsmen: attackerSwordsmen,
+      knights: attackerKnights,
+      archers: attackerArchers,
+      player: attackerPlayer
+    }
+    console.log('updatedTarget:', updatedTarget);
+  } 
+  
+  updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer); // update the board
+  
+  return {
+    isOver: attackerDidWin ? checkForWin(defenderPlayer, attackerPlayer, gameIndex) : false,
+    updatedOrigin: updatedOrigin,
+    updatedTarget: updatedTarget 
+  }
+}
+
+const checkForWin = (losingPlayer, winningPlayer, gameIndex) => {
+  let isGameOver = true;
+  games[gameIndex].board.forEach(hex => {
+    if (hex.player === losingPlayer) {
+      isGameOver = false;
+    }
+  })
+  
+  if (isGameOver) {
+    return winningPlayer;
+  }
+  return isGameOver;
 }
 
 const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room, board) => {
