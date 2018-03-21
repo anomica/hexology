@@ -46,9 +46,9 @@ class Main extends React.Component {
   render() {
     return (
       <div>
-        <Button onClick={this.props.menuToggle}>Menu</Button>
         <SidebarLeft />
         <RoomsList />
+        <Button style={{float: 'left', position: 'absolute', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
       </div>
     );
   }

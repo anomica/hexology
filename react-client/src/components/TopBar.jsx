@@ -18,7 +18,7 @@ const TopBar = props => {
   }
 
   return (
-    <Segment style={{width: '80%', float: 'right'}}>
+    <Segment className={'topBar'} secondary floated={'right'} raised>
       <Header as='h3'>Hexology: you are {props.userPlayer === 'player1' ? 'player one' : 'player two'}!</Header>
       <Button onClick={exitGame}>Exit Game</Button>
       <Segment.Group horizontal>

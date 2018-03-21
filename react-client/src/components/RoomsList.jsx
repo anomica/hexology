@@ -6,7 +6,7 @@ import { Image, Feed, Label, Button } from 'semantic-ui-react';
 const RoomsList = props => {
   if (props.rooms) {
     return (
-      <Feed style={{textAlign: 'center', width: '45%', marginLeft: '20%'}}>
+      <Feed style={{textAlign: 'center', width: '45%', marginLeft: '20%', marginTop: 0, paddingTop: '20px'}}>
         <h1>Welcome to Hexology</h1>
         <h3>Currently Open Rooms: </h3>
         {Object.keys(props.rooms).map((room, id) => {

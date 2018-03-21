@@ -57,7 +57,7 @@ class SidebarLeft extends React.Component {
     return (
       <div style={styles.sidebar}>
         <Sidebar.Pushable>
-          <Sidebar style={{bottom: 0}} as={Menu} animation='push' width='thin' visible={menuVisible} icon='labeled' vertical inverted>
+          <Sidebar style={{top: 0}} as={Menu} animation='scale down' width='thin' visible={menuVisible} icon='labeled' vertical inverted>
 
             <Menu.Item
               as={Link} to='/game'

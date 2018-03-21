@@ -236,10 +236,6 @@ io.on('connection', socket => { // initialize socket on user connection
   })
 })
 
-
-app.get('/*', (req, res) => res.sendfile('/'));
-
-
 app.post('/newBoard', (req, res) => {
   games = {};  // ************************THIS IS JUST FOR DEVELOPMENT, IT MAKES IT SO WE DON'T GUM UP THE SERVER WITH A TON OF OBJECTS, IN REAL LIFE WE WON'T EVEN BE STORING GAMES ON THE SERVER MOST LIKELY
   const board = gameInit(req.body.numRows, req.body.numCols);
@@ -449,7 +445,9 @@ const buyUnits = (type, player, gameIndex, socketId) => {
   }
 }
 
-app.get('/*', (req, res) => res.sendFile('/'));
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../react-client/dist', 'index.html'));
+});
 
 
 // io.listen(process.env.PORT || 3000);

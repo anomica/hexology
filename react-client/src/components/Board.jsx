@@ -181,7 +181,7 @@ class Board extends React.Component {
   render() {
     return (
       <div>
-        <Button onClick={this.props.menuToggle}>Menu</Button>
+        <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
         <SidebarLeft />
         <TopBar />
         <div className="Board flex" style={{float: 'right'}}>
