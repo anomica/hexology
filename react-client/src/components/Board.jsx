@@ -184,9 +184,9 @@ class Board extends React.Component {
         <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
         <SidebarLeft />
         <TopBar />
-        <div className="Board flex" style={{float: 'right'}}>
+        <div className="Board">
           <HexGrid height={800} viewBox="-50 -50 150 150">
-            <Layout size={{ x: 13, y: 13 }} flat={false} spacing={1.2} origin={{ x: -15, y: -25 }}>
+            <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
               {this.props.boardState ? this.props.boardState.map(hex => {
                 let targetClass = '';
                 if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
