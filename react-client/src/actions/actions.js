@@ -74,6 +74,16 @@ export const reinforceHex = (hexIndex, resourceType) => (
   }
 )
 
+export const updateResources = (playerOneResources, playerTwoResources) => (
+  {
+    type: 'UPDATE-RESOURCES',
+    payload: {
+      playerOneResources: playerOneResources,
+      playerTwoResources: playerTwoResources
+    }
+  }
+)
+
 export const swordsmen = (player) => (
   {
     type: 'SWORDSMEN',

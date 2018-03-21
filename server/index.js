@@ -191,11 +191,16 @@ setInterval(findOpenRooms, 1000);
 
 io.on('connection', socket => { // initialize socket on user connection
   console.log('User connected');
-  // console.log('socket.id:', socket.id);
-  let room = selectRoom();
-  if (room) { // if there is an existing room with one player,
-    socket.join(room);
-    // console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
+
+  socket.on('newGame', () => {
+    let newRoom = `*${roomNum}`
+    socket.join(newRoom); // create a new room
+    io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
+    roomNum++; // increment room count to assign new ro
+  })
+
+  socket.on('joinGame', (data) => {
+    socket.join(data.room);
     const board = gameInit(5, 4);
     let gameIndex = uuidv4();
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
@@ -216,19 +221,15 @@ io.on('connection', socket => { // initialize socket on user connection
       gameIndex: gameIndex,
       room: room
     }
-    io.to(room).emit('newGame', newGameBoard); // send game board to user
-  } else { // otherwise
-    socket.join('*' + roomNum); // create a new room
-    io.to(`*${roomNum}`).emit('newGame', 'Waiting on another player to join!'); // and send back a string to initialize for player 1
-    roomNum++; // increment room count to assign new rooms
-  }
+    io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
+  })
 
   socket.on('move', data => { // move listener
     moveUnits(data, socket); // pass move data and socket to function to assess move
   })
 
   socket.on('buy', data => {
-    buyUnits(data.type, data.player, data.gameIndex, data.socketId);
+    buyUnits(data.type, data.player, data.gameIndex, data.socketId, data.room);
   })
 
   socket.on('disconnect', () => {
@@ -399,7 +400,7 @@ const reinforceHexes = (gameIndex, currentPlayer) => {
   })
 }
 
-const buyUnits = (type, player, gameIndex, socketId) => {
+const buyUnits = (type, player, gameIndex, socketId, room) => {
   let game = games[gameIndex], resources;
   player === 'player1' ? resources = game.playerOneResources : resources = game.playerTwoResources;
   if (type === 'swordsmen') {
@@ -411,9 +412,13 @@ const buyUnits = (type, player, gameIndex, socketId) => {
           hex.swordsmen += 10;
         }
       })
-      io.to(socketId).emit('swordsmen');
+      io.to(room).emit('swordsmen');
+      io.to(room).emit('updateResources', {
+        playerOneResources: game.playerOneResources,
+        playerTwoResources: game.playerTwoResources
+      });
     } else {
-      io.to(socketId).emit('not enough resources');
+      io.to(socketId).emit('notEnoughResources');
     }
   } else if (type === 'archers') {
     if (resources.gold >= 10 && resources.wood >= 20) {
@@ -424,7 +429,11 @@ const buyUnits = (type, player, gameIndex, socketId) => {
           hex.archers += 10;
         }
       })
-      io.to(socketId).emit('archers');
+      io.to(room).emit('archers');
+      io.to(room).emit('updateResources', {
+        playerOneResources: game.playerOneResources,
+        playerTwoResources: game.playerTwoResources
+      });
     } else {
       io.to(socketId).emit('not enough resources');
     }
@@ -438,9 +447,13 @@ const buyUnits = (type, player, gameIndex, socketId) => {
           hex.knights += 10;
         }
       })
-      io.to(socketId).emit('knights');
+      io.to(room).emit('knights');
+      io.to(room).emit('updateResources', {
+        playerOneResources: game.playerOneResources,
+        playerTwoResources: game.playerTwoResources
+      });
     } else {
-      io.to(socketId).emit('not enough resources');
+      io.to(room).emit('not enough resources');
     }
   }
 }

@@ -23,7 +23,7 @@ class App extends React.Component {
       <Router history={browserHistory}>
         <Switch>
           <Route exact path='/' component={ Main } />
-          <Route path='/game' component={ Board } />
+          <Route path='/game*' component={ Board } />
           <Route path='/login' component={ Login } />
           <Route path='/signup' component={ Signup } />
         </Switch>

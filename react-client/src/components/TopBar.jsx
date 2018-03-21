@@ -38,7 +38,7 @@ const TopBar = props => {
           </Segment>
         }
         <Segment style={{textAlign: 'center'}}><strong>{props.playerTwoResources && props.playerTwoResources.hasOwnProperty('wood') ?
-          `${props.currentPlayer}'s turn` :
+          (props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') :
           `Game will begin when both players have joined.`}</strong>
         {props.playerTwoResources && props.playerTwoResources.hasOwnProperty('wood') && props.currentPlayer === props.userPlayer ?
           <UnitShop>Shop</UnitShop> : null
