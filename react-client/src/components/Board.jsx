@@ -18,9 +18,9 @@ class Board extends React.Component {
       socket: null,
       room: null,
       open: false,
-      tempSwordsman: null,
-      tempArchers: null,
-      tempKnights: null
+      tempSwordsman: 0,
+      tempArchers: 0,
+      tempKnights: 0
     }
   }
 
@@ -124,9 +124,9 @@ class Board extends React.Component {
     
       let updatedTarget = { // create copy of target hex
         ...target,
-        swordsmen: target.swordsmen += this.state.tempSwordsman,
-        archers: target.archers += this.state.tempArchers,
-        knights: target.knights += this.state.tempKnights,
+        swordsmen: target.player && target.player === this.props.userPlayer ? target.swordsmen += this.state.tempSwordsman : this.state.tempSwordsman,
+        archers: target.player && target.player === this.props.userPlayer ? target.archers += this.state.tempArchers : this.state.tempArchers, 
+        knights: target.player && target.player === this.props.userPlayer ? target.knights += this.state.tempKnights : this.state.tempKnights,
         player: this.props.userPlayer
       }
       let updatedOrigin = { // reinitialize hex they left
