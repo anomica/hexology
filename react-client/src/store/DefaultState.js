@@ -10,7 +10,8 @@ const DefaultState = {
   selectedHex: {},
   boardState: null,
   winner: null,
-  neighbors: []
+  neighbors: [],
+  menuVisible: true
 }
 
 export default DefaultState;

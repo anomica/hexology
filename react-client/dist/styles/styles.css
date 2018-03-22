@@ -73,3 +73,20 @@ g.metal > g > polygon {
   margin: 10px !important;
   cursor: pointer;
 }
+
+.topBar {
+  display: block;
+  width: 80%;
+}
+
+@media only screen and (min-width: 1800px) {
+  .topBar {
+    width: 90%;
+  }
+}
+
+@media only screen and (max-width: 850px) {
+  .topBar {
+    width: 70%;
+  }
+}

@@ -2,13 +2,16 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
-import { setSocket, setRoom, setUserPlayer, selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
+import { Segment, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
+import { setSocket, setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+         highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
+         archers, knights, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
 
 import SidebarLeft from './Sidebar.jsx';
+import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
 
 class Board extends React.Component {
@@ -19,39 +22,59 @@ class Board extends React.Component {
       socket: null,
       room: null,
       open: false,
-      tempSwordsman: null,
-      tempArchers: null,
-      tempKnights: null
+      tempSwordsmen: 0,
+      tempArchers: 0,
+      tempKnights: 0
     }
   }
 
   componentDidMount() {
     (async () => {
-      let socket = await socketIOClient("http://127.0.0.1:3000");
+      let socket = await socketIOClient('http://127.0.0.1:3000');
       this.props.setSocket(socket);
-      this.props.socket.on('newGame', data => {
-        if (typeof data === 'string') { // server sends string if player is first player to join room
-          !this.props.playerAssigned && this.props.setUserPlayer('player1'); // so for that client, they should be assigned to player 1
-        } else {
-          this.props.drawBoard(data.board); // if the server sends an object, it means that the player is player 2
-          this.props.setGameIndex(data.gameIndex); // if so, set game index
-          this.props.selectHex({}); // initialize selected hex
-          this.props.highlightNeighbors([]); // and neighbors
+      if (this.props.location.state) {
+        socket.emit('joinGame', {
+          room: this.props.location.state.detail
+        });
+        !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+        this.props.setRoom(this.props.location.state.detail);
+      } else {
+        socket.emit('newGame');
+        !this.props.playerAssigned && this.props.setUserPlayer('player1'); // so for that client, they should be assigned to player 1
+        socket.on('newGame', data => {
           this.props.setRoom(data.room);
-          !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
-        }
+        })
+      }
+      socket.on('gameCreated', data => {
+        this.props.drawBoard(data.board); // if the server sends an object, it means that the player is player 2
+        this.props.setGameIndex(data.gameIndex); // if so, set game index
+        this.props.selectHex({}); // initialize selected hex
+        this.props.highlightNeighbors([]); // and neighbors
+        !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
       });
-      this.props.socket.on('move', (move) => { // when socket receives result of move request,
+      socket.on('move', (move) => { // when socket receives result of move request,
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
       });
-      this.props.socket.on('win', () => {
+      this.props.socket.on('updateResources', data => {
+        this.props.updateResources(data.playerOneResources, data.playerTwoResources);
+      })
+      this.props.socket.on('swordsmen', () => {
+        this.props.swordsmen(this.props.currentPlayer);
+      });
+      this.props.socket.on('archers', () => {
+        this.props.archers(this.props.currentPlayer);
+      });
+      this.props.socket.on('knights', () => {
+        this.props.knights(this.props.currentPlayer);
+      });
+      socket.on('win', () => {
         alert('You win!');
       });
-      this.props.socket.on('lose', () => {
+      socket.on('lose', () => {
         alert('You lose!');
       });
-      this.props.socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
+      socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
     })();
@@ -67,11 +90,11 @@ class Board extends React.Component {
       this.setState({
         tempArchers: 0,
         tempKnights: 0,
-        tempSwordsman: 0
+        tempSwordsmen: 0
       })
     }
     let hex = this.props.selectedHex;
-    if (hex.swordsmen < this.state.tempSwordsman || hex.archers < this.state.tempArchers || hex.knights < this.state.tempKnights) {
+    if (hex.swordsmen < this.state.tempSwordsmen || hex.archers < this.state.tempArchers || hex.knights < this.state.tempKnights) {
       resetState();
       alert('you cannot enter a number higher of units than you currently have');
       return false;
@@ -117,24 +140,24 @@ class Board extends React.Component {
 
   handleMoveClick(e, hex) { // if move click,,
     // need to first check if player has units to move
-    if (this.props.neighbors.indexOf(hex.index) > -1 && (this.state.tempArchers > 0 || 
-      this.state.tempKnights > 0 || this.state.tempSwordsman > 0)) { // check if clicked hex is a neighbor
+    if (this.props.neighbors.indexOf(hex.index) > -1 && (this.state.tempArchers > 0 ||
+      this.state.tempKnights > 0 || this.state.tempSwordsmen > 0)) { // check if clicked hex is a neighbor
       let board = this.props.boardState;
       let origin = this.props.selectedHex;
       let originIndex = board.indexOf(origin); // grab index of hex in board state array for replacement in reducer
       let targetIndex = board.indexOf(hex); // same for target
       let target = board[targetIndex];
-    
+
       let updatedTarget = { // create copy of target hex
         ...target,
-        swordsmen: target.swordsmen += this.state.tempSwordsman,
-        archers: target.archers += this.state.tempArchers,
-        knights: target.knights += this.state.tempKnights,
+        swordsmen: target.player && target.player === this.props.userPlayer ? target.swordsmen += this.state.tempSwordsmen : this.state.tempSwordsmen,
+        archers: target.player && target.player === this.props.userPlayer ? target.archers += this.state.tempArchers : this.state.tempArchers,
+        knights: target.player && target.player === this.props.userPlayer ? target.knights += this.state.tempKnights : this.state.tempKnights,
         player: this.props.userPlayer
       }
       let updatedOrigin = { // reinitialize hex they left
         ...origin,
-        swordsmen: origin.swordsmen -= this.state.tempSwordsman,
+        swordsmen: origin.swordsmen -= this.state.tempSwordsmen,
         archers: origin.archers -= this.state.tempArchers,
         knights: origin.knights -= this.state.tempKnights,
       }
@@ -142,7 +165,7 @@ class Board extends React.Component {
       if (updatedOrigin.swordsmen === 0 && updatedOrigin.archers === 0 && updatedOrigin.knights === 0) {
         updatedOrigin.player = null
       }
-      
+
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex); // send information to be sent over socket
     } else { //  if selected hex is not a neighbor,
       console.log('hex: ', hex, '\nneighbors: ', this.props.neighbors)
@@ -192,62 +215,67 @@ class Board extends React.Component {
 
   render() {
     return (
-      <div className="Board flex">
-        <HexGrid height={800} viewBox="-50 -50 150 150">
-          <Layout size={{ x: 13, y: 13 }} flat={false} spacing={1.2} origin={{ x: -15, y: -25 }}>
-            {this.props.boardState ? this.props.boardState.map(hex => {
-              let targetClass = '';
-              if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
-                targetClass += 'opponent';
-              } else if (this.props.selectedHex.index === hex.index) {
-                targetClass += 'selected';
-              } else if (hex.player === this.props.userPlayer) {
-                targetClass += 'friendly';
-              } else if (this.props.neighbors.indexOf(hex.index) > -1) {
-                targetClass += 'neighbor';
-              } else if (hex.hasGold) {
-                targetClass += 'gold';
-              } else if (hex.hasWood) {
-                targetClass += 'wood';
-              } else if (hex.hasMetal) {
-                targetClass += 'metal';
-              }
-              return <Hexagon
-                key={uuidv4()}
-                className={targetClass}
-                onClick={(e) => this.handleClick(e, hex)}
-                q={hex.coordinates[0]}
-                r={hex.coordinates[1]}
-                s={hex.coordinates[2]}>
-                <Text>
-                  {/*<img src="https://png.icons8.com/metro/50/000000/sword.png"/>*/}
-                  {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
-                  {/*<img src="https://png.icons8.com/windows/50/000000/archer.png"/>*/}
-                  {/*<img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>*/}
-                </Text>
-              </Hexagon>
-            }): <div>Want to play with a friend? Send them this link: </div>}
-          </Layout>
-        </HexGrid>
-        <Modal open={this.state.open} size={'small'}
-          style={{ textAlign: 'center' }} closeIcon onClose={this.close.bind(this)}>
-          <Modal.Header>Move Troops</Modal.Header>
-          <Modal.Content>
-            <Modal.Description>
-              <Form size={'small'} key={'small'}>
-                <Form.Group widths='equal'>
-                  <Form.Field onChange={(e) => {this.setState({ tempSwordsman: Number(e.target.value) })}} label='Swordsman' control='input' placeholder='number' />
-                  <Form.Field onChange={(e) => {this.setState({ tempArchers: Number(e.target.value) })}} label='Archers' control='input' placeholder='number' />
-                  <Form.Field onChange={(e) => {this.setState({ tempKnights: Number(e.target.value) })}} label='Knights' control='input' placeholder='number' />
-                </Form.Group>
-                <Divider hidden />
-              </Form>
-            </Modal.Description>
-          </Modal.Content>
-          <Modal.Actions>
-            <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Submit</Button>
-          </Modal.Actions>
-        </Modal>
+      <div>
+        <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
+        <SidebarLeft />
+        <TopBar />
+        <div className="Board">
+          <HexGrid height={800} viewBox="-50 -50 150 150">
+            <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
+              {this.props.boardState ? this.props.boardState.map(hex => {
+                let targetClass = '';
+                if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
+                  targetClass += 'opponent';
+                } else if (this.props.selectedHex.index === hex.index) {
+                  targetClass += 'selected';
+                } else if (hex.player === this.props.userPlayer) {
+                  targetClass += 'friendly';
+                } else if (this.props.neighbors.indexOf(hex.index) > -1) {
+                  targetClass += 'neighbor';
+                } else if (hex.hasGold) {
+                  targetClass += 'gold';
+                } else if (hex.hasWood) {
+                  targetClass += 'wood';
+                } else if (hex.hasMetal) {
+                  targetClass += 'metal';
+                }
+                return <Hexagon
+                  key={uuidv4()}
+                  className={targetClass}
+                  onClick={(e) => this.handleClick(e, hex)}
+                  q={hex.coordinates[0]}
+                  r={hex.coordinates[1]}
+                  s={hex.coordinates[2]}>
+                  <Text>
+                    {/*<img src="https://png.icons8.com/metro/50/000000/sword.png"/>*/}
+                    {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
+                    {/*<img src="https://png.icons8.com/windows/50/000000/archer.png"/>*/}
+                    {/*<img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>*/}
+                  </Text>
+                </Hexagon>
+              }): <div></div>}
+            </Layout>
+          </HexGrid>
+          <Modal open={this.state.open} size={'small'}
+            style={{ textAlign: 'center' }} closeIcon onClose={this.close.bind(this)}>
+            <Modal.Header>Move Troops</Modal.Header>
+            <Modal.Content>
+              <Modal.Description>
+                <Form size={'small'} key={'small'}>
+                  <Form.Group widths='equal'>
+                    <Form.Field onChange={(e) => {this.setState({ tempSwordsmen: Number(e.target.value) })}} label='Swordsmen' control='input' placeholder='number' />
+                    <Form.Field onChange={(e) => {this.setState({ tempArchers: Number(e.target.value) })}} label='Archers' control='input' placeholder='number' />
+                    <Form.Field onChange={(e) => {this.setState({ tempKnights: Number(e.target.value) })}} label='Knights' control='input' placeholder='number' />
+                  </Form.Group>
+                  <Divider hidden />
+                </Form>
+              </Modal.Description>
+            </Modal.Content>
+            <Modal.Actions>
+              <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Submit</Button>
+            </Modal.Actions>
+          </Modal>
+        </div>
       </div>
     );
   }
@@ -263,12 +291,16 @@ const mapStateToProps = (state) => {
     gameIndex: state.state.gameIndex,
     currentPlayer: state.state.currentPlayer,
     playerAssigned: state.state.playerAssigned,
-    userPlayer: state.state.userPlayer
+    userPlayer: state.state.userPlayer,
+    playerOneResources: state.state.playerOneResources,
+    playerTwoResources: state.state.playerTwoResources
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setSocket, setRoom, setUserPlayer, selectHex, highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex, switchPlayer, setGameIndex }, dispatch)
+  return bindActionCreators({ setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+    highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
+    updateResources, swordsmen, archers, knights, switchPlayer, setGameIndex }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);
