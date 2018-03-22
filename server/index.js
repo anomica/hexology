@@ -483,36 +483,22 @@ const deleteOldGames = async () => {
 }
 
 // Check for old games and marks them as completed
-setInterval(deleteOldGames, 86400000)
-  // this.deleteGames = setInterval(() => {
-  //   // console.log('checking for old games...'); //TODO: Delete console log
-  //   axios.patch('/deleteGames')
-  //   .catch(err => console.error('err in checking old games:', err));
-  // }, 5000);
-  
-  //86400000
+setInterval(deleteOldGames, 86400000);
 
 const buyUnits = async (type, player, gameIndex, socketId, room) => {
-  let game = games[gameIndex], resources;
+  let game = games[gameIndex], resources;  
 
-  // console.log('&&&&&&&& THIS IS THE ROOM', room)
-  
+  ////////////////////////// BEGIN DB STUFF //////////////////////////
   let gameBoard = await db.getGameBoard(room, gameIndex);
   let currentPlayerResources = await db.getResources(room, gameIndex, player);
-
-  // player resources [ { p1_gold: 10, p1_wood: 10, p1_metal: 10 } ]
 
   console.log(`------------ player resources for ${player}: `, currentPlayerResources[0]);
 
   if (type === 'swordsmen') { // if buying swordsmen
-
-    console.log('///////////// LETS BUY SOME ----> SWORDSMEN');
-
+    console.log('///////////// LETS BUY SOME ----> SWORDSMEN'); //TODO: delete console log
     if (player === 'player1') { // for player 1
       if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_metal >= 10) { // check if player has enough resources to purchase unit
-        db.buySwordsmen(room, gameIndex, player);
-        // update player resources in the game to subtract gold and metal
-        // increase player's swordsmen in the game
+        db.buySwordsmen(room, gameIndex, player); // update units and resources in the db
       }
     } else if (player === 'player2') { // else same for player 2
       if (currentPlayerResources[0].p2_gold >= 10 && currentPlayerResources[0].p2_metal >= 10) {
@@ -521,8 +507,33 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
     }
   }
 
-  // console.log('^^^^^^^^^^^^^ buy units: ', game)
-  // console.log('^^^^^^^^^^^^^ game board: ', gameBoard);
+  if (type === 'archers') { // if buying archers
+    console.log('///////////// LETS BUY SOME ----> ARCHERS'); //TODO: delete console log
+    if (player === 'player1') { // for player 1
+      if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_wood >= 20) { // check if player has enough resources to purchase unit
+        db.buyArchers(room, gameIndex, player); // update units and resources in the db
+      }
+    } else if (player === 'player2') { // else same for player 2
+      if (currentPlayerResources[0].p2_gold >= 10 && currentPlayerResources[0].p2_wood >= 20) {
+        db.buyArchers(room, gameIndex, player);
+      }
+    }
+  }
+
+  if (type === 'knights') { // if buying knights
+    console.log('///////////// LETS BUY SOME ----> KNIGHTS'); //TODO: delete console log
+    if (player === 'player1') { // for player 1
+      if (currentPlayerResources[0].p1_gold >= 20 && currentPlayerResources[0].p1_wood >= 20 && currentPlayerResources[0].p1_metal >= 20) {
+        // check if player has enough resources to purchase unit
+        db.buyKnights(room, gameIndex, player); // update units and resources in the db
+      }
+    } else if (player === 'player2') { // else same for player 2
+      if (currentPlayerResources[0].p2_gold >= 20 && currentPlayerResources[0].p2_wood >= 20 && currentPlayerResources[0].p2_metal >= 20) {
+        db.buyKnights(room, gameIndex, player);
+      }
+    }
+  }
+  //////////////////////////// END OF DB STUFF //////////////////////////
 
   player === 'player1' ? resources = game.playerOneResources : resources = game.playerTwoResources;
   if (type === 'swordsmen') {
