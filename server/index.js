@@ -369,28 +369,29 @@ const moveUnits = async (data, socket) => {
 
 const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb) => { // to check move legality,
 
-  console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CHECKING LEGAL MOVE')
-  console.log('masterOrigCs: ', masterOrigCs)
+  console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CHECKING LEGAL MOVE');
+  console.log('masterOrigCs: ', masterOrigCs);
   console.log('origCs: ', origCs);
   console.log('masterTarCs: ', masterTarCs);
   console.log('tarCs: ', tarCs);
 
   let isLegal = false;
   if (await masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] && // make sure all coordinates match between origin
-      masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]  ) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
+      masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
     console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES MATCH');
 
-    ///////////////////////// USE THIS IF USING GAMES OBJ ON SERVER ////////////////////////////////////
+    ///////////////////////// USE THIS IF USING GAMES OBJECT ON SERVER ////////////////////////////////////
     // if (masterOrigin.archers === updatedOrigin.archers + updatedTarget.archers &&
     // masterOrigin.knights === updatedOrigin.knights + updatedTarget.knights &&
     // masterOrigin.swordsmen === updatedOrigin.swordsmen + updatedTarget.swordsmen) {
-    //////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     ///////////////////////// USE THIS IF USING DATABASE //////////////////////////////////////////////
     if (masterOrigin[0].archers === updatedOrigin.archers + updatedTarget.archers &&
     masterOrigin[0].knights === updatedOrigin.knights + updatedTarget.knights &&
     masterOrigin[0].swordsmen === updatedOrigin.swordsmen + updatedTarget.swordsmen) {
-    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
       isLegal = true;
       return true;
     } else { // master origin units do not match updated origin units + updated target units
@@ -406,10 +407,9 @@ const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, 
   }
 }
 
-// const checkForCollision = async (originIndex, targetIndex, gameIndex, room) => {
 const checkForCollision = async (originHexIndex, targetHexIndex, gameIndex, room) => {
 
-  ///////////////////////// IF USING GAME OBJECT ON THE SERVER /////////////////////////
+  //////////////////////////////// IF USING GAME OBJECT ON THE SERVER /////////////////////////
   // let game = games[gameIndex].board;
   // let origin = game[originIndex]; // uses games object on server
   // let target = game[targetIndex]; // uses games object on server
@@ -422,10 +422,9 @@ const checkForCollision = async (originHexIndex, targetHexIndex, gameIndex, room
   // } else {
   //   return false;
   // }
-  ///////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
-
-  ///////////////////////// IF USING DATABASE ////////////////////////////////////
+  /////////////////////////////////// IF USING DATABASE //////////////////////////////////////
   let game = await db.getGameBoard(room, gameIndex);
   let origin = await db.getHex(originHexIndex); // NOTE: returns an object
   let target = await db.getHex(targetHexIndex); // NOTE: returns an object
@@ -451,6 +450,7 @@ const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarge
 }
 
 const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedOrigin, updatedTarget, currentPlayer) => { // if combat,
+
   ////////////////////////////////// IF USING GAME OBJECT ON SERVER //////////////////////////////////
   // let attacker = updatedTarget // get attacking hex
   // let defender = games[gameIndex].board[targetIndex]; // and defending hex
@@ -481,9 +481,9 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
   console.log('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
 
   console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& UNITS COMPARISON &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-  console.log('swordsMenKnight: ', '\n ATTACKER SWORDSMEN: ', attacker.swordsmen, '\n DEFENDER KNIGHTS: ', defender[0].knights, '\n');
-  console.log('knightsArchers: ', '\n ATTACKER KNIGHTS: ', attacker.knights, '\n DEFENDER ARCHERS: ', defender[0].archers, '\n');
-  console.log('archerSwordsmen: ', '\n ATTACKER ARCHERS: ', attacker.archers, '\n DEFENDER SWORDSMEN: ', defender[0].swordsmen);
+  console.log('swordsMenKnight: ', '\n ATTACKER SWORDSMEN: ', attacker[0].swordsmen, '\n DEFENDER KNIGHTS: ', defender[0].knights, '\n');
+  console.log('knightsArchers: ', '\n ATTACKER KNIGHTS: ', attacker[0].knights, '\n DEFENDER ARCHERS: ', defender[0].archers, '\n');
+  console.log('archerSwordsmen: ', '\n ATTACKER ARCHERS: ', attacker[0].archers, '\n DEFENDER SWORDSMEN: ', defender[0].swordsmen);
   console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&');
 
   let attackerSwordsmen;
@@ -548,32 +548,37 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
 
   await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer); // update the board
 
-  // await updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin);
+  let masterOrigin = await db.getHex(updatedOrigin.index);
+  
+  await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin);
 
   return {
-    isOver: attackerDidWin ? checkForWin(defenderPlayer, attackerPlayer, gameIndex) : false,
+    isOver: await attackerDidWin ? checkForWin(defenderPlayer, attackerPlayer, gameIndex, room) : false,
     updatedOrigin: updatedOrigin,
     updatedTarget: updatedTarget
   }
 };
 
-const checkForWin = (losingPlayer, winningPlayer, gameIndex, room) => {
+const checkForWin = async (losingPlayer, winningPlayer, gameIndex, room) => {
   let isGameOver = true;
 
   //////////////// IF USING GAME OBJECT ON SERVER ////////////////
-  games[gameIndex].board.forEach(hex => {
-    if (hex.player === losingPlayer) {
-      isGameOver = false;
-    }
-  })
-  ////////////////////////////////////////////////////////////////
-
-  ////////////////////// IF USING DATABASE //////////////////////
   // games[gameIndex].board.forEach(hex => {
   //   if (hex.player === losingPlayer) {
   //     isGameOver = false;
   //   }
   // })
+  ////////////////////////////////////////////////////////////////
+
+  ////////////////////// IF USING DATABASE //////////////////////
+  let board = await db.getGameBoard(room, gameIndex);
+  board.forEach(hex => {
+    console.log('--------------------------------------------- CHECKING FOR WIN ------------------------------')
+    console.log('hex id: ', hex.hex_id, '\nhex player: ', hex.player);
+    if (hex.player === losingPlayer) {
+      isGameOver = false;
+    }
+  })
   ////////////////////////////////////////////////////////////////
 
   if (isGameOver) {
@@ -615,7 +620,7 @@ const deleteOldGames = async () => {
 }
 
 // Check for old games and marks them as completed
-// setInterval(deleteOldGames, 86400000)
+setInterval(deleteOldGames, 86400000);
 
 const buyUnits = async (type, player, gameIndex, socketId, room) => {
   let game = games[gameIndex], resources;
