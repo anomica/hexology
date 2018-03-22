@@ -19,6 +19,15 @@ export const setRoom = (room) => (
   }
 )
 
+export const newRoom = (room) => (
+  {
+    type: 'NEW-ROOM',
+    payload: {
+      [room.roomName]: room.room
+    }
+  }
+)
+
 export const menuToggle = () => (
   {
     type: 'MENU-TOGGLE'
