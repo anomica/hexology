@@ -12,6 +12,7 @@ const uuidv4 = require('uuid/v4');
 
 import SidebarLeft from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
+import DefaultState from '../store/DefaultState.js';
 
 class Board extends React.Component {
   constructor(props) {
@@ -21,9 +22,9 @@ class Board extends React.Component {
       socket: null,
       room: null,
       open: false,
-      tempSwordsmen: null,
-      tempArchers: null,
-      tempKnights: null
+      tempSwordsmen: 0,
+      tempArchers: 0,
+      tempKnights: 0
     }
   }
 
@@ -147,9 +148,9 @@ class Board extends React.Component {
 
       let updatedTarget = { // create copy of target hex
         ...target,
-        swordsmen: target.swordsmen += this.state.tempSwordsmen,
-        archers: target.archers += this.state.tempArchers,
-        knights: target.knights += this.state.tempKnights,
+        swordsmen: target.player && target.player === this.props.userPlayer ? target.swordsmen += this.state.tempSwordsmen : this.state.tempSwordsmen,
+        archers: target.player && target.player === this.props.userPlayer ? target.archers += this.state.tempArchers : this.state.tempArchers,
+        knights: target.player && target.player === this.props.userPlayer ? target.knights += this.state.tempKnights : this.state.tempKnights,
         player: this.props.userPlayer
       }
       let updatedOrigin = { // reinitialize hex they left
