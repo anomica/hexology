@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
+import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
 import { setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
@@ -18,7 +18,9 @@ class Board extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      open: false,
+      hex: null,
+      modalOpen: false,
+      confirmOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
       tempKnights: 0
@@ -74,8 +76,8 @@ class Board extends React.Component {
     });
   }
 
-  close() {
-    this.setState({ open: false });
+  closeModal() {
+    this.setState({ modalOpen: false });
   }
 
   validateTroopAmounts() {
@@ -92,21 +94,25 @@ class Board extends React.Component {
       resetState();
       alert('you cannot enter a number higher of units than you currently have');
       return false;
-    }
-    this.setState({
-      open: false
-    })
-  }
-
-  handleClick(e, hex) {
-    if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) { // since selected hex is either empty object or hex, check if hex is selected and if click is on selected hex
-      this.handleSelectClick(e, hex); // if either of these, reoute to select click function
     } else {
-      this.handleMoveClick(e, hex); // otherwise, click must be an attempt at a move
+      this.handleMoveClick(this.state.hex);
+      this.setState({
+        modalOpen: false
+      })
     }
   }
 
-  handleSelectClick(e, hex) {
+  handleClick(hex) {
+    if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) { // since selected hex is either empty object or hex, check if hex is selected and if click is on selected hex
+      this.handleSelectClick(hex); // if either of these, reoute to select click function
+    } else {
+      this.setState({
+        confirmOpen: true
+      })
+    }
+  }
+
+  handleSelectClick(hex) {
     if (hex.player === this.props.currentPlayer && hex.player === this.props.userPlayer) { // if selected hex is owned by user and it's their turn,
       let neighbors = [];
       let targetCs = hex.coordinates;
@@ -124,13 +130,10 @@ class Board extends React.Component {
         }
       })
       this.props.highlightNeighbors(neighbors); // dispatch neighbors array to reducer\
-      this.setState({
-        open: true
-      })
     }
   }
 
-  handleMoveClick(e, hex) { // if move click,,
+  handleMoveClick(hex) { // if move click,
     // need to first check if player has units to move
     if (this.props.neighbors.indexOf(hex.index) > -1 && (this.state.tempArchers > 0 ||
       this.state.tempKnights > 0 || this.state.tempSwordsmen > 0)) { // check if clicked hex is a neighbor
@@ -158,9 +161,13 @@ class Board extends React.Component {
         updatedOrigin.player = null
       }
 
+      this.setState({
+        confirmOpen: false
+      })
+
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex); // send information to be sent over socket
     } else { //  if selected hex is not a neighbor,
-      alert('AAAAAAAA') // alert player they can't move there
+      alert('Please select a valid move.') // alert player they can't move there
     }
   }
 
@@ -224,7 +231,10 @@ class Board extends React.Component {
                 return <Hexagon
                   key={uuidv4()}
                   className={targetClass}
-                  onClick={(e) => this.handleClick(e, hex)}
+                  onClick={() => {
+                    this.handleClick(hex);
+                    this.setState({ hex: hex });
+                  }}
                   q={hex.coordinates[0]}
                   r={hex.coordinates[1]}
                   s={hex.coordinates[2]}>
@@ -238,8 +248,26 @@ class Board extends React.Component {
               }): <div></div>}
             </Layout>
           </HexGrid>
-          <Modal open={this.state.open} size={'small'}
-            style={{ textAlign: 'center' }} closeIcon onClose={this.close.bind(this)}>
+          <Confirm
+            open={this.state.confirmOpen}
+            size={'tiny'}
+            content={'Move all your troops on this hex?'}
+            cancelButton={'No, only some'}
+            onCancel={() => {
+              this.setState({ modalOpen: true })
+              this.setState({ confirmOpen: false })
+            }}
+            confirmButton={'Yes'}
+            onConfirm={async () => {
+              await this.setState({
+                tempSwordsmen: this.props.selectedHex.swordsmen,
+                tempArchers: this.props.selectedHex.archers,
+                tempKnights: this.props.selectedHex.knights
+              })
+              this.handleMoveClick(this.state.hex);
+            }}/>
+          <Modal open={this.state.modalOpen} size={'small'}
+            style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
             <Modal.Header>Move Troops</Modal.Header>
             <Modal.Content>
               <Modal.Description>
@@ -254,7 +282,7 @@ class Board extends React.Component {
               </Modal.Description>
             </Modal.Content>
             <Modal.Actions>
-              <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Submit</Button>
+              <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
             </Modal.Actions>
           </Modal>
         </div>

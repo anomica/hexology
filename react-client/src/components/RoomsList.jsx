@@ -21,7 +21,6 @@ const RoomsList = props => {
     let socket = await props.socket;
     if (socket) {
       socket.on('newRoom', (room) => {
-        console.log(room);
         props.newRoom(room);
       })
     }
