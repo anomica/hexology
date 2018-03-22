@@ -197,9 +197,9 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     roomNum++; // increment room count to assign new ro
   })
 
-  socket.on('joinGame', (data) => {
-    socket.join(data.room);
-    const board = gameInit(5, 4);
+  socket.on('joinGame', async (data) => {
+    await socket.join(data.room);
+    const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
 
     //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
@@ -225,7 +225,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
     await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
 
-    io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
+    await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
   })
 
   socket.on('move', data => { // move listener
@@ -287,7 +287,7 @@ const moveUnits = async (data, socket) => {
       } else {
         let result = await resolveCombat(updatedOrigin.index, updatedTarget.index, gameIndex, room, updatedOrigin, updatedTarget, currentPlayer); //otherwise, roll for combat
         result.isOver ? // if attacker wins, need to change hexes and send back board
-        (() => {
+        (async () => {
           io.to(socketId).emit('win'); // the attacker gets a personal win message
           socket.to(room).emit('lose'); // while the rest of the room (defender) gets lose message
           const board = gameInit(5, 4);
@@ -316,16 +316,16 @@ const moveUnits = async (data, socket) => {
           
           await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
           
-          io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
+          await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
         })() :
-        (() => { // and vice versa
+        (async () => { // and vice versa
           let move = {
             updatedOrigin: result.updatedOrigin,
             updatedTarget: result.updatedTarget,
             originIndex: originIndex,
             targetIndex: targetIndex
           }
-          io.to(room).emit('move', move);
+          await io.to(room).emit('move', move);
         })();
         // const board = gameInit(5, 4); // the reinit board
         // gameIndex = uuidv4();
@@ -364,12 +364,6 @@ const moveUnits = async (data, socket) => {
       await io.to(room).emit('move', move);
     }
   } else { // if move request is not legal, send socket failure message, cheating detected
-    // console.log('************************ CHEATING ***********************')
-    // console.log('-------- master origin: ', masterOrigin);
-    // console.log('-------- updated target: ', updatedTarget);
-    // console.log('-------- updated origin: ', updatedOrigin);
-    // console.log('-------- current player: ', currentPlayer);
-    
     await io.to(room).emit('failure');
   }
 };
