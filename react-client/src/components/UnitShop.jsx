@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Label } from 'semantic-ui-react';
-import { swordsmen, archers, knights } from '../../src/actions/actions.js';
+import { updateResources, swordsmen, archers, knights } from '../../src/actions/actions.js';
 
 class UnitShop extends React.Component {
   constructor(props) {
@@ -35,10 +35,8 @@ class UnitShop extends React.Component {
         type: 'swordsmen',
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
-        socketId: this.props.socket.id
-      });
-      this.props.socket.on('swordsmen', () => {
-        this.props.swordsmen(this.props.userPlayer);
+        socketId: this.props.socket.id,
+        room: this.props.room
       });
     } else {
       alert('Not enough resources!');
@@ -56,10 +54,8 @@ class UnitShop extends React.Component {
         type: 'archers',
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
-        socketId: this.props.socket.id
-      });
-      this.props.socket.on('archers', () => {
-        this.props.archers(this.props.userPlayer);
+        socketId: this.props.socket.id,
+        room: this.props.room
       });
     } else {
       alert('Not enough resources!');
@@ -77,10 +73,8 @@ class UnitShop extends React.Component {
         type: 'knights',
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
-        socketId: this.props.socket.id
-      });
-      this.props.socket.on('knights', () => {
-        this.props.knights(this.props.userPlayer);
+        socketId: this.props.socket.id,
+        room: this.props.room
       });
     } else {
       alert('Not enough resources!');
@@ -135,7 +129,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ swordsmen, archers, knights }, dispatch);
+  return bindActionCreators({ updateResources, swordsmen, archers, knights }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(UnitShop);

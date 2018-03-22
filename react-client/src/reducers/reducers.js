@@ -2,6 +2,11 @@ import defaultState from '../../src/store/DefaultState.js';
 
 const reducers = (state = defaultState, action) => {
   switch(action.type) {
+    case 'SET-ROOMS':
+      return {
+        ...state,
+        rooms: action.payload
+      }
     case 'SET-SOCKET':
       return {
         ...state,
@@ -11,6 +16,17 @@ const reducers = (state = defaultState, action) => {
       return {
         ...state,
         room: action.payload
+      }
+    case 'MENU-TOGGLE':
+      return {
+        ...state,
+        menuVisible: !state.menuVisible
+      }
+    case 'EXIT-GAME':
+      return {
+        ...state,
+        socket: null,
+        room: null
       }
     case 'SELECT-HEX': // select hex on user click
       return {
@@ -101,6 +117,12 @@ const reducers = (state = defaultState, action) => {
           }
         }
       }
+    case 'UPDATE-RESOURCES':
+      return {
+        ...state,
+        playerOneResources: action.payload.playerOneResources,
+        playerTwoResources: action.payload.playerTwoResources
+      }
     case 'SWORDSMEN':
       let playerResources, hexIndex;
       action.payload.player === 'player1' ?
@@ -113,12 +135,7 @@ const reducers = (state = defaultState, action) => {
       })
       return {
         ...state,
-        boardState: newBoardState,
-        [playerResources]: {
-          ...state[playerResources],
-          gold: state[playerResources].gold -= 10,
-          metal: state[playerResources].metal -= 10
-        }
+        boardState: newBoardState
       }
     case 'ARCHERS':
       action.payload.player === 'player1' ?
@@ -132,11 +149,6 @@ const reducers = (state = defaultState, action) => {
       return {
         ...state,
         boardState: newBoardState,
-        [playerResources]: {
-          ...state[playerResources],
-          gold: state[playerResources].gold -= 10,
-          wood: state[playerResources].wood -= 20
-        }
       }
     case 'KNIGHTS':
       action.payload.player === 'player1' ?
@@ -150,11 +162,6 @@ const reducers = (state = defaultState, action) => {
       return {
         ...state,
         boardState: newBoardState,
-        [playerResources]: {
-          gold: state[playerResources].gold -= 20,
-          metal: state[playerResources].metal -= 20,
-          wood: state[playerResources].wood -= 20
-        }
       }
     case 'SWITCH-PLAYER':
       return {
