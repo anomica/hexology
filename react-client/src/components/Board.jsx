@@ -82,6 +82,7 @@ class Board extends React.Component {
   }
 
   handleClick(e, hex) {
+    console.log('------ clicked hex: ', hex);
     if (!this.props.selectedHex.hasOwnProperty('index') || this.props.selectedHex.index === hex.index) { // since selected hex is either empty object or hex, check if hex is selected and if click is on selected hex
       this.handleSelectClick(e, hex); // if either of these, reoute to select click function
     } else {
@@ -90,6 +91,7 @@ class Board extends React.Component {
   }
 
   handleSelectClick(e, hex) {
+    console.log('------ selected hex: ', hex);
     if (hex.player === this.props.currentPlayer && hex.player === this.props.userPlayer) { // if selected hex is owned by user and it's their turn,
       let neighbors = [];
       let targetCs = hex.coordinates;
@@ -143,6 +145,16 @@ class Board extends React.Component {
       
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex); // send information to be sent over socket
     } else { //  if selected hex is not a neighbor,
+      console.log('hex: ', hex, '\nneighbors: ', this.props.neighbors)
+      console.log('index of stuff: (> -1)', this.props.neighbors.indexOf(hex.index)) // should be > -1
+      // and
+      console.log('temp archers: (> 0)', this.state.tempArchers) // should be > 0 
+      // or
+
+      console.log('temp knights: (> 0)', this.state.tempKnights) //should be > 0
+      // or
+      console.log('temp swordsmen: (> 0)', this.state.tempSwordsman) // should be > 0
+
       alert('AAAAAAAA') // alert player they can't move there
     }
   }

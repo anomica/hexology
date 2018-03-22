@@ -229,7 +229,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   })
 
   socket.on('buy', data => {
-    buyUnits(data.type, data.player, data.gameIndex, data.socketId);
+    console.log('------ buy data', data)
+    buyUnits(data.type, data.player, data.gameIndex, data.socketId, data.room);
   })
 
   socket.on('disconnect', () => {
@@ -338,7 +339,7 @@ const moveUnits = async (data, socket) => {
       }
     } else {
       await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room, board); // if move is to unoccupied hex, execute move
-      let move = { 
+      let move = await { 
         originIndex: originIndex, 
         updatedOrigin: updatedOrigin, 
         targetIndex: targetIndex, 
@@ -347,13 +348,16 @@ const moveUnits = async (data, socket) => {
 
       await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
 
-      // console.log('-------- master origin: ', masterOrigin)
-      // console.log('-------- updated target: ', updatedTarget)
-      // console.log('-------- current player: ', currentPlayer)
+      console.log('-------- master origin: ', masterOrigin)
+      console.log('-------- updated target: ', updatedTarget)
+      console.log('-------- current player: ', currentPlayer)
 
       await io.to(room).emit('move', move);
     }
   } else {
+    console.log('-------- master origin: ', masterOrigin);
+    console.log('-------- updated target: ', updatedTarget);
+    console.log('-------- current player: ', currentPlayer);
     // if move request is not legal, send socket failure message, cheating detected
     await io.to(room).emit('failure');
   }
@@ -487,8 +491,38 @@ setInterval(deleteOldGames, 86400000)
   
   //86400000
 
-const buyUnits = (type, player, gameIndex, socketId) => {
+const buyUnits = async (type, player, gameIndex, socketId, room) => {
   let game = games[gameIndex], resources;
+
+  // console.log('&&&&&&&& THIS IS THE ROOM', room)
+  
+  let gameBoard = await db.getGameBoard(room, gameIndex);
+  let currentPlayerResources = await db.getResources(room, gameIndex, player);
+
+  // player resources [ { p1_gold: 10, p1_wood: 10, p1_metal: 10 } ]
+
+  console.log(`------------ player resources for ${player}: `, currentPlayerResources[0]);
+
+  if (type === 'swordsmen') { // if buying swordsmen
+
+    console.log('///////////// LETS BUY SOME ----> SWORDSMEN');
+
+    if (player === 'player1') { // for player 1
+      if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_metal >= 10) { // check if player has enough resources to purchase unit
+        db.buySwordsmen(room, gameIndex, player);
+        // update player resources in the game to subtract gold and metal
+        // increase player's swordsmen in the game
+      }
+    } else if (player === 'player2') { // else same for player 2
+      if (currentPlayerResources[0].p2_gold >= 10 && currentPlayerResources[0].p2_metal >= 10) {
+        db.buySwordsmen(room, gameIndex, player);
+      }
+    }
+  }
+
+  // console.log('^^^^^^^^^^^^^ buy units: ', game)
+  // console.log('^^^^^^^^^^^^^ game board: ', gameBoard);
+
   player === 'player1' ? resources = game.playerOneResources : resources = game.playerTwoResources;
   if (type === 'swordsmen') {
     if (resources.gold >= 10 && resources.metal >= 10) {

@@ -221,6 +221,68 @@ const removeHasMetal = async (hexIndex) => {
     .update({has_metal: 0})
 }
 
+/////////////////////// Gets user resources from game ///////////////////////
+const getResources = async (room, gameIndex, currentPlayer) => {
+  console.log('_____________ inside get resources _____________');
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+
+  if (player === '1') { // TODO: update with player id
+    return await knex('games')
+      .select('p1_gold', 'p1_wood', 'p1_metal')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+
+  } else if (player === '2') { // TODO: update with player id
+    return await knex('games')
+      .select('p2_gold', 'p2_wood', 'p2_metal')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+  }
+}
+
+/////////////////////// Updates user resources & units upon purchases ///////////////////////
+const buySwordsmen = async (room, gameIndex, currentPlayer) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+  let gameId = await getGameId(room, gameIndex); // gets the game id to find find the current game and hex the player is on
+
+  // console.log('++++++++++++++++ game id', gameId);
+
+  if (player === '1') { //TODO: update with player id
+    console.log('>>>>>>>>>>>>>> player 1 buying SWORDSMEN');
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p1_gold', 10) // decreases the player's gold
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p1_metal', 10) // decreases the player's metal
+
+  } else if (player === '2') { //TODO: update with player id
+    console.log('>>>>>>>>>>>>>> player 2 buying SWORDSMEN');
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_gold', 10) // decreases the player's gold
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_metal', 10) // decreases the player's metal
+  }
+
+  // then find hex that the current player is on
+  await knex('hex')
+    .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
+    .increment('swordsmen', 10) // increases the units on the player's hex
+
+};
+
+const buyArchers = async (room, gameIndex, currentPlayer) => {
+
+};
+
+const buyKnights = async (room, gameIndex, currentPlayer) => {
+
+};
+
 /////////////////////// Gets hex based off hex index ///////////////////////
 const getHex = (hexIndex) => {
   return knex('hex').select()
@@ -233,6 +295,14 @@ const getGame = (room, gameIndex) => {
   return knex('games').where(
     knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`)
   );
+}
+
+/////////////////////// Gets game ID based off room and game index ///////////////////////
+const getGameId = (room, gameIndex) => {
+  let roomNum = room.split('*').join('');
+  return knex('games')
+    .select('game_id')
+    .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`));
 }
 
 /////////////////////// Fetches games older than 1 day from today's date ///////////////////////
@@ -299,5 +369,9 @@ module.exports = {
   getOldGames,
   deleteGames,
   deleteHex,
-  gameComplete
+  gameComplete,
+  getResources,
+  buySwordsmen,
+  buyArchers,
+  buyKnights
 };
