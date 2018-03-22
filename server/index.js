@@ -266,7 +266,7 @@ app.get('/*', (req, res) => res.sendfile('/'));
 // });
 
 const moveUnits = async (data, socket) => {
-  console.log('??????????????????????????? move units data', data);
+  // console.log('??????????????????????????? move units data', data);
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
   let updatedOrigin = await data.updatedOrigin; // new origin object as sent by user
   let originIndex = await data.originIndex; // with its index,
@@ -278,15 +278,14 @@ const moveUnits = async (data, socket) => {
   // let board = games[gameIndex].board; // game board found using above index
   let board = await db.getGameBoard(room, gameIndex); // gets game board from db using above index
 
-  // console.log('////////////////// ORIGINAL BOARD /////////////////', games[gameIndex].board[targetIndex], 'TARGET INDEX: ', targetIndex, '////////////////// END OF ORIGINAL BOARD /////////////////');
-  // console.log('////////////////// DB BOARD /////////////////', board[targetIndex], 'TARGET INDEX: ', targetIndex, '////////////////// END OF DB BOARD /////////////////');
+  let masterOrigin = await db.getHex(updatedOrigin.index);// origin to be updated/checked against
+  // let masterOrigin = await board[originIndex];// origin to be updated/checked against
 
-  let masterOrigin = await board[originIndex];// origin to be updated/checked against
   let masterTarget = await db.getHex(updatedTarget.index); // same for target
   // let masterTarget = await board[targetIndex]
 
   // let masterOrigCs = masterOrigin.coordinates; // coordinates of those masters
-  let masterOrigCs = [masterOrigin.coordinate_0, masterOrigin.coordinate_1, masterOrigin.coordinate_2]; // coordinates of those masters
+  let masterOrigCs = [masterOrigin[0].coordinate_0, masterOrigin[0].coordinate_1, masterOrigin[0].coordinate_2]; // coordinates of those masters
 
   // let masterTarCs = masterTarget.coordinates;
   let masterTarCs = [masterTarget[0].coordinate_0, masterTarget[0].coordinate_1, masterTarget[0].coordinate_2]; // coordinates of those masters
@@ -294,6 +293,8 @@ const moveUnits = async (data, socket) => {
   console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ coords ]]]]]]]]]]]]]]]]]]]]]]]]]]')
   console.log('mastertarget.coordinates: ', games[gameIndex].board[targetIndex].coordinates);
   console.log('masterTarCs: ', masterTarCs);
+  console.log('masterOrigin.coordinates: ', games[gameIndex].board[originIndex].coordinates);
+  console.log('masterOrigCs: ', masterOrigCs);
 
   let origCs = await updatedOrigin.coordinates; // as well as coordinates of the ones sent by user
   let tarCs = await updatedTarget.coordinates;
@@ -302,12 +303,11 @@ const moveUnits = async (data, socket) => {
   let socketId = await data.socketId; // socket to send back response if necessary
 
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget); // assess legality of move
-  if (legal) {
-    // if legal move,
-    let collision = await checkForCollision(originIndex, targetIndex, gameIndex, room); // check for collision
+  if (legal) { // if legal move,
+    let collision = await checkForCollision(updatedOrigin.index, updatedTarget.index, gameIndex, room); // check for collision
+    // let collision = await checkForCollision(originIndex, targetIndex, gameIndex, room); // check for collision
     if (collision) {
-      if (collision === 'friendly') {
-        // if collision and collision is friendly,
+      if (collision === 'friendly') { // if collision and collision is friendly,
         await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room, board); // update hexes without combat occuring
 
         await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
@@ -355,31 +355,26 @@ const moveUnits = async (data, socket) => {
 
       await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
 
-      // console.log('-------- master origin: ', masterOrigin)
-      // console.log('-------- updated target: ', updatedTarget)
-      // console.log('-------- updated origin: ', updatedOrigin);
-      // console.log('-------- current player: ', currentPlayer)
-
       await io.to(room).emit('move', move);
     }
-  } else {
-    console.log('************************ CHEATING ***********************')
-    console.log('-------- master origin: ', masterOrigin);
-    console.log('-------- updated target: ', updatedTarget);
-    console.log('-------- updated origin: ', updatedOrigin);
-    console.log('-------- current player: ', currentPlayer);
-    // if move request is not legal, send socket failure message, cheating detected
+  } else { // if move request is not legal, send socket failure message, cheating detected
+    // console.log('************************ CHEATING ***********************')
+    // console.log('-------- master origin: ', masterOrigin);
+    // console.log('-------- updated target: ', updatedTarget);
+    // console.log('-------- updated origin: ', updatedOrigin);
+    // console.log('-------- current player: ', currentPlayer);
+    
     await io.to(room).emit('failure');
   }
 };
 
 const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, cb) => { // to check move legality,
   // TODO: delete console log
-  console.log('-------------------- checking legal move')
-  console.log('master orig cs: ', masterOrigCs);
-  console.log('orig cs: ', origCs)
-  console.log('master tar cs: ', masterTarCs)
-  console.log('tar cs: ', tarCs)
+  // console.log('-------------------- checking legal move')
+  // console.log('master orig cs: ', masterOrigCs);
+  // console.log('orig cs: ', origCs)
+  // console.log('master tar cs: ', masterTarCs)
+  // console.log('tar cs: ', tarCs)
 
   if (await masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] && // make sure all coordinates match between origin
       masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2] ) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
@@ -389,41 +384,38 @@ const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, 
       }
 }
 
-const checkForCollision = async (originIndex, targetIndex, gameIndex, room) => {
+// const checkForCollision = async (originIndex, targetIndex, gameIndex, room) => {
+const checkForCollision = async (originHexIndex, targetHexIndex, gameIndex, room) => {
   // let game = games[gameIndex].board;
   let game = await db.getGameBoard(room, gameIndex);
 
-  let origin = game[originIndex];
-  let target = game[targetIndex];
+  let origin = await db.getHex(originHexIndex); // NOTE: returns an object
+  // let origin = game[originIndex];
 
-  // TODO: delete console log
-  // console.log('------- origin', origin)
-  // console.log('------- target', target)
+  let target = await db.getHex(targetHexIndex); // NOTE: returns an object
+  // let target = game[targetIndex];
 
-  if (origin.player && target.player) {
+  if (origin[0].player && target[0].player) {
     let collision = '';
-    origin.player === target.player ? collision += 'friendly' : collision += 'opponent'; // if collision, decide if collision is with own units or enemy units
+    origin[0].player === target[0].player
+      ? (collision += 'friendly')
+      : (collision += 'opponent'); // if collision, decide if collision is with own units or enemy units
     return collision;
   } else {
     return false;
   }
-}
+};
 
 const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room, board) => {
-  // console.log('************************ BOARD IN UPDATE HEXES ************************', board[0], '************************ END OF BOARD IN UPDATE HEXES ************************');
   games[gameIndex].board[originIndex] = await updatedOrigin;
   games[gameIndex].board[targetIndex] = await updatedTarget; // This is what will happen on an ordinary move
-
-  console.log('---------------------- update hex -------------------------');
-  console.log('update origin: ', updatedOrigin);
-  console.log('updated target: ', updatedTarget)
 
   currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1'; // then player will toggle
   await reinforceHexes(gameIndex, currentPlayer, targetIndex, room, board); // then check to see if there are reinforcements
 }
 
 const resolveCombat = async (originIndex, targetIndex, gameIndex, room) => { // if combat,
-  let board = await db.getGameBoard(room, gameIndex);
+  let board = await db.getGameBoard(room, gameIndex); // gets the hexes (NOTE: This returns an object)
 
   // let attacker = games[gameIndex].board[originIndex]; // get attacking hex
   let attacker = await board[originIndex]; // get attacking hex
