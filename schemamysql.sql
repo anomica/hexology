@@ -23,16 +23,13 @@ CREATE TABLE games (
   game_index VARCHAR(60) NOT NULL,
   room_id INT NOT NULL,
   player1 INT NOT NULL,
-
   p1_gold INT DEFAULT 10,
   p1_wood INT DEFAULT 10,
   p1_metal INT DEFAULT 10,
-
   player2 INT NOT NULL,
   p2_gold INT DEFAULT 10,
   p2_wood INT DEFAULT 10,
   p2_metal INT DEFAULT 10,
-
   current_player INT DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   game_completed BOOLEAN DEFAULT FALSE,
@@ -52,16 +49,13 @@ CREATE TABLE hex (
   coordinate_1 INT NOT NULL,
   coordinate_2 INT NOT NULL,
   player INT DEFAULT NULL,
-  -- units INT NOT NULL,
-  -- has_resource BOOLEAN DEFAULT FALSE,
-
+  hex_owner INT DEFAULT NULL,
   has_gold BOOLEAN DEFAULT FALSE,
   has_wood BOOLEAN DEFAULT FALSE,
   has_metal BOOLEAN DEFAULT FALSE,
   swordsmen INT DEFAULT 0,
   archers INT DEFAULT 0,
   knights INT DEFAULT 0,
-
   remove_hex BOOLEAN DEFAULT FALSE,
   PRIMARY KEY (hex_id),
   FOREIGN KEY (game_id) REFERENCES games (game_id),

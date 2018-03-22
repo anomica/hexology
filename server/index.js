@@ -355,6 +355,7 @@ const moveUnits = async (data, socket) => {
       await io.to(room).emit('move', move);
     }
   } else {
+    console.log('************************ CHEATING ***********************')
     console.log('-------- master origin: ', masterOrigin);
     console.log('-------- updated target: ', updatedTarget);
     console.log('-------- current player: ', currentPlayer);
