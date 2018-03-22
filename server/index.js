@@ -194,6 +194,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let newRoom = `*${roomNum}`
     socket.join(newRoom); // create a new room
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
+    socket.broadcast.emit('newRoom', { roomName: newRoom, room: io.sockets.adapter.rooms[newRoom] });
     roomNum++; // increment room count to assign new ro
   })
 

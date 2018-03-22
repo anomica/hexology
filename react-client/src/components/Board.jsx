@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
 import { Segment, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
-import { setSocket, setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -18,9 +18,6 @@ class Board extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      endpoint: "http://127.0.0.1:3000", // local host on local build, should be "/" for heroku deployment as sockets are hosted on root
-      socket: null,
-      room: null,
       open: false,
       tempSwordsmen: 0,
       tempArchers: 0,
@@ -29,55 +26,52 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-    (async () => {
-      let socket = await socketIOClient('http://127.0.0.1:3000');
-      this.props.setSocket(socket);
-      if (this.props.location.state) {
-        socket.emit('joinGame', {
-          room: this.props.location.state.detail
-        });
-        !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
-        this.props.setRoom(this.props.location.state.detail);
-      } else {
-        socket.emit('newGame');
-        !this.props.playerAssigned && this.props.setUserPlayer('player1'); // so for that client, they should be assigned to player 1
-        socket.on('newGame', data => {
-          this.props.setRoom(data.room);
-        })
-      }
-      socket.on('gameCreated', data => {
-        this.props.drawBoard(data.board); // if the server sends an object, it means that the player is player 2
-        this.props.setGameIndex(data.gameIndex); // if so, set game index
-        this.props.selectHex({}); // initialize selected hex
-        this.props.highlightNeighbors([]); // and neighbors
-        !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+    let socket = this.props.socket;
+    if (this.props.location.state) {
+      socket.emit('joinGame', {
+        room: this.props.location.state.detail
       });
-      socket.on('move', (move) => { // when socket receives result of move request,
-        this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
-        this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
-      });
-      this.props.socket.on('updateResources', data => {
-        this.props.updateResources(data.playerOneResources, data.playerTwoResources);
+      !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+      this.props.setRoom(this.props.location.state.detail);
+    } else {
+      socket.emit('newGame');
+      !this.props.playerAssigned && this.props.setUserPlayer('player1'); // so for that client, they should be assigned to player 1
+      socket.on('newGame', data => {
+        this.props.setRoom(data.room);
       })
-      this.props.socket.on('swordsmen', () => {
-        this.props.swordsmen(this.props.currentPlayer);
-      });
-      this.props.socket.on('archers', () => {
-        this.props.archers(this.props.currentPlayer);
-      });
-      this.props.socket.on('knights', () => {
-        this.props.knights(this.props.currentPlayer);
-      });
-      socket.on('win', () => {
-        alert('You win!');
-      });
-      socket.on('lose', () => {
-        alert('You lose!');
-      });
-      socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
-        alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
-      });
-    })();
+    }
+    socket.on('gameCreated', data => {
+      this.props.drawBoard(data.board); // if the server sends an object, it means that the player is player 2
+      this.props.setGameIndex(data.gameIndex); // if so, set game index
+      this.props.selectHex({}); // initialize selected hex
+      this.props.highlightNeighbors([]); // and neighbors
+      !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+    });
+    socket.on('move', (move) => { // when socket receives result of move request,
+      this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
+      this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
+    });
+    this.props.socket.on('updateResources', data => {
+      this.props.updateResources(data.playerOneResources, data.playerTwoResources);
+    })
+    this.props.socket.on('swordsmen', () => {
+      this.props.swordsmen(this.props.currentPlayer);
+    });
+    this.props.socket.on('archers', () => {
+      this.props.archers(this.props.currentPlayer);
+    });
+    this.props.socket.on('knights', () => {
+      this.props.knights(this.props.currentPlayer);
+    });
+    socket.on('win', () => {
+      alert('You win!');
+    });
+    socket.on('lose', () => {
+      alert('You lose!');
+    });
+    socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
+      alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
+    });
   }
 
   close() {
@@ -286,7 +280,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, switchPlayer, setGameIndex }, dispatch);
 }
