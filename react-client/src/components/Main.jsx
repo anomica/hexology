@@ -14,17 +14,17 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
-    // axios.post('/signup', {
-    //   username: 'amy11',
-    //   email: 'glova11@aol.com',
-    //   password: 'kitty'
-    // })
-    //   .then(data => {
-    //     console.log('data from signup:', data);
-    //   })
-    //   .catch(err => {
-    //     console.log('error from signup:', err);
-    //   })
+    axios.post('/signup', {
+      username: 'amy11',
+      email: 'glova11@aol.com',
+      password: 'kitty'
+    })
+      .then(data => {
+        console.log('data from signup:', data);
+      })
+      .catch(err => {
+        console.log('error from signup:', err);
+      })
     axios.get('/persistUser')
       .then(data => {
         console.log('data from session:', data);
