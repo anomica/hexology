@@ -13,7 +13,7 @@ var cors = require('cors');
 const socketIo = require("socket.io");
 const io = socketIo(server);
 require('./auth-config.js')(passport);
-
+require('events').EventEmitter.prototype._maxListeners = 100;
 // const http = require('http').Server(app);
 // require('../server/config/passport')(passport);
 app.use(session({
@@ -54,7 +54,6 @@ app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
 });
 
 app.post('/login', passport.authenticate('local-login'), (req, res) => {
-  console.log('req.user upon login:', req.user);
   res.status(201).json(req.user);
 });
 
@@ -141,6 +140,10 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
   });
 };
 
+app.get('/rooms', (req, res) => {
+  res.status(200).json(io.sockets.adapter.rooms);
+});
+
 let roomNum = 0;
 let openRooms = [];
 
@@ -186,14 +189,19 @@ setInterval(findOpenRooms, 1000);
 
 io.on('connection', async (socket) => { // initialize socket on user connection
   console.log('User connected');
-  // console.log('socket.id:', socket.id);
-  let room = await selectRoom();
-  if (room) { // if there is an existing room with one player,
-    socket.join(room);
-    // console.log('room after joining other player:', io.sockets.adapter.rooms[room]);
-    const board = await gameInit(5, 4);
+
+  socket.on('newGame', () => {
+    let newRoom = `*${roomNum}`
+    socket.join(newRoom); // create a new room
+    io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
+    roomNum++; // increment room count to assign new ro
+  })
+
+  socket.on('joinGame', (data) => {
+    socket.join(data.room);
+    const board = gameInit(5, 4);
     let gameIndex = uuidv4();
-    
+
     //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
@@ -214,55 +222,22 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       gameIndex: gameIndex,
       room: room
     }
-    
-    // await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
-
-    await io.to(room).emit('newGame', newGameBoard); // send game board to user
-  } else { // otherwise
-    socket.join('*' + roomNum); // create a new room
-    io.to(`*${roomNum}`).emit('newGame', 'Waiting on another player to join!'); // and send back a string to initialize for player 1
-    roomNum++; // increment room count to assign new rooms
-  }
+    io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
+  })
 
   socket.on('move', data => { // move listener
     moveUnits(data, socket); // pass move data and socket to function to assess move
   })
 
   socket.on('buy', data => {
-    buyUnits(data.type, data.player, data.gameIndex, data.socketId);
+    buyUnits(data.type, data.player, data.gameIndex, data.socketId, data.room);
   })
 
   socket.on('disconnect', () => {
-    console.log('user disconnected')
+    console.log('user disconnected');
   })
 })
 
-
-app.get('/*', (req, res) => res.sendfile('/'));
-
-
-// app.post('/newBoard', (req, res) => {
-//   games = {};  // ************************THIS IS JUST FOR DEVELOPMENT, IT MAKES IT SO WE DON'T GUM UP THE SERVER WITH A TON OF OBJECTS, IN REAL LIFE WE WON'T EVEN BE STORING GAMES ON THE SERVER MOST LIKELY
-//   const board = gameInit(req.body.numRows, req.body.numCols);
-//   let gameIndex = uuidv4();
-//   games[gameIndex] = {
-//     board: board,
-//     playerOneResources: {
-//       gold: 10,
-//       wood: 10,
-//       metal: 10
-//     },
-//     playerTwoResources: {
-//       gold: 10,
-//       wood: 10,
-//       metal: 10
-//     }
-//   };
-//   res.status(201).json({
-//     board: board,
-//     gameIndex: gameIndex
-//   });
-// });
 
 const moveUnits = async (data, socket) => {
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
@@ -274,18 +249,14 @@ const moveUnits = async (data, socket) => {
   let room = data.room; // room to send move to
 
   let board = games[gameIndex].board; // game board found using above index
-  console.log('board:', board);
   // let board = await db.getGameBoard(room, gameIndex); // gets game board from db using above index
 
   // console.log('////////////////// BOARD /////////////////', board[0], '////////////////// END OF BOARD /////////////////');
 
   let masterOrigin = board[originIndex]; // origin to be updated/checked against
   let masterTarget = board[targetIndex]; // same for target
-  console.log('masetrOrigin:', masterOrigin);
-  console.log('masterTarget:', masterTarget);
   let masterOrigCs = masterOrigin.coordinates; // coordinates of those masters
   // let masterOrigCs = [masterOrigin.coordinate_0, masterOrigin.coordinate_1, masterOrigin.coordinate_2]; // coordinates of those masters
-  console.log('masetrOriginCs', masterOrigCs);
   let masterTarCs = masterTarget.coordinates;
   // let masterTarCs = [masterTarget.coordinate_0, masterTarget.coordinate_1, masterTarget.coordinate_2]; // coordinates of those masters
 
@@ -294,10 +265,8 @@ const moveUnits = async (data, socket) => {
 
   let currentPlayer = data.currentPlayer; // player whose turn it is
   let socketId = data.socketId; // socket to send back response if necessary
-   
-  console.log('args before calling:', masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget)
+
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget); // assess legality of move
-  console.log('legal:', legal);
   if (legal) { // if legal move,
     let collision = await checkForCollision(originIndex, targetIndex, gameIndex); // check for collision
     if (collision) {
@@ -310,11 +279,34 @@ const moveUnits = async (data, socket) => {
         await io.to(room).emit('move', move); // then send back okay to move units
       } else {
         let result = await resolveCombat(originIndex, targetIndex, gameIndex, updatedOrigin, updatedTarget, currentPlayer); //otherwise, roll for combat
-        console.log('result:', result);
         result.isOver ? // if attacker wins, need to change hexes and send back board
         (() => {
           io.to(socketId).emit('win'); // the attacker gets a personal win message
           socket.to(room).emit('lose'); // while the rest of the room (defender) gets lose message
+          const board = gameInit(5, 4);
+          let gameIndex = uuidv4();
+
+          //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
+          games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
+            board: board, // set board,
+            playerOneResources: { // p1 resources,
+              gold: 10,
+              wood: 10,
+              metal: 10
+            },
+            playerTwoResources: { // and p2 resources
+              gold: 10,
+              wood: 10,
+              metal: 10
+            }
+          };
+
+          const newGameBoard = {
+            board: board,
+            gameIndex: gameIndex,
+            room: room
+          }
+          io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
         })() :
         (() => { // and vice versa
           let move = {
@@ -350,13 +342,12 @@ const moveUnits = async (data, socket) => {
       }
     } else {
       await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room, board); // if move is to unoccupied hex, execute move
-      let move = { 
-        originIndex: originIndex, 
-        updatedOrigin: updatedOrigin, 
-        targetIndex: targetIndex, 
+      let move = {
+        originIndex: originIndex,
+        updatedOrigin: updatedOrigin,
+        targetIndex: targetIndex,
         updatedTarget: updatedTarget
       };
-      console.log('move:'. move);
       // await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer); // updates the original hex and new hex in the db for the current player
 
       // console.log('-------- master origin: ', masterOrigin)
@@ -372,18 +363,13 @@ const moveUnits = async (data, socket) => {
 };
 
 const checkLegalMove = (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb) => { // to check move legality,
-  console.log('args:', masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb);
   let isLegal = false;
   if (masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] && // make sure all coordinates match between origin
       masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]  ) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
-        console.log('masterOrigin.archers, updatedOrigin.archers + updatedTarget.archers', masterOrigin.archers, updatedOrigin.archers + updatedTarget.archers)
-        console.log(' masterOrigin.knights, updatedOrigin.knights + updatedTarget.knights', masterOrigin.knights, updatedOrigin.knights + updatedTarget.knights)
-        console.log('asterOrigin.swordsmen, updatedOrigin.swordsmen + updatedTarget.swordsmen', masterOrigin.swordsmen, updatedOrigin.swordsmen + updatedTarget.swordsmen)
-        if (masterOrigin.archers === updatedOrigin.archers + updatedTarget.archers && 
-        masterOrigin.knights === updatedOrigin.knights + updatedTarget.knights && 
+        if (masterOrigin.archers === updatedOrigin.archers + updatedTarget.archers &&
+        masterOrigin.knights === updatedOrigin.knights + updatedTarget.knights &&
         masterOrigin.swordsmen === updatedOrigin.swordsmen + updatedTarget.swordsmen) {
           isLegal = true;
-          console.log('isLegal:', isLegal);
           return true;
         } else {
           return false;
@@ -430,18 +416,14 @@ const resolveCombat = (originIndex, targetIndex, gameIndex, updatedOrigin, updat
   let attackerDidWin;
 
 // Stephanie's changes retrieving from DB
-// const resolveCombat = async (originIndex, targetIndex, gameIndex, room) => { // if combat, 
+// const resolveCombat = async (originIndex, targetIndex, gameIndex, room) => { // if combat,
 //   let board = await db.getGameBoard(room, gameIndex);
 
 //   // let attacker = games[gameIndex].board[originIndex]; // get attacking hex
 //   let attacker = board[originIndex]; // get attacking hex
-  
+
 //   // let defender = games[gameIndex].board[targetIndex]; // and defending hex
 //   let defender = board[targetIndex]; // and defending hex
-
-
-  console.log('Attacker: ', attacker.swordsmen, attacker.archers, attacker.knights)
-  console.log('Defender: ', defender.swordsmen, defender.archers, defender.knights)
 
   let swordsMenKnight = attacker.swordsmen - defender.knights;
   let knightsArchers = attacker.knights - defender.archers;
@@ -480,7 +462,7 @@ const resolveCombat = (originIndex, targetIndex, gameIndex, updatedOrigin, updat
   let defendingArmy = defenderSwordsmen + defenderArchers + defenderKnights;
   let attackingArmy = attackerArchers + attackerSwordsmen + attackerKnights;
 
-  if (defendingArmy > attackingArmy) { 
+  if (defendingArmy > attackingArmy) {
     updatedOrigin = { // reinitialize hex they left
       ...updatedOrigin,
       swordsmen: updatedOrigin.swordsmen + attackerSwordsmen,
@@ -495,8 +477,6 @@ const resolveCombat = (originIndex, targetIndex, gameIndex, updatedOrigin, updat
       archers: defenderArchers,
       player: defenderPlayer
     }
-    console.log('updatedOrigin:', updatedOrigin);
-    console.log('updatedTarget:', updatedTarget);
   } else { // tie goes to attacker
     attackerDidWin = true;
     updatedTarget = {
@@ -506,15 +486,14 @@ const resolveCombat = (originIndex, targetIndex, gameIndex, updatedOrigin, updat
       archers: attackerArchers,
       player: attackerPlayer
     }
-    console.log('updatedTarget:', updatedTarget);
-  } 
-  
+  }
+
   updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer); // update the board
-  
+
   return {
     isOver: attackerDidWin ? checkForWin(defenderPlayer, attackerPlayer, gameIndex) : false,
     updatedOrigin: updatedOrigin,
-    updatedTarget: updatedTarget 
+    updatedTarget: updatedTarget
   }
 }
 
@@ -525,7 +504,7 @@ const checkForWin = (losingPlayer, winningPlayer, gameIndex) => {
       isGameOver = false;
     }
   })
-  
+
   if (isGameOver) {
     return winningPlayer;
   }
@@ -544,7 +523,6 @@ const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room, board
 
   // console.log('{{{{{{{{{{{{{{{{{{{ REINFORCE HEX BOARD }}}}}}}}}}}}}}}}}}}}}}}', board[0], '{{{{{{{{{{{{{{{{{{{ END OF REINFORCE HEX BOARD }}}}}}}}}}}}}}}}}}}}}}}');
 
-  console.log('ROOM: ', room, 'GAME INDEX: ', gameIndex);
 
   let playerId = await currentPlayer[currentPlayer.length - 1];
 
@@ -579,22 +557,22 @@ const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room, board
 const deleteOldGames = async () => {
   let oldGames = await db.getOldGames();
   for (let i = 0; i < oldGames.length; i++) {
-    await db.deleteHex(oldGames[i].game_id); // first mark hexes to delete 
+    await db.deleteHex(oldGames[i].game_id); // first mark hexes to delete
     await db.deleteGames(oldGames[i].game_id); // then delete the game
   }
 }
 
 // Check for old games and marks them as completed
-setInterval(deleteOldGames, 86400000)
+// setInterval(deleteOldGames, 86400000)
   // this.deleteGames = setInterval(() => {
   //   // console.log('checking for old games...'); //TODO: Delete console log
   //   axios.patch('/deleteGames')
   //   .catch(err => console.error('err in checking old games:', err));
   // }, 5000);
-  
+
   //86400000
 
-const buyUnits = (type, player, gameIndex, socketId) => {
+const buyUnits = (type, player, gameIndex, socketId, room) => {
   let game = games[gameIndex], resources;
   player === 'player1' ? resources = game.playerOneResources : resources = game.playerTwoResources;
   if (type === 'swordsmen') {
@@ -606,9 +584,13 @@ const buyUnits = (type, player, gameIndex, socketId) => {
           hex.swordsmen += 10;
         }
       })
-      io.to(socketId).emit('swordsmen');
+      io.to(room).emit('swordsmen');
+      io.to(room).emit('updateResources', {
+        playerOneResources: game.playerOneResources,
+        playerTwoResources: game.playerTwoResources
+      });
     } else {
-      io.to(socketId).emit('not enough resources');
+      io.to(socketId).emit('notEnoughResources');
     }
   } else if (type === 'archers') {
     if (resources.gold >= 10 && resources.wood >= 20) {
@@ -619,7 +601,11 @@ const buyUnits = (type, player, gameIndex, socketId) => {
           hex.archers += 10;
         }
       })
-      io.to(socketId).emit('archers');
+      io.to(room).emit('archers');
+      io.to(room).emit('updateResources', {
+        playerOneResources: game.playerOneResources,
+        playerTwoResources: game.playerTwoResources
+      });
     } else {
       io.to(socketId).emit('not enough resources');
     }
@@ -633,19 +619,24 @@ const buyUnits = (type, player, gameIndex, socketId) => {
           hex.knights += 10;
         }
       })
-      io.to(socketId).emit('knights');
+      io.to(room).emit('knights');
+      io.to(room).emit('updateResources', {
+        playerOneResources: game.playerOneResources,
+        playerTwoResources: game.playerTwoResources
+      });
     } else {
-      io.to(socketId).emit('not enough resources');
+      io.to(room).emit('not enough resources');
     }
   }
 }
 
-app.get('/*', (req, res) => res.sendfile('/'));
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../react-client/dist', 'index.html'));
+});
 
 //////////////////////////////////////////////////
 // TODO: Take out this section - JUST FOR TESTING
 app.post('/users', (req, res) => {
-  console.log('user req.body', req.body);
   db.addUser(req.body.username, req.body.email, req.body.password);
   res.end();
 })
