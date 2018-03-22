@@ -1,8 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { setRooms, menuToggle } from '../../src/actions/actions.js';
+import { setRooms, menuToggle, setSocket } from '../../src/actions/actions.js';
 import { Button } from 'semantic-ui-react';
+import socketIOClient from "socket.io-client";
 
 import axios from 'axios';
 const uuidv4 = require('uuid/v4');
@@ -27,9 +28,13 @@ class Main extends React.Component {
     //   .catch(err => {
     //     console.log('error from signup:', err);
     //   })
+    (async () => {
+      let socket = await socketIOClient('http://127.0.0.1:3000');
+      this.props.setSocket(socket);
+    })();
     axios.get('/persistUser')
       .then(data => {
-        console.log('data from session:', data);
+        // console.log('data from session:', data);
       })
       .catch(err => {
         console.log('err from persistUser:', err);
@@ -65,7 +70,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setRooms, menuToggle }, dispatch)
+  return bindActionCreators({ setRooms, menuToggle, setSocket }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);

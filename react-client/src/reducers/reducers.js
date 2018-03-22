@@ -7,6 +7,14 @@ const reducers = (state = defaultState, action) => {
         ...state,
         rooms: action.payload
       }
+    case 'NEW-ROOM':
+      return {
+        ...state,
+        rooms: {
+          ...state.rooms,
+          ...action.payload
+        }
+      }
     case 'SET-SOCKET':
       return {
         ...state,

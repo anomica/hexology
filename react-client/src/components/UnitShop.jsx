@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Label } from 'semantic-ui-react';
+import { Button, Transition, Header, Popup, Image, Modal, Content, Description, Label } from 'semantic-ui-react';
 import { updateResources, swordsmen, archers, knights } from '../../src/actions/actions.js';
 
 class UnitShop extends React.Component {
@@ -9,7 +9,10 @@ class UnitShop extends React.Component {
     super(props);
 
     this.state = {
-      open: false
+      open: false,
+      swordsmen: true,
+      archers: true,
+      knights: true
     }
   }
 
@@ -39,6 +42,9 @@ class UnitShop extends React.Component {
         socketId: this.props.socket.id,
         room: this.props.room
       });
+      this.setState({
+        swordsmen: !this.state.swordsmen
+      })
     } else {
       alert('Not enough resources!');
     }
@@ -59,6 +65,9 @@ class UnitShop extends React.Component {
         socketId: this.props.socket.id,
         room: this.props.room
       });
+      this.setState({
+        archers: !this.state.archers
+      })
     } else {
       alert('Not enough resources!');
     }
@@ -79,6 +88,9 @@ class UnitShop extends React.Component {
         socketId: this.props.socket.id,
         room: this.props.room
       });
+      this.setState({
+        knights: !this.state.knights
+      })
     } else {
       alert('Not enough resources!');
     }
@@ -96,21 +108,33 @@ class UnitShop extends React.Component {
           <Modal.Header>Unit Shop</Modal.Header>
           <Modal.Content>
             <Modal.Description>
-              <Label color='blue' image className={'unitType'} onClick={this.buySwordsmen.bind(this)}>
-                <img src="https://png.icons8.com/metro/50/000000/sword.png"/>
-                Swordsmen
-                <Label.Detail>Cost: 10 gold, 10 metal</Label.Detail>
-              </Label>
-              <Label color='green' image className={'unitType'} onClick={this.buyArchers.bind(this)}>
-                <img src="https://png.icons8.com/windows/50/000000/archer.png"/>
-                Archer
-                <Label.Detail>Cost: 10 gold, 20 wood</Label.Detail>
-              </Label>
-              <Label color='grey' image className={'unitType'} onClick={this.buyKnights.bind(this)}>
-                <img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>
-                Knight
-                <Label.Detail>Cost: 20 gold, 20 metal, 20 wood</Label.Detail>
-              </Label>
+              Your Resources: {this.props.userPlayer === 'player1' ?
+              `${this.props.playerOneResources.gold} Gold, ${this.props.playerOneResources.wood} Wood, ${this.props.playerOneResources.metal} Metal` :
+              `${this.props.playerTwoResources.gold} Gold, ${this.props.playerTwoResources.wood} Wood, ${this.props.playerTwoResources.metal} Metal`
+            }
+            </Modal.Description>
+            <Modal.Description>
+              <Transition  animation={'jiggle'} duration={'1000'} visible={this.state.swordsmen}>
+                <Label color='blue' image className={'unitType'} onClick={this.buySwordsmen.bind(this)}>
+                  <Image src="https://png.icons8.com/metro/50/000000/sword.png"/>
+                  Swordsmen
+                  <Label.Detail>Cost: 10 gold, 10 metal</Label.Detail>
+                </Label>
+              </Transition>
+              <Transition animation={'jiggle'} duration={'1000'} visible={this.state.archers}>
+                <Label color='green' image className={'unitType'} onClick={this.buyArchers.bind(this)}>
+                  <Image src="https://png.icons8.com/windows/50/000000/archer.png"/>
+                  Archer
+                  <Label.Detail>Cost: 10 gold, 20 wood</Label.Detail>
+                </Label>
+              </Transition>
+              <Transition animation={'jiggle'} duration={'1000'} visible={this.state.knights}>
+                <Label color='grey' image className={'unitType'} onClick={this.buyKnights.bind(this)}>
+                  <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>
+                  Knight
+                  <Label.Detail>Cost: 20 gold, 20 metal, 20 wood</Label.Detail>
+                </Label>
+              </Transition>
             </Modal.Description>
           </Modal.Content>
         </Modal>
