@@ -9,7 +9,7 @@ CREATE TABLE users (
   user_id INT NOT NULL AUTO_INCREMENT,
   username VARCHAR(60) NOT NULL,
   email VARCHAR(60) NOT NULL,
-  password varchar(60) NOT NULL,
+  password VARCHAR(250) NOT NULL,
   wins INT DEFAULT 0,
   losses INT DEFAULT 0,
   PRIMARY KEY (user_id)

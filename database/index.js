@@ -1,6 +1,7 @@
 const config = require('./config.js');
 const mysql = require('mysql');
 const moment = require('moment');
+const bcrypt = require('bcrypt');
 
 const knex = require('knex')({
   client: 'mysql',
@@ -13,18 +14,30 @@ const addUser = async (username, email, password) => {
     .from('users')
     .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
 
-  if (existingUser.length) {
+  if (existingUser.length) { // checks if user already exists in the db
     // console.log('user exists');
     return 'User already exists! :(';
   } else {
-    // console.log('user added');
-    return knex('users')
-      .insert({
-        username: username,
-        email: email,
-        password: password
-      });
+    bcrypt.hash(password, 10, (err, hash) => { // hash the pw
+      if (err) {
+        console.error('Error in hashing password: ', err);
+      } else {
+        console.log('----------------- database added user: ')
+        console.log('user added: ', username, '\npassword: ', password, '\nhash: ', hash);
+        insertNewUser(username, email, hash); // inserts user with hashed pw in the db
+      }
+    })
   }
+}
+
+const insertNewUser = async (username, email, hash) => {
+  // console.log('=========== insert new user ==========');
+  return await knex('users') // insert user into the db
+    .insert({
+      username: username,
+      email: email,
+      password: hash
+    });
 }
 
 /////////////////////// Checks user credentials ///////////////////////
@@ -94,7 +107,7 @@ const getGameBoard = async (room, gameIndex) => {
 }
 
 /////////////////////// Update origin hex & new hex when player moves ///////////////////////
-const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
+const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOrigin) => {
   let playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with user id... eventually
 
   // Updates original hex to no player and no units
@@ -102,9 +115,9 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
     .where(knex.raw(`${playerId} = player AND '${originalOrigin.hex_index}' = hex_index`))
     .update({
       player: null, // removes the player from the origin hex
-      swordsmen: 0,
-      archers: 0,
-      knights: 0
+      swordsmen: updatedOrigin.swordsmen,
+      archers: updatedOrigin.archers,
+      knights: updatedOrigin.knights
     })
 
   // Updates new hex that the player has moved to with current player & units
@@ -112,9 +125,9 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
     .where(knex.raw(`'${newOrigin.index}' = hex_index`))
     .update({
       player: playerId, // moves the current player to the new hex
-      swordsmen: originalOrigin.swordsmen, // updates the new hex with the player's units
-      archers: originalOrigin.archers,
-      knights: originalOrigin.knights
+      swordsmen: newOrigin.swordsmen, // updates the new hex with the player's units
+      archers: newOrigin.archers,
+      knights: newOrigin.knights
     })
 
   // console.log('+++++++++++++++ new hex has gold: +++++++++++++++', newOrigin);
@@ -419,6 +432,7 @@ const gameComplete = async (game) => {
 module.exports = {
   addUser,
   checkUserCreds,
+  insertNewUser,
   findUserById,
   createGame,
   createHex,
