@@ -33,7 +33,7 @@ class Signup extends React.Component {
     this.setState({
       [name]: e.target.value
     }, () => {
-      console.log(`this.state[${[name]}]`, this.state[name])
+      // console.log(`this.state[${[name]}]`, this.state[name])
     })
   }
 
