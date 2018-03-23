@@ -183,12 +183,10 @@ const reducers = (state = defaultState, action) => {
       }
     case 'UPDATE-BANK':
       let unit;
-      console.log('action.payload:', action.payload);
       action.payload.unit === 'swordsmen' ? unit = 'swordsmen'
       : action.payload.unit === 'archer' ? unit = 'archer'
       : unit = 'knight';
       if (action.payload.player === 'player1') {
-        console.log('state.playerOneUnitBank', state.playerOneUnitBank)
         return {
           ...state,
           playerOneUnitBank: {
@@ -204,6 +202,27 @@ const reducers = (state = defaultState, action) => {
             [unit]: playerTwoUnitBank[unit] += 10
           }
         }
+      }
+    case 'DEPLOY-UNITS': 
+      return {
+        ...state,
+        deployment: {
+          unit: action.payload.unit,
+          quantity: action.payload.quantity,
+          player: action.payload.player
+        }
+      }
+    case 'ADD-UNITS-TO-HEX': 
+      newBoardState = state.boardState.slice();
+      let updatedHex = state.boardState[action.payload.hexIndex];
+      action.payload.unit === 'swordsmen' ? updatedHex.swordsmen = updatedHex.swordsmen + action.payload.quantity
+      : action.payload.unit === 'archer' ? updatedHex.archers = updatedHex.archers + action.payload.quantity
+      : updatedHex.knights = updatedHex.knights + action.payload.quantity
+      newBoardState.splice(hexIndex, 1, updatedHex);
+      return {
+        ...state,
+        boardState: newBoardState,
+        deployment: null 
       }
       
     default: return state;

@@ -22,7 +22,8 @@ const DefaultState = {
   winner: null,
   neighbors: [],
   menuVisible: true,
-  showUnitShop: false
+  showUnitShop: false,
+  deployment: null
 }
 
 export default DefaultState;

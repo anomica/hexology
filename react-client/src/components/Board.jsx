@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition, 
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
-import { updateBank, setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { addUnitsToHex, updateBank, setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -165,6 +165,10 @@ class Board extends React.Component {
     }
   }
 
+  addUnitsToHex(hexIndex) {
+    this.props.addUnitsToHex(hexIndex, this.props.deployment.unit, this.props.deployment.quantity);
+  }
+
   sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {
     const move = { // package outputs
       updatedOrigin: updatedOrigin,
@@ -212,7 +216,7 @@ class Board extends React.Component {
         <div className="Board">
           <HexGrid height={800} viewBox="-50 -50 150 150">
             <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
-              {this.props.boardState ? this.props.boardState.map(hex => {
+              {this.props.boardState ? this.props.boardState.map((hex, index) => {
                 let targetClass = '';
                 if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
                   targetClass += 'opponent';
@@ -229,10 +233,18 @@ class Board extends React.Component {
                 } else if (hex.hasMetal) {
                   targetClass += 'metal';
                 }
+                if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
+                  targetClass += ' swordsmen';
+                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archer') {
+                  targetClass += ' archer';
+                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knight') {
+                  targetClass += ' knight';
+                }
                 return <Hexagon
                   key={uuidv4()}
                   className={targetClass}
                   onClick={() => {
+                    this.props.deployment ? this.addUnitsToHex(index) :
                     this.handleClick(hex);
                     this.setState({ hex: hex });
                   }}
@@ -311,12 +323,13 @@ const mapStateToProps = (state) => {
     playerAssigned: state.state.playerAssigned,
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
-    playerTwoResources: state.state.playerTwoResources
+    playerTwoResources: state.state.playerTwoResources,
+    deployment: state.state.deployment
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ updateBank, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ addUnitsToHex, updateBank, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, switchPlayer, setGameIndex }, dispatch);
 }

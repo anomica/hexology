@@ -159,3 +159,25 @@ export const updateBank = (player, unit) => (
     }
   }
 )
+
+export const deployUnits = (player, unit, quantity) => (
+  {
+    type: 'DEPLOY-UNITS',
+    payload: {
+      player: player,
+      unit: unit,
+      quantity: quantity
+    }
+  }
+)
+
+export const addUnitsToHex = (hexIndex, unit, quantity) => (
+  {
+    type: 'ADD-UNITS-TO-HEX',
+    payload: {
+      hexIndex: hexIndex,
+      unit: unit,
+      quantity: quantity
+    }
+  }
+)
