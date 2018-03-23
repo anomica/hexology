@@ -560,6 +560,7 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
 };
 
 const checkForWin = async (losingPlayer, winningPlayer, gameIndex, room) => {
+  console.log('--------------------------------------------- CHECKING FOR WIN ------------------------------');
   let isGameOver = true;
 
   //////////////// IF USING GAME OBJECT ON SERVER ////////////////
@@ -573,7 +574,7 @@ const checkForWin = async (losingPlayer, winningPlayer, gameIndex, room) => {
   ////////////////////// IF USING DATABASE //////////////////////
   let board = await db.getGameBoard(room, gameIndex);
   board.forEach(hex => {
-    console.log('--------------------------------------------- CHECKING FOR WIN ------------------------------')
+    console.log('--------------------------------------------- looping through the board hexes ------------------------------')
     console.log('hex id: ', hex.hex_id, '\nhex player: ', hex.player);
     if (hex.player === losingPlayer) {
       isGameOver = false;
@@ -587,6 +588,7 @@ const checkForWin = async (losingPlayer, winningPlayer, gameIndex, room) => {
   return isGameOver;
 }
 
+// TODO: this should not be needed once db works... this is all handled in the updateDbhex func
 const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room, board) => {
   let playerResources;
   currentPlayer === 'player1' ? // determine player to give resources to depending on whose turn is starting
@@ -623,175 +625,246 @@ const deleteOldGames = async () => {
 setInterval(deleteOldGames, 86400000);
 
 const buyUnits = async (type, player, gameIndex, socketId, room) => {
-  let game = games[gameIndex], resources;
-  player === 'player1' ? resources = game.playerOneResources : resources = game.playerTwoResources;
-  if (type === 'swordsmen') {
-    if (resources.gold >= 10 && resources.metal >= 10) {
-      resources.gold -= 10;
-      resources.metal -= 10;
-      game.board.forEach(hex => {
-        if (hex.player === player) {
-          hex.swordsmen += 10;
-        }
-      })
-      io.to(room).emit('swordsmen');
-      io.to(room).emit('updateResources', {
-        playerOneResources: game.playerOneResources,
-        playerTwoResources: game.playerTwoResources
-      });
-    } else {
-      io.to(socketId).emit('notEnoughResources');
-    }
-  } else if (type === 'archers') {
-    if (resources.gold >= 10 && resources.wood >= 20) {
-      resources.gold -= 10;
-      resources.wood -= 20;
-      game.board.forEach(hex => {
-        if (hex.player === player) {
-          hex.archers += 10;
-        }
-      })
-      io.to(room).emit('archers');
-      io.to(room).emit('updateResources', {
-        playerOneResources: game.playerOneResources,
-        playerTwoResources: game.playerTwoResources
-      });
-    } else {
-      io.to(socketId).emit('not enough resources');
-    }
-  } else if (type === 'knights') {
-    if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
-      resources.gold -= 20;
-      resources.wood -= 20;
-      resources.metal -= 20;
-      game.board.forEach(hex => {
-        if (hex.player === player) {
-          hex.knights += 10;
-        }
-      })
-      io.to(room).emit('knights');
-      io.to(room).emit('updateResources', {
-        playerOneResources: game.playerOneResources,
-        playerTwoResources: game.playerTwoResources
-      });
-    } else {
-      io.to(room).emit('not enough resources');
+
+  ///////////////////////////////////// IF USING DATABASE ///////////////////////////////////////
+  let game = await db.getGameBoard(room, gameIndex);
+  let currentPlayerResources = await db.getResources(room, gameIndex, player); // returns an object
+
+  if (type === 'swordsmen') { // if buying swordsmen
+    console.log('LETS BUY SOME ----> SWORDSMEN'); //TODO: delete console log
+    if (player === 'player1') { // for player 1
+      if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_metal >= 10) { // check if player has enough resources to purchase unit
+
+        await db.buySwordsmen(room, gameIndex, player); // update units and resources in the db
+
+        let p1Resources = await db.getResources(room, gameIndex, 'player1');
+        let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
+        await io.to(socketId).emit('swordsmen');
+
+        await io.to(room).emit('updateResources', {
+          playerOneResources: {
+            gold: p1Resources[0].p1_gold,
+            wood: p1Resources[0].p1_wood,
+            metal: p1Resources[0].p1_metal
+          },
+          playerTwoResources: {
+            gold: p2Resources[0].p2_gold,
+            wood: p2Resources[0].p2_wood,
+            metal: p2Resources[0].p2_metal
+          }
+        });
+        console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[ resources ]]]]]]]]]]]]]]]]]]]]]]]]]')
+        console.log(p1Resources)
+        console.log(p2Resources)
+      } else { // if not enough resources
+        console.log('~~~~~~~~~~~ player 1 is too poor to buy SWORDSMEN');
+        io.to(socketId).emit('not enough resources');
+      }
+    } else if (player === 'player2') { // else same for player 2
+      if (currentPlayerResources[0].p2_gold >= 10 && currentPlayerResources[0].p2_metal >= 10) {
+        db.buySwordsmen(room, gameIndex, player);
+        
+        let p1Resources = await db.getResources(room, gameIndex, 'player1');
+        let p2Resources = await db.getResources(room, gameIndex, 'player2');
+        
+        await io.to(socketId).emit('swordsmen');
+
+        await io.to(room).emit('updateResources', {
+          playerOneResources: {
+            gold: p1Resources[0].p1_gold,
+            wood: p1Resources[0].p1_wood,
+            metal: p1Resources[0].p1_metal
+          },
+          playerTwoResources: {
+            gold: p2Resources[0].p2_gold,
+            wood: p2Resources[0].p2_wood,
+            metal: p2Resources[0].p2_metal
+          }
+        });
+
+        console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[ resources ]]]]]]]]]]]]]]]]]]]]]]]]]');
+        console.log(p1Resources);
+        console.log(p2Resources);
+      } else {
+        // if not enough resources
+        console.log('~~~~~~~~~~~ player 2 is too poor to buy SWORDSMEN');
+        io.to(socketId).emit('not enough resources');
+      }
     }
   }
-  ////////////////////////// BEGIN DB STUFF //////////////////////////
-  // let gameBoard = await db.getGameBoard(room, gameIndex);
-  // let currentPlayerResources = await db.getResources(room, gameIndex, player);
 
-  // // console.log(`------------ player resources for ${player}: `, currentPlayerResources[0]);
+  if (type === 'archers') { // if buying archers
+    console.log('LETS BUY SOME ----> ARCHERS');
+    if (player === 'player1') { // for player 1
+      if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_wood >= 20) { // check if player has enough resources to purchase unit
 
-  // if (type === 'swordsmen') { // if buying swordsmen
-  //   // console.log('///////////// LETS BUY SOME ----> SWORDSMEN'); //TODO: delete console log
-  //   if (player === 'player1') { // for player 1
-  //     if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_metal >= 10) { // check if player has enough resources to purchase unit
-  //       db.buySwordsmen(room, gameIndex, player); // update units and resources in the db
-  //       await io.to(socketId).emit('swordsmen');
-  //     } else { // if not enough resources
-  //       // console.log('~~~~~~~~~~~ player 1 is too poor to buy SWORDSMEN');
-  //       io.to(socketId).emit('not enough resources');
-  //     }
-  //   } else if (player === 'player2') { // else same for player 2
-  //     if (currentPlayerResources[0].p2_gold >= 10 && currentPlayerResources[0].p2_metal >= 10) {
-  //       db.buySwordsmen(room, gameIndex, player);
-  //       await io.to(socketId).emit('swordsmen');
-  //     } else {
-  //       // if not enough resources
-  //       // console.log('~~~~~~~~~~~ player 2 is too poor to buy SWORDSMEN');
-  //       io.to(socketId).emit('not enough resources');
-  //     }
-  //   }
-  // }
+        db.buyArchers(room, gameIndex, player); // update units and resources in the db
 
-  // if (type === 'archers') { // if buying archers
-  //   // console.log('///////////// LETS BUY SOME ----> ARCHERS');
-  //   if (player === 'player1') { // for player 1
-  //     if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_wood >= 20) { // check if player has enough resources to purchase unit
-  //       db.buyArchers(room, gameIndex, player); // update units and resources in the db
-  //       await io.to(socketId).emit('archers');
-  //     } else { // if not enough resources
-  //       // console.log('~~~~~~~~~~~ player 1 too poor to buy ARCHERS');
-  //       io.to(socketId).emit('not enough resources');
-  //     }
-  //   } else if (player === 'player2') { // else same for player 2
-  //     if (currentPlayerResources[0].p2_gold >= 10 && currentPlayerResources[0].p2_wood >= 20) {
-  //       db.buyArchers(room, gameIndex, player);
-  //       await io.to(socketId).emit('archers');
-  //     } else { // if not enough resources
-  //       // console.log('~~~~~~~~~~~ player 2 too poor to buy ARCHERS');
-  //       io.to(socketId).emit('not enough resources');
-  //     }
-  //   }
-  // }
+        let p1Resources = await db.getResources(room, gameIndex, 'player1');
+        let p2Resources = await db.getResources(room, gameIndex, 'player2');
 
-  // if (type === 'knights') { // if buying knights
-  //   // console.log('///////////// LETS BUY SOME ----> KNIGHTS');
-  //   if (player === 'player1') { // for player 1
-  //     if (currentPlayerResources[0].p1_gold >= 20 && currentPlayerResources[0].p1_wood >= 20 && currentPlayerResources[0].p1_metal >= 20) {
-  //       // check if player has enough resources to purchase unit
-  //       db.buyKnights(room, gameIndex, player); // update units and resources in the db
-  //       await io.to(socketId).emit('knights');
-  //     } else { // if not enough resources
-  //       // console.log('~~~~~~~~~~~ player 1 too poor to buy KNIGHTS');
-  //       io.to(socketId).emit('not enough resources');
-  //     }
-  //   } else if (player === 'player2') { // else same for player 2
-  //     if (currentPlayerResources[0].p2_gold >= 20 && currentPlayerResources[0].p2_wood >= 20 && currentPlayerResources[0].p2_metal >= 20) {
-  //       db.buyKnights(room, gameIndex, player);
-  //       await io.to(socketId).emit('knights');
-  //     } else { // if not enough resources
-  //       // console.log('~~~~~~~~~~~ player 2 too poor to buy KNIGHTS');
-  //       io.to(socketId).emit('not enough resources');
-  //     }
-  //   }
-  // }
-  //////////////////////////// END OF DB STUFF //////////////////////////
+        await io.to(socketId).emit('archers');
 
-  //////////////////////////// SERVER STUFF USING GAME OBJECT //////////////////////////
-  // let game = await games[gameIndex], resources;
+        await io.to(room).emit('updateResources', {
+          playerOneResources: {
+            gold: p1Resources[0].p1_gold,
+            wood: p1Resources[0].p1_wood,
+            metal: p1Resources[0].p1_metal
+          },
+          playerTwoResources: {
+            gold: p2Resources[0].p2_gold,
+            wood: p2Resources[0].p2_wood,
+            metal: p2Resources[0].p2_metal
+          }
+        });
+
+      } else { // if not enough resources
+        console.log('~~~~~~~~~~~ player 1 too poor to buy ARCHERS');
+        io.to(socketId).emit('not enough resources');
+      }
+    } else if (player === 'player2') { // else same for player 2
+      if (currentPlayerResources[0].p2_gold >= 10 && currentPlayerResources[0].p2_wood >= 20) {
+        db.buyArchers(room, gameIndex, player);
+
+        let p1Resources = await db.getResources(room, gameIndex, 'player1');
+        let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
+        await io.to(socketId).emit('archers');
+
+        await io.to(room).emit('updateResources', {
+          playerOneResources: {
+            gold: p1Resources[0].p1_gold,
+            wood: p1Resources[0].p1_wood,
+            metal: p1Resources[0].p1_metal
+          },
+          playerTwoResources: {
+            gold: p2Resources[0].p2_gold,
+            wood: p2Resources[0].p2_wood,
+            metal: p2Resources[0].p2_metal
+          }
+        });
+
+      } else { // if not enough resources
+        console.log('~~~~~~~~~~~ player 2 too poor to buy ARCHERS');
+        io.to(socketId).emit('not enough resources');
+      }
+    }
+  }
+
+  if (type === 'knights') { // if buying knights
+    console.log('LETS BUY SOME ----> KNIGHTS');
+    if (player === 'player1') { // for player 1
+      if (currentPlayerResources[0].p1_gold >= 20 && currentPlayerResources[0].p1_wood >= 20 && currentPlayerResources[0].p1_metal >= 20) {
+        // check if player has enough resources to purchase unit
+        db.buyKnights(room, gameIndex, player); // update units and resources in the db
+
+        let p1Resources = await db.getResources(room, gameIndex, 'player1');
+        let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
+        await io.to(socketId).emit('knights');
+
+        await io.to(room).emit('updateResources', {
+          playerOneResources: {
+            gold: p1Resources[0].p1_gold,
+            wood: p1Resources[0].p1_wood,
+            metal: p1Resources[0].p1_metal
+          },
+          playerTwoResources: {
+            gold: p2Resources[0].p2_gold,
+            wood: p2Resources[0].p2_wood,
+            metal: p2Resources[0].p2_metal
+          }
+        });
+
+      } else { // if not enough resources
+        console.log('~~~~~~~~~~~ player 1 too poor to buy KNIGHTS');
+        io.to(socketId).emit('not enough resources');
+      }
+    } else if (player === 'player2') { // else same for player 2
+      if (currentPlayerResources[0].p2_gold >= 20 && currentPlayerResources[0].p2_wood >= 20 && currentPlayerResources[0].p2_metal >= 20) {
+        db.buyKnights(room, gameIndex, player);
+
+        let p1Resources = await db.getResources(room, gameIndex, 'player1');
+        let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
+        await io.to(socketId).emit('knights');
+
+        await io.to(room).emit('updateResources', {
+          playerOneResources: {
+            gold: p1Resources[0].p1_gold,
+            wood: p1Resources[0].p1_wood,
+            metal: p1Resources[0].p1_metal
+          },
+          playerTwoResources: {
+            gold: p2Resources[0].p2_gold,
+            wood: p2Resources[0].p2_wood,
+            metal: p2Resources[0].p2_metal
+          }
+        });
+        
+      } else { // if not enough resources
+        console.log('~~~~~~~~~~~ player 2 too poor to buy KNIGHTS');
+        io.to(socketId).emit('not enough resources');
+      }
+    }
+  }
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  /////////////////////////////// IF USING GAME OBJ ON SERVER /////////////////////////////////////
+  // let game = games[gameIndex], resources;
   // player === 'player1' ? resources = game.playerOneResources : resources = game.playerTwoResources;
   // if (type === 'swordsmen') {
   //   if (resources.gold >= 10 && resources.metal >= 10) {
   //     resources.gold -= 10;
   //     resources.metal -= 10;
-  //     await game.board.forEach(hex => {
+  //     game.board.forEach(hex => {
   //       if (hex.player === player) {
   //         hex.swordsmen += 10;
   //       }
   //     })
-  //     await io.to(socketId).emit('swordsmen');
+  //     io.to(room).emit('swordsmen');
+  //     io.to(room).emit('updateResources', {
+  //       playerOneResources: game.playerOneResources,
+  //       playerTwoResources: game.playerTwoResources
+  //     });
   //   } else {
-  //     await io.to(socketId).emit('not enough resources');
+  //     io.to(socketId).emit('notEnoughResources');
   //   }
   // } else if (type === 'archers') {
   //   if (resources.gold >= 10 && resources.wood >= 20) {
   //     resources.gold -= 10;
   //     resources.wood -= 20;
-  //     await game.board.forEach(hex => {
+  //     game.board.forEach(hex => {
   //       if (hex.player === player) {
   //         hex.archers += 10;
   //       }
   //     })
-  //     await io.to(socketId).emit('archers');
+  //     io.to(room).emit('archers');
+  //     io.to(room).emit('updateResources', {
+  //       playerOneResources: game.playerOneResources,
+  //       playerTwoResources: game.playerTwoResources
+  //     });
   //   } else {
-  //     await io.to(socketId).emit('not enough resources');
+  //     io.to(socketId).emit('not enough resources');
   //   }
   // } else if (type === 'knights') {
   //   if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
   //     resources.gold -= 20;
   //     resources.wood -= 20;
   //     resources.metal -= 20;
-  //     await game.board.forEach(hex => {
+  //     game.board.forEach(hex => {
   //       if (hex.player === player) {
   //         hex.knights += 10;
   //       }
   //     })
-  //     await io.to(socketId).emit('knights');
+  //     io.to(room).emit('knights');
+  //     io.to(room).emit('updateResources', {
+  //       playerOneResources: game.playerOneResources,
+  //       playerTwoResources: game.playerTwoResources
+  //     });
   //   } else {
-  //     await io.to(socketId).emit('not enough resources');
+  //     io.to(room).emit('not enough resources');
   //   }
   // }
 }
