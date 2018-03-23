@@ -92,22 +92,39 @@ class Board extends React.Component {
         combatMessage: 'You are victorious!',
         combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
       }), 2500);
+      setTimeout(() => this.resetCombatModal());
     });
     socket.on('combatLoss', () => {
       setTimeout(() => this.setState({
         combatMessage: 'Your armies have been bested.',
         combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
       }), 2500);
+      setTimeout(() => this.resetCombatModal());
     })
-    socket.on('win', () => {
-      alert('You win!');
+    socket.on('winGame', () => {
+      setTimeout(() => this.setState({
+        combatMessage: 'Congratulations! You have won the battle, and the day!',
+        combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
+      }), 2500);
+      setTimeout(() => this.resetCombatModal());
     });
-    socket.on('lose', () => {
-      alert('You lose!');
+    socket.on('loseGame', () => {
+      setTimeout(() => this.setState({
+        combatMessage: 'Your armies have been bested, and your enemy is victorious. Better luck next time.',
+        combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
+      }), 2500);
+      setTimeout(() => this.resetCombatModal());
     });
     socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
       alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
     });
+  }
+
+  resetCombatModal() {
+    this.setState({
+      combatMessage: 'May the strongest prevail!',
+      combatIcon: 'https://pixabay.com/get/eb37b90e2bf7053ed1584d05fb0938c9bd22ffd41cb3104994f9c970a0/sword-2281334_1280.png',
+    })
   }
 
   closeModal() {
