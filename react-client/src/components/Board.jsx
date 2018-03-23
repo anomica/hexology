@@ -2,10 +2,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
+import { Segment, Transition, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
 import { setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
-         archers, knights, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
+         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -20,6 +20,9 @@ class Board extends React.Component {
     this.state = {
       hex: null,
       modalOpen: false,
+      combatModalOpen: false,
+      combatMessage: 'May the strongest prevail!',
+      combatIcon: 'https://pixabay.com/get/eb37b90e2bf7053ed1584d05fb0938c9bd22ffd41cb3104994f9c970a0/sword-2281334_1280.png',
       confirmOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
@@ -51,8 +54,27 @@ class Board extends React.Component {
     });
     socket.on('move', (move) => { // when socket receives result of move request,
       this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
+      if (move.tie) {
+        this.setState({
+          combatModalOpen: true,
+        });
+        setTimeout(() => this.setState({
+          combatMessage: 'Combat ends in a bitter draw.',
+        }), 2500);
+        setTimeout(() => this.setState({
+          combatModalOpen: false,
+          combatMessage: 'May the strongest prevail!',
+        }), 5000);
+      }// TEMP:
+      if (move.updatedUnitCounts) {
+        this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
+      }
       this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
     });
+    socket.on('combat', () => {
+      this.setState({ combatModalOpen: true });
+      setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
+    })
     this.props.socket.on('updateResources', data => {
       this.props.updateResources(data.playerOneResources, data.playerTwoResources);
     })
@@ -65,6 +87,18 @@ class Board extends React.Component {
     this.props.socket.on('knights', () => {
       this.props.knights(this.props.currentPlayer);
     });
+    socket.on('combatWin', () => {
+      setTimeout(() => this.setState({
+        combatMessage: 'You are victorious!',
+        combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
+      }), 2500);
+    });
+    socket.on('combatLoss', () => {
+      setTimeout(() => this.setState({
+        combatMessage: 'Your armies have been bested.',
+        combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
+      }), 2500);
+    })
     socket.on('win', () => {
       alert('You win!');
     });
@@ -78,6 +112,10 @@ class Board extends React.Component {
 
   closeModal() {
     this.setState({ modalOpen: false });
+  }
+
+  skipCombatAnmiation() {
+    this.setState({ combatModalOpen: false })
   }
 
   validateTroopAmounts() {
@@ -209,8 +247,8 @@ class Board extends React.Component {
         <SidebarLeft />
         <TopBar />
         <div className="Board">
-          <HexGrid height={800} viewBox="-50 -50 175 150">
-            <Layout size={{ x: 9, y: 9 }} flat={false} spacing={1.2} origin={{ x: 0, y: -50 }}>
+          <HexGrid height={800} viewBox="-50 -50 150 150">
+            <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
               {this.props.boardState ? this.props.boardState.map(hex => {
                 let targetClass = '';
                 if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
@@ -285,6 +323,19 @@ class Board extends React.Component {
               <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
             </Modal.Actions>
           </Modal>
+            <Modal open={this.state.combatModalOpen} size={'small'} style={{ textAlign: 'center' }}>
+              <Modal.Header>{this.state.combatMessage}</Modal.Header>
+                <Modal.Content>
+                  <Transition animation={'jiggle'} duration={'5000'} visible={true}>
+                    <Segment>
+                      <Image style={{maxWidth: '400px', margin: 'auto'}} src={this.state.combatIcon}/>
+                    </Segment>
+                  </Transition>
+                </Modal.Content>
+              <Modal.Actions>
+                <Button type='submit' size={'tiny'} onClick={this.skipCombatAnmiation.bind(this)}>Skip</Button>
+              </Modal.Actions>
+            </Modal>
         </div>
       </div>
     );
@@ -310,7 +361,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
-    updateResources, swordsmen, archers, knights, switchPlayer, setGameIndex }, dispatch);
+    updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
+    setGameIndex }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);
