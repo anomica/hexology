@@ -10,11 +10,12 @@ module.exports = function (passport) {
     console.log('serializingUser');
     done(null, user);
   });
+
   passport.deserializeUser(async (user, done) => { // what actually gets passed in here as user?
     console.log('user from passport.deserializedUser:', user);
-    const userProfile = await db.findUserById(user);
-    console.log('deserializedUser:', userProfile);
-    done(null, userProfile[0]);
+    // const userProfile = await db.findUserById(user);
+    // console.log('deserializedUser:', userProfile);
+    done(null, user);
   });
 
   // LOCAL LOGIN STRATEGY
@@ -44,14 +45,25 @@ module.exports = function (passport) {
     passReqToCallback: true,
   },
     async (req, username, password, cb) => {
-      console.log('woooooo')
-      console.log('req', req.body);
-      console.log('username:', username);
-      console.log('password:', password);
-      console.log('cb:', cb);
-      let response = await db.addUser(username, req.body.email, password);
-      console.log('response:', response);
-      cb(null, response[0]);
+      // console.log('woooooo')
+      // console.log('req', req.body);
+      // console.log('username:', username);
+      // console.log('password:', password);
+      // console.log('cb:', cb);
+
+      bcrypt.hash(password, 10, async (err, hash) => {
+        if (err) {
+          cb(err, null)
+        } else {
+          const user = await db.addUser(username, req.body.email, hash);
+          if (user === 'User already exists') {
+            cb(user, null);
+          } else {
+            let userData = await db.checkUserCreds(username);
+            cb(null, userData)
+          }
+        }
+      })
     }
   ));
 }
