@@ -47,6 +47,7 @@ class UnitShop extends React.Component {
     if (resources.gold >= 10 && resources.metal >= 10) {
       this.buyUnitsServerRequest({
         type: 'swordsmen',
+        room: this.props.room,
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
         socketId: this.props.socket.id,
@@ -69,6 +70,7 @@ class UnitShop extends React.Component {
     if (resources.gold >= 10 && resources.wood >= 20) {
       this.buyUnitsServerRequest({
         type: 'archers',
+        room: this.props.room,
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
         socketId: this.props.socket.id,
@@ -91,6 +93,7 @@ class UnitShop extends React.Component {
     if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
       this.buyUnitsServerRequest({
         type: 'knights',
+        room: this.props.room,
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
         socketId: this.props.socket.id,
