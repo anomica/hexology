@@ -369,16 +369,16 @@ const moveUnits = async (data, socket) => {
 
 const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb) => { // to check move legality,
 
-  console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CHECKING LEGAL MOVE');
-  console.log('masterOrigCs: ', masterOrigCs);
-  console.log('origCs: ', origCs);
-  console.log('masterTarCs: ', masterTarCs);
-  console.log('tarCs: ', tarCs);
+  // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CHECKING LEGAL MOVE');
+  // console.log('masterOrigCs: ', masterOrigCs);
+  // console.log('origCs: ', origCs);
+  // console.log('masterTarCs: ', masterTarCs);
+  // console.log('tarCs: ', tarCs);
 
   let isLegal = false;
   if (await masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] && // make sure all coordinates match between origin
       masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES MATCH');
+    // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES MATCH');
 
     /////////////////////////// IF USING GAMES OBJECT ON SERVER ///////////////////////////////////
     // if (masterOrigin.archers === updatedOrigin.archers + updatedTarget.archers &&
@@ -395,11 +395,11 @@ const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, 
       isLegal = true;
       return true;
     } else { // master origin units do not match updated origin units + updated target units
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MISMATCH IN UNITS');
+      // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MISMATCH IN UNITS');
       return false;
     }
   } else {
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES DO NOT MATCH');
+    // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES DO NOT MATCH');
     // console.log('masterOrigin: ', masterOrigin);
     // console.log('updatedOrigin: ', updatedOrigin);
     // console.log('updatedTarget: ', updatedTarget);
@@ -476,17 +476,17 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
   let archerSwordsmen = attacker[0].archers - defender[0].swordsmen;
   ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-  console.log('++++++++++++++++++++++++++++++++++++++++++++++++ RESOLVE COMBAT ++++++++++++++++++++++++++++++++++++++++++++++++');
-  console.log('origin index: ', originIndex, '\ntarget index: ', targetIndex)
-  console.log('ATTACKER: ', attacker);
-  console.log('DEFENDER: ', defender);
-  console.log('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+  // console.log('++++++++++++++++++++++++++++++++++++++++++++++++ RESOLVE COMBAT ++++++++++++++++++++++++++++++++++++++++++++++++');
+  // console.log('origin index: ', originIndex, '\ntarget index: ', targetIndex)
+  // console.log('ATTACKER: ', attacker);
+  // console.log('DEFENDER: ', defender);
+  // console.log('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
 
-  console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& UNITS COMPARISON &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-  console.log('swordsMenKnight: ', '\n ATTACKER SWORDSMEN: ', attacker[0].swordsmen, '\n DEFENDER KNIGHTS: ', defender[0].knights, '\n');
-  console.log('knightsArchers: ', '\n ATTACKER KNIGHTS: ', attacker[0].knights, '\n DEFENDER ARCHERS: ', defender[0].archers, '\n');
-  console.log('archerSwordsmen: ', '\n ATTACKER ARCHERS: ', attacker[0].archers, '\n DEFENDER SWORDSMEN: ', defender[0].swordsmen);
-  console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&');
+  // console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& UNITS COMPARISON &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+  // console.log('swordsMenKnight: ', '\n ATTACKER SWORDSMEN: ', attacker[0].swordsmen, '\n DEFENDER KNIGHTS: ', defender[0].knights, '\n');
+  // console.log('knightsArchers: ', '\n ATTACKER KNIGHTS: ', attacker[0].knights, '\n DEFENDER ARCHERS: ', defender[0].archers, '\n');
+  // console.log('archerSwordsmen: ', '\n ATTACKER ARCHERS: ', attacker[0].archers, '\n DEFENDER SWORDSMEN: ', defender[0].swordsmen);
+  // console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&');
 
   let attackerSwordsmen;
   let attackerKnights;
@@ -563,9 +563,9 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
 };
 
 const checkForWin = async (losingPlayer, winningPlayer, gameIndex, room) => {
-  console.log('--------------------------------------------- CHECKING FOR WIN ------------------------------');
-  console.log('>>>>>>>>>>>> loser <<<<<<<<<<<<<<<<< ', losingPlayer);
-  console.log('>>>>>>>>>>>> winner <<<<<<<<<<<<<<<<< ', winningPlayer);
+  // console.log('--------------------------------------------- CHECKING FOR WIN ------------------------------');
+  // console.log('>>>>>>>>>>>> loser <<<<<<<<<<<<<<<<< ', losingPlayer);
+  // console.log('>>>>>>>>>>>> winner <<<<<<<<<<<<<<<<< ', winningPlayer);
   let isGameOver = true;
 
   //////////////// IF USING GAME OBJECT ON SERVER ////////////////
@@ -580,8 +580,8 @@ const checkForWin = async (losingPlayer, winningPlayer, gameIndex, room) => {
   let board = await db.getGameBoard(room, gameIndex);
 
   board.forEach(hex => {
-    console.log('--------------------------------------------- looping through the board hexes ------------------------------')
-    console.log('hex id: ', hex.hex_id, ' hex player: ', hex.player);
+    // console.log('--------------------------------------------- looping through the board hexes ------------------------------')
+    // console.log('hex id: ', hex.hex_id, ' hex player: ', hex.player);
     if (hex.player === losingPlayer) {
       isGameOver = false;
     }
@@ -589,7 +589,7 @@ const checkForWin = async (losingPlayer, winningPlayer, gameIndex, room) => {
   ////////////////////////////////////////////////////////////////
 
   if (isGameOver) {
-    console.log('_______________________GAME OVER_______________________');
+    // console.log('_______________________GAME OVER_______________________');
 
     /////////////// UNCOMMENT WHEN USING DATABASE ///////////////////
     db.gameComplete(gameIndex, room, winningPlayer, losingPlayer); // updates game to completed & user wins/losses
@@ -597,7 +597,7 @@ const checkForWin = async (losingPlayer, winningPlayer, gameIndex, room) => {
 
     return winningPlayer;
   }
-  console.log('_______________________GAME AINT OVER_______________________')
+  // console.log('_______________________GAME AINT OVER_______________________')
   return isGameOver;
 }
 
@@ -644,7 +644,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
   let currentPlayerResources = await db.getResources(room, gameIndex, player); // returns an object
 
   if (type === 'swordsmen') { // if buying swordsmen
-    console.log('LETS BUY SOME ----> SWORDSMEN'); //TODO: delete console log
+    // console.log('LETS BUY SOME ----> SWORDSMEN');
     if (player === 'player1') { // for player 1
       if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_metal >= 10) { // check if player has enough resources to purchase unit
 
@@ -667,11 +667,11 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
             metal: p2Resources[0].p2_metal
           }
         });
-        console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[ resources ]]]]]]]]]]]]]]]]]]]]]]]]]')
-        console.log(p1Resources)
-        console.log(p2Resources)
+        // console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[ resources ]]]]]]]]]]]]]]]]]]]]]]]]]')
+        // console.log(p1Resources)
+        // console.log(p2Resources)
       } else { // if not enough resources
-        console.log('~~~~~~~~~~~ player 1 is too poor to buy SWORDSMEN');
+        // console.log('~~~~~~~~~~~ player 1 is too poor to buy SWORDSMEN');
         io.to(socketId).emit('not enough resources');
       }
     } else if (player === 'player2') { // else same for player 2
@@ -696,19 +696,19 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
-        console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[ resources ]]]]]]]]]]]]]]]]]]]]]]]]]');
-        console.log(p1Resources);
-        console.log(p2Resources);
+        // console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[ resources ]]]]]]]]]]]]]]]]]]]]]]]]]');
+        // console.log(p1Resources);
+        // console.log(p2Resources);
       } else {
         // if not enough resources
-        console.log('~~~~~~~~~~~ player 2 is too poor to buy SWORDSMEN');
+        // console.log('~~~~~~~~~~~ player 2 is too poor to buy SWORDSMEN');
         io.to(socketId).emit('not enough resources');
       }
     }
   }
 
   if (type === 'archers') { // if buying archers
-    console.log('LETS BUY SOME ----> ARCHERS');
+    // console.log('LETS BUY SOME ----> ARCHERS');
     if (player === 'player1') { // for player 1
       if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_wood >= 20) { // check if player has enough resources to purchase unit
 
@@ -733,7 +733,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
         });
 
       } else { // if not enough resources
-        console.log('~~~~~~~~~~~ player 1 too poor to buy ARCHERS');
+        // console.log('~~~~~~~~~~~ player 1 too poor to buy ARCHERS');
         io.to(socketId).emit('not enough resources');
       }
     } else if (player === 'player2') { // else same for player 2
@@ -759,14 +759,14 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
         });
 
       } else { // if not enough resources
-        console.log('~~~~~~~~~~~ player 2 too poor to buy ARCHERS');
+        // console.log('~~~~~~~~~~~ player 2 too poor to buy ARCHERS');
         io.to(socketId).emit('not enough resources');
       }
     }
   }
 
   if (type === 'knights') { // if buying knights
-    console.log('LETS BUY SOME ----> KNIGHTS');
+    // console.log('LETS BUY SOME ----> KNIGHTS');
     if (player === 'player1') { // for player 1
       if (currentPlayerResources[0].p1_gold >= 20 && currentPlayerResources[0].p1_wood >= 20 && currentPlayerResources[0].p1_metal >= 20) {
         // check if player has enough resources to purchase unit
@@ -791,7 +791,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
         });
 
       } else { // if not enough resources
-        console.log('~~~~~~~~~~~ player 1 too poor to buy KNIGHTS');
+        // console.log('~~~~~~~~~~~ player 1 too poor to buy KNIGHTS');
         io.to(socketId).emit('not enough resources');
       }
     } else if (player === 'player2') { // else same for player 2
@@ -817,7 +817,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
         });
         
       } else { // if not enough resources
-        console.log('~~~~~~~~~~~ player 2 too poor to buy KNIGHTS');
+        // console.log('~~~~~~~~~~~ player 2 too poor to buy KNIGHTS');
         io.to(socketId).emit('not enough resources');
       }
     }

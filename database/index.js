@@ -34,7 +34,7 @@ const insertNewUser = async (username, email, hash) => {
       email: email,
       password: hash
     })
-  console.log('=========== NEW USER INSERTED ==========');
+  // console.log('=========== NEW USER INSERTED ==========');
 }
 
 /////////////////////// Checks user credentials ///////////////////////
