@@ -400,7 +400,7 @@ const deleteGames = async (gameId) => {
   return await knex('games')
     .where(knex.raw(`${gameId} = game_id`))
     .update(`game_completed`, 1)
-    // .del();
+    // .del(); // TODO: make this work
 }
 
 /////////////////////// Marks hexes with remove flag = true if game deleted ///////////////////////
@@ -410,26 +410,32 @@ const deleteHex = (gameId) => {
     .update('remove_hex', 1)
 }
 
-// TODO: THIS
 /////////////////////// Updates game to completed once done ///////////////////////
-const gameComplete = async (game) => {
-  console.log('DATABASE ---> Game Complete'); //TODO: take out console log
+const gameComplete = async (gameIndex, room, winner, loser) => {
+  // console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DATABASE ---> Game Complete');
+
+  let roomNum = room.split('*').join('');
+
   await knex('games')
-    .where(knex.raw(`room_id = ${game.room} AND game_index = ${game.gameIndex}`))
+    .where(knex.raw(`room_id = ${roomNum} AND game_index = '${gameIndex}'`))
     .update(`game_completed`, 1)
+  // console.log('++++++++++++++++++++++++++++++++++++++ GAME STATUS UPDATED TO COMPLETED')
 
-  let winner = game.playerOne; // TODO: update with winner id
-  let loser = game.playerTwo; // TODO: update with loser id
-  
-  // Updates user table for the winner
+  // Updates wins for the winner in the user table
   await knex('users')
-    .where(`room_id = ${game.room} and user_id =${winner}`)
+    .where(knex.raw(`user_id = ${winner}`))
     .increment(`wins`, 1)
+  // console.log('-------------------------------------- WINNER UPDATED')
 
-  // Updates user table for the loser
-  await knex('users')
-    .where(`room_id = ${game.room} and user_id =${loser}`)
+  // Updates losses for the loser in the user tabl
+  await knex('users') 
+    .where(knex.raw(`user_id = ${loser}`))
     .increment(`losses`, 1)
+  // console.log('?????????????????????????????????????? LOSER UPDATED')
+
+  let gameId = await getGameId(room, gameIndex); // returns an object with game_id
+  await deleteHex(gameId[0].game_id); // marks hexes to be deleted
+  // console.log('===================================== HEXES MARKED AS COMPLETED')
 }
 
 module.exports = {
