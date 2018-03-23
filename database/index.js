@@ -16,26 +16,25 @@ const addUser = async (username, email, password) => {
 
   if (existingUser.length) { // checks if user already exists in the db
     // console.log('user exists');
-    return 'User already exists! :(';
+    return 'User already exists';
   } else {
-    bcrypt.hash(password, 10, (err, hash) => { // hash the pw
-      if (err) {
-        console.error('Error in hashing password: ', err);
-      } else {
-        insertNewUser(username, email, hash); // inserts user with hashed pw in the db
-      }
+    return await knex('users') // insert user into the db
+    .insert({
+      username: username,
+      email: email,
+      password: password
     })
   }
 }
 
 const insertNewUser = async (username, email, hash) => {
-  // console.log('=========== insert new user ==========');
   return await knex('users') // insert user into the db
     .insert({
       username: username,
       email: email,
       password: hash
-    });
+    })
+  console.log('=========== NEW USER INSERTED ==========');
 }
 
 /////////////////////// Checks user credentials ///////////////////////
@@ -47,7 +46,9 @@ const checkUserCreds = (username) => {
 
 /////////////////////// Fetches user by id ///////////////////////
 const findUserById = (id) => {
-  return knex('users').where('user_id', id);
+  return knex('users')
+    .select('user_id', 'username', 'email', 'wins', 'losses')
+    .where('user_id', id);
 }
 
 /////////////////////// Saves new game ///////////////////////

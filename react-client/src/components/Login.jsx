@@ -9,7 +9,11 @@ const Login = props => {
       <Modal.Content>
         <Modal.Description>
         <Form>
-          <Form.Input label='Username' type='text' />
+          <Form.Input
+            label='Username'
+            type='text'
+            onChange={(e) => console.log(e.target.value)}
+          />
           <Form.Input label='Password' type='password' />
           <Button
             onClick={() => {console.log('submit button clicked: ', `input[type='text']`)}}
