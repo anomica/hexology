@@ -200,7 +200,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('joinGame', (data) => {
     socket.join(data.room);
-    const board = gameInit(9, 7);
+    const board = gameInit(5, 4);
     let gameIndex = uuidv4();
 
     //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
@@ -284,7 +284,7 @@ const moveUnits = async (data, socket) => {
         (() => {
           io.to(socketId).emit('win'); // the attacker gets a personal win message
           socket.to(room).emit('lose'); // while the rest of the room (defender) gets lose message
-          const board = gameInit(9, 7);
+          const board = gameInit(5, 4);
           let gameIndex = uuidv4();
 
           //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
@@ -318,7 +318,7 @@ const moveUnits = async (data, socket) => {
           }
           io.to(room).emit('move', move);
         })();
-        // const board = gameInit(9, 7); // the reinit board
+        // const board = gameInit(5, 4); // the reinit board
         // gameIndex = uuidv4();
         // games[gameIndex] = {
         //   board: board,
@@ -426,68 +426,88 @@ const resolveCombat = (originIndex, targetIndex, gameIndex, updatedOrigin, updat
 //   // let defender = games[gameIndex].board[targetIndex]; // and defending hex
 //   let defender = board[targetIndex]; // and defending hex
 
-  let swordsMenKnight = attacker.swordsmen - defender.knights;
-  let knightsArchers = attacker.knights - defender.archers;
-  let archerSwordsmen = attacker.archers - defender.swordsmen;
-  let attackerSwordsmen;
-  let attackerKnights;
-  let attackerArchers;
-  let defenderSwordsmen;
-  let defenderKnights;
-  let defenderArchers;
+  let attackerSwordsmen = attacker.swordsmen;
+  let attackerKnights = attacker.knights;
+  let attackerArchers = attacker.archers;
+  let defenderSwordsmen = defender.swordsmen;
+  let defenderKnights = defender.knights;
+  let defenderArchers = defender.archers;
 
-  if (swordsMenKnight > 0) {
-    attackerSwordsmen = swordsMenKnight;
-    defenderKnights = 0;
-  } else {
+  attackerKnights -= defenderArchers; // first, archers pick off knights from afar
+  defenderKnights -= attackerArchers;
+
+  attackerSwordsmen -= (defenderKnights * 3); // then, knights crash against swordsmen
+  defenderSwordsmen -= (attackerKnights * 3);
+
+  attackerArchers -= (defenderSwordsmen * 2); // finally, swordsmen take out archers
+  defenderArchers -= (attackerSwordsmen * 2);
+
+  if (attackerSwordsmen < 0) attackerSwordsmen = 0; // no numbers should go below zero
+  if (attackerKnights < 0) attackerKnights = 0;
+  if (attackerArchers < 0) attackerArchers = 0;
+  if (defenderSwordsmen < 0) defenderSwordsmen = 0;
+  if (defenderKnights < 0) defenderKnights = 0;
+  if (defenderArchers < 0) defenderArchers = 0;
+
+  if (defenderSwordsmen >= attackerSwordsmen) {
+    defenderSwordsmen -= attackerSwordsmen;
     attackerSwordsmen = 0;
-    defenderKnights = Math.abs(attackerSwordsmen);
-  }
-
-  if (knightsArchers > 0) {
-    attackerKnights = knightsArchers;
-    let defenderArchers = 0;
-  } else {
-    attackerKnights = 0;
-    defenderArchers = Math.abs(knightsArchers);
-  }
-
-  if (archerSwordsmen > 0) {
-    attackerArchers = archerSwordsmen;
+  } else if (defenderSwordsmen < attackerSwordsmen) {
+    attackerSwordsmen -= defenderSwordsmen;
     defenderSwordsmen = 0;
-  } else {
-    attackerArchers = 0;
-    defenderSwordsmen = Math.abs(archerSwordsmen);
   }
-
+  if (defenderArchers >= attackerArchers) {
+    defenderArchers -= attackerArchers;
+    attackerArchers = 0;
+  } else if (defenderArchers < attackerArchers) {
+    attackerArchers -= defenderArchers;
+    defenderArchers = 0;
+  }
+  if (defenderKnights >= attackerKnights) {
+    defenderKnights -= attackerKnights;
+    attackerKnights = 0;
+  } else if (defenderKnights < attackerKnights) {
+    attackerKnights -= defenderKnights;
+    defenderKnights = 0;
+  }
   let defendingArmy = defenderSwordsmen + defenderArchers + defenderKnights;
   let attackingArmy = attackerArchers + attackerSwordsmen + attackerKnights;
 
-  if (defendingArmy > attackingArmy) {
-    updatedOrigin = { // reinitialize hex they left
-      ...updatedOrigin,
-      swordsmen: updatedOrigin.swordsmen + attackerSwordsmen,
-      archers: updatedOrigin.knights + attackerKnights,
-      knights: updatedOrigin.archers + attackerArchers,
-      player: attackerPlayer
-    }
-    updatedTarget = {
-      ...updatedTarget,
-      swordsmen: defenderSwordsmen,
-      knights: defenderKnights,
-      archers: defenderArchers,
-      player: defenderPlayer
-    }
-  } else { // tie goes to attacker
-    attackerDidWin = true;
-    updatedTarget = {
-      ...updatedTarget,
-      swordsmen: attackerSwordsmen,
-      knights: attackerKnights,
-      archers: attackerArchers,
-      player: attackerPlayer
-    }
+  if (attackingArmy === defendingArmy) {
+    // this is a tie
   }
+
+  if (attackingArmy > defendingArmy) {
+    // otherwise, subtract leftover units to determine winner, at 1 to 1 ratio, starting with swordsmen, archers, knights
+  }
+
+
+  //
+  // if (defendingArmy > attackingArmy) {
+  //   updatedOrigin = { // reinitialize hex they left
+  //     ...updatedOrigin,
+  //     swordsmen: updatedOrigin.swordsmen + attackerSwordsmen,
+  //     archers: updatedOrigin.knights + attackerKnights,
+  //     knights: updatedOrigin.archers + attackerArchers,
+  //     player: attackerPlayer
+  //   }
+  //   updatedTarget = {
+  //     ...updatedTarget,
+  //     swordsmen: defenderSwordsmen,
+  //     knights: defenderKnights,
+  //     archers: defenderArchers,
+  //     player: defenderPlayer
+  //   }
+  // } else { // tie goes to attacker
+  //   attackerDidWin = true;
+  //   updatedTarget = {
+  //     ...updatedTarget,
+  //     swordsmen: attackerSwordsmen,
+  //     knights: attackerKnights,
+  //     archers: attackerArchers,
+  //     player: attackerPlayer
+  //   }
+  // }
 
   updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer); // update the board
 
