@@ -142,3 +142,10 @@ export const setGameIndex = (gameIndex) => (
     payload: gameIndex
   }
 )
+
+export const toggleUnitShop = (toggle) => (
+  {
+    type: 'TOGGLE-UNIT-SHOP',
+    payload: toggle
+  }
+)

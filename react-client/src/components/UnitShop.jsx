@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Button, Transition, Header, Popup, Image, Modal, Content, Description, Label } from 'semantic-ui-react';
+import { Icon, Button, Transition, Header, Popup, Image, Modal, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
 import { updateResources, swordsmen, archers, knights } from '../../src/actions/actions.js';
 
 class UnitShop extends React.Component {
@@ -9,18 +9,29 @@ class UnitShop extends React.Component {
     super(props);
 
     this.state = {
-      open: false,
+      open: true,
       swordsmen: true,
       archers: true,
       knights: true
     }
   }
 
-  show() {
-    this.setState({ open: true });
+  open() {
+    this.setState({
+      open: true
+    })
   }
+
   close() {
-    this.setState({ open: false });
+    this.setState({
+      open: false
+    })
+  }
+
+  toggleVisibility() {
+    this.setState({
+      open: !this.state.open
+    })
   }
 
   buyUnitsServerRequest(buy) {
@@ -94,9 +105,28 @@ class UnitShop extends React.Component {
   }
 
   render() {
+    let styles = {
+      sidebar: {
+        float: 'right',
+        display: 'block',
+        height: '100%',
+        width: '30%',
+        minWidth: '360px'
+      }
+    }
+
     return (
       <div>
-        <Popup trigger={<Button style={{marginTop: '30px'}} secondary onClick={() => this.show('blurring')}>Unit Store</Button>}>
+        {/* <Button onClick={this.toggleVisibility.bind(this)}>UnitShop</Button> */}
+        {console.log('this.props.showUnitShop:', this.props.showUnitShop)}
+
+        <Menu vertical>
+          <Menu.Item name='bio'  />
+          <Menu.Item name='pics'  />
+          <Menu.Item name='companies'/>
+          <Menu.Item name='links' />
+        </Menu>
+        {/* <Popup trigger={<Button style={{marginTop: '30px'}} secondary onClick={() => this.show('blurring')}>Unit Store</Button>}>
           <Popup.Header>Spend your resources on new units!</Popup.Header>
         </Popup>
 
@@ -134,7 +164,7 @@ class UnitShop extends React.Component {
               </Transition>
             </Modal.Description>
           </Modal.Content>
-        </Modal>
+        </Modal> */}
       </div>
     )
   }
@@ -148,7 +178,8 @@ const mapStateToProps = (state) => {
     playerTwoResources: state.state.playerTwoResources,
     currentPlayer: state.state.currentPlayer,
     userPlayer: state.state.userPlayer,
-    gameIndex: state.state.gameIndex
+    gameIndex: state.state.gameIndex,
+    showUnitShop: state.state.showUnitShop
   }
 }
 

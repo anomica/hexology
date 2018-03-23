@@ -176,6 +176,11 @@ const reducers = (state = defaultState, action) => {
         ...state,
         currentPlayer: action.payload.currentPlayer
       }
+    case 'TOGGLE-UNIT-SHOP':
+      return {
+        ...state,
+        showUnitShop: action.payload.toggle
+      }
     default: return state;
   }
 }

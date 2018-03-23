@@ -11,7 +11,8 @@ const DefaultState = {
   boardState: null,
   winner: null,
   neighbors: [],
-  menuVisible: true
+  menuVisible: true,
+  showUnitShop: false
 }
 
 export default DefaultState;

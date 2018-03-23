@@ -4,7 +4,7 @@ import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
 import { Segment, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
-import { exitGame } from '../../src/actions/actions.js';
+import { exitGame, toggleUnitShop } from '../../src/actions/actions.js';
 
 import UnitShop from './UnitShop.jsx';
 
@@ -15,6 +15,14 @@ const TopBar = props => {
     props.exitGame();
     props.socket.close();
     props.history.push('/');
+  }
+
+  let toggle = false;
+
+  const toggleUnitShop = () => {
+    toggle = !toggle;
+    props.toggleUnitShop(toggle);
+    console.log('toggle:', toggle);
   }
 
   return (
@@ -41,7 +49,8 @@ const TopBar = props => {
           (props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') :
           `Game will begin when both players have joined.`}</strong>
         {props.playerTwoResources && props.playerTwoResources.hasOwnProperty('wood') && props.currentPlayer === props.userPlayer ?
-          <UnitShop>Shop</UnitShop> : null
+          // <UnitShop>Shop</UnitShop> : null
+          <Button onClick={toggleUnitShop}>Shop</Button> : null
           }
         </Segment>
         {props.playerTwoResources && props.playerTwoResources.hasOwnProperty('wood') ?
@@ -74,7 +83,7 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ exitGame }, dispatch);
+  return bindActionCreators({ exitGame, toggleUnitShop }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TopBar));
