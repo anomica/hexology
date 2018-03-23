@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Card, Icon, Button, Transition, Header, Popup, Image, Modal, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
+import { Modal, Input, Card, Icon, Button, Transition, Header, Popup, Image, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
 import { updateBank } from '../../src/actions/actions.js';
 
 class UnitBank extends React.Component {
@@ -9,21 +9,34 @@ class UnitBank extends React.Component {
     super(props);
 
     this.state = {
- 
+      open: false,
+      unitBeingDeployed: null,
+      quantity: 0
     }
   }
 
+  handleOpen() {
+    this.setState({
+      open: !this.state.open
+    })
+  }
+
+  handleSubmit() {
+    // send to reducer
+  }
+
   componentDidMount() {
-    setTimeout(console.log('this.props:', this.props), 2000);
-    // this.props.socket.on('swordsmen', () => {
-    //   this.props.updateBank(this.props.userPlayer, 'swordsman');
-    // });
-    // this.props.socket.on('archers', () => {
-    //   this.props.updateBank(this.props.userPlayer, 'archers');
-    // });
-    // this.props.socket.on('knights', () => {
-    //   this.props.updateBank(this.props.userPlayer, 'knights');
-    // });
+    this.props.socket.on('swordsmen', () => {
+      console.log('received swordsmen transmition');
+      console.log('this.props.userPlayer', this.props.userPlayer);
+      this.props.updateBank(this.props.userPlayer, 'swordsmen');
+    });
+    this.props.socket.on('archers', () => {
+      this.props.updateBank(this.props.userPlayer, 'archer');
+    });
+    this.props.socket.on('knights', () => {
+      this.props.updateBank(this.props.userPlayer, 'knight');
+    });
   }
 
   render() {
@@ -35,7 +48,7 @@ class UnitBank extends React.Component {
             <Card.Content>
               <Label color='blue' image className={'unitType'} >
               <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
-                Swordsmen
+                Deploy Swordsmen
               </Label>
               <Card.Description> 
                 Swordsmen: 
@@ -46,7 +59,7 @@ class UnitBank extends React.Component {
             <Card.Content>
               <Label color='green' image className={'unitType'} >
                 <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
-                Archer
+                Deploy Archers
               </Label>
               <Card.Description>
                 Archer: 
@@ -57,7 +70,7 @@ class UnitBank extends React.Component {
             <Card.Content>
               <Label color='grey' image className={'unitType'} >
                 <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
-                 Knight
+                 Deploy Knights
               </Label>
             <Card.Description>
               Knight: 
@@ -66,6 +79,15 @@ class UnitBank extends React.Component {
             </Card.Description>
             </Card.Content>
           </Card>
+          <Modal open={this.open}>
+            <Modal.Header>
+              Choose Quanity {' ' + this.unitBeingDeployed}
+            </Modal.Header>
+            <Modal.Content >
+              <Input placeholder='quantity' onChange={(e) => {this.setState({quantity: Number(e)})}} />
+              <Button onClick={this.handleSubmit.bind(this)}>Deploy</Button>
+            </Modal.Content>
+          </Modal>
         </div>
       )
     }
