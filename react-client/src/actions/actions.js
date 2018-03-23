@@ -171,13 +171,14 @@ export const deployUnits = (player, unit, quantity) => (
   }
 )
 
-export const addUnitsToHex = (hexIndex, unit, quantity) => (
+export const addUnitsToHex = (hexIndex, unit, quantity, userPlayer) => (
   {
     type: 'ADD-UNITS-TO-HEX',
     payload: {
       hexIndex: hexIndex,
       unit: unit,
-      quantity: quantity
+      quantity: quantity,
+      player: userPlayer
     }
   }
 )

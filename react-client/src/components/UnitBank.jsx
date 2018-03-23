@@ -30,9 +30,11 @@ class UnitBank extends React.Component {
 
   handleSubmit() {
     console.log('quantity:', this.state.quantity);
-    if (this.state.quantity > 0 && this.state.unitBeingDeployed) {
+    let playerBank;
+    this.props.userPlayer === 'player1' ? playerBank = this.props.playerOneUnitBank
+    : playerBank = this.props.playerTwoUnitBank;
+    if (this.state.quantity > 0 && this.state.unitBeingDeployed && this.state.quantity < playerBank[this.state.unitBeingDeployed.toLowerCase()]) {
       this.props.deployUnits(this.props.userPlayer, this.state.unitBeingDeployed.toLowerCase(), this.state.quantity);
-      setTimeout(() => {console.log('deployment:', this.props.deployment)}, 2000);
     } else {
       alert('hey yo this doesnt meet the submit requirements');
     }
@@ -87,7 +89,7 @@ class UnitBank extends React.Component {
               </Card.Description>
             </Card.Content>
             <Card.Content>
-              <Label color='grey' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Anight')} >
+              <Label color='grey' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Knight')} >
                 <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
                  Deploy Knights
               </Label>

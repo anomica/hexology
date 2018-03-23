@@ -166,7 +166,7 @@ class Board extends React.Component {
   }
 
   addUnitsToHex(hexIndex) {
-    this.props.addUnitsToHex(hexIndex, this.props.deployment.unit, this.props.deployment.quantity);
+    this.props.addUnitsToHex(hexIndex, this.props.deployment.unit, this.props.deployment.quantity, this.props.userPlayer);
   }
 
   sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {
