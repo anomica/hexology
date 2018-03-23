@@ -50,14 +50,12 @@ class SidebarLeft extends React.Component {
       sidebar: {
         position: 'fixed',
         height: '100%',
-        width: this.props.menuVisible ? '20%' : '0%',
-        minWidth: '360px'
+        minWidth: this.props.menuVisible ? '160px' : 0
       }
     }
 
     return (
       <div style={styles.sidebar}>
-        <Sidebar.Pushable>
           <Sidebar style={{top: 0}} as={Menu} animation='scale down' width='thin' visible={menuVisible} icon='labeled' vertical inverted>
 
             <Menu.Item
@@ -97,10 +95,9 @@ class SidebarLeft extends React.Component {
               <p></p>
               <p>Units on Hex:</p>
               <ul style={{marginLeft: '-40px', listStyleType: 'none'}}>
-                <li><strong>S, A, K</strong></li>
-                <li><strong>S</strong>wordsmen</li>
-                <li><strong>A</strong>rcher</li>
-                <li><strong>K</strong>nights</li>
+                <li>Swordsmen (+1)</li>
+                <li>Archers (+2)</li>
+                <li>Knights (+3)</li>
               </ul>
               <p>Resources:</p>
               <ul style={{marginLeft: '-40px', listStyleType: 'none'}}>
@@ -112,11 +109,8 @@ class SidebarLeft extends React.Component {
           </Sidebar>
 
 
-          <Sidebar.Pusher>
             {showRules()}
-          </Sidebar.Pusher>
 
-        </Sidebar.Pushable>
       </div>
     )
   }

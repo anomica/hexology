@@ -200,7 +200,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('joinGame', (data) => {
     socket.join(data.room);
-    const board = gameInit(5, 4);
+    const board = gameInit(9, 7);
     let gameIndex = uuidv4();
 
     //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
@@ -284,7 +284,7 @@ const moveUnits = async (data, socket) => {
         (() => {
           io.to(socketId).emit('win'); // the attacker gets a personal win message
           socket.to(room).emit('lose'); // while the rest of the room (defender) gets lose message
-          const board = gameInit(5, 4);
+          const board = gameInit(9, 7);
           let gameIndex = uuidv4();
 
           //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
@@ -318,7 +318,7 @@ const moveUnits = async (data, socket) => {
           }
           io.to(room).emit('move', move);
         })();
-        // const board = gameInit(5, 4); // the reinit board
+        // const board = gameInit(9, 7); // the reinit board
         // gameIndex = uuidv4();
         // games[gameIndex] = {
         //   board: board,

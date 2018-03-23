@@ -209,8 +209,8 @@ class Board extends React.Component {
         <SidebarLeft />
         <TopBar />
         <div className="Board">
-          <HexGrid height={800} viewBox="-50 -50 150 150">
-            <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
+          <HexGrid height={800} viewBox="-50 -50 175 150">
+            <Layout size={{ x: 9, y: 9 }} flat={false} spacing={1.2} origin={{ x: 0, y: -50 }}>
               {this.props.boardState ? this.props.boardState.map(hex => {
                 let targetClass = '';
                 if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
@@ -251,7 +251,7 @@ class Board extends React.Component {
           <Confirm
             open={this.state.confirmOpen}
             size={'tiny'}
-            content={'Move all your troops on this hex?'}
+            content={'Move all your troops to this hex?'}
             cancelButton={'No, only some'}
             onCancel={() => {
               this.setState({ modalOpen: true })
