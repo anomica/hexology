@@ -27,16 +27,6 @@ const addUser = async (username, email, password) => {
   }
 }
 
-const insertNewUser = async (username, email, hash) => {
-  return await knex('users') // insert user into the db
-    .insert({
-      username: username,
-      email: email,
-      password: hash
-    })
-  // console.log('=========== NEW USER INSERTED ==========');
-}
-
 /////////////////////// Checks user credentials ///////////////////////
 const checkUserCreds = (username) => {
   return knex.select()
@@ -442,7 +432,6 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
 module.exports = {
   addUser,
   checkUserCreds,
-  insertNewUser,
   findUserById,
   createGame,
   createHex,
