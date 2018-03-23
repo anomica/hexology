@@ -49,8 +49,7 @@ const TopBar = props => {
           (props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') :
           `Game will begin when both players have joined.`}</strong>
         {props.playerTwoResources && props.playerTwoResources.hasOwnProperty('wood') && props.currentPlayer === props.userPlayer ?
-          // <UnitShop>Shop</UnitShop> : null
-          <Button onClick={toggleUnitShop}>Shop</Button> : null
+          <UnitShop>Shop</UnitShop> : null
           }
         </Segment>
         {props.playerTwoResources && props.playerTwoResources.hasOwnProperty('wood') ?

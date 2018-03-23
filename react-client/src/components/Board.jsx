@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition, 
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
-import { setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { updateBank, setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -15,7 +15,7 @@ import SidebarLeft from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
-
+import UnitBank from './UnitBank.jsx';
 
 class Board extends React.Component {
   constructor(props) {
@@ -59,15 +59,6 @@ class Board extends React.Component {
     this.props.socket.on('updateResources', data => {
       this.props.updateResources(data.playerOneResources, data.playerTwoResources);
     })
-    this.props.socket.on('swordsmen', () => {
-      this.props.swordsmen(this.props.currentPlayer);
-    });
-    this.props.socket.on('archers', () => {
-      this.props.archers(this.props.currentPlayer);
-    });
-    this.props.socket.on('knights', () => {
-      this.props.knights(this.props.currentPlayer);
-    });
     socket.on('win', () => {
       alert('You win!');
     });
@@ -299,7 +290,7 @@ class Board extends React.Component {
         </div> 
           </Grid.Column>
           <Grid.Column width={2}>
-            <UnitShop />
+            <UnitBank />
           </Grid.Column>
        
         </Grid>
@@ -325,7 +316,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ updateBank, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, switchPlayer, setGameIndex }, dispatch);
 }

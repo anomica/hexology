@@ -181,6 +181,29 @@ const reducers = (state = defaultState, action) => {
         ...state,
         showUnitShop: action.payload.toggle
       }
+    case 'UPDATE-BANK':
+      let unit;
+      action.payload.unit === 'swordsmen' ? unit = 'swordsmen'
+      : action.payload.unit === 'archer' ? unit = 'archer'
+      : unit = 'knight';
+      if (action.payload.player === 'player1') {
+        return {
+          ...state,
+          playerOneUnitBank: {
+            ...playerOneUnitBank,
+            [unit]: state.playerOneUnitBank[unit] += 10
+          }
+        }
+      } else {
+        return {
+          ...state,
+          playerTwoUnitBank: {
+            ...playerTwoUnitBank,
+            [unit]: state.playerTwoUnitBank[unit] += 10
+          }
+        }
+      }
+      
     default: return state;
   }
 }

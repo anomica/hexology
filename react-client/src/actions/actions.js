@@ -149,3 +149,13 @@ export const toggleUnitShop = (toggle) => (
     payload: toggle
   }
 )
+
+export const updateBank = (player, unit) => (
+  {
+    type: 'UPDATE-BANK',
+    payload: {
+      player: player,
+      unit: unit
+    }
+  }
+)
