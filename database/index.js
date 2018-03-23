@@ -1,6 +1,7 @@
 const config = require('./config.js');
 const mysql = require('mysql');
 const moment = require('moment');
+const bcrypt = require('bcrypt');
 
 const knex = require('knex')({
   client: 'mysql',
@@ -13,18 +14,28 @@ const addUser = async (username, email, password) => {
     .from('users')
     .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
 
-  if (existingUser.length) {
+  if (existingUser.length) { // checks if user already exists in the db
     // console.log('user exists');
     return 'User already exists! :(';
   } else {
-    // console.log('user added');
-    return knex('users')
-      .insert({
-        username: username,
-        email: email,
-        password: password
-      });
+    bcrypt.hash(password, 10, (err, hash) => { // hash the pw
+      if (err) {
+        console.error('Error in hashing password: ', err);
+      } else {
+        insertNewUser(username, email, hash); // inserts user with hashed pw in the db
+      }
+    })
   }
+}
+
+const insertNewUser = async (username, email, hash) => {
+  // console.log('=========== insert new user ==========');
+  return await knex('users') // insert user into the db
+    .insert({
+      username: username,
+      email: email,
+      password: hash
+    });
 }
 
 /////////////////////// Checks user credentials ///////////////////////
@@ -83,9 +94,6 @@ const createHex = async (hex, gameId) => {
 const getGameBoard = async (room, gameIndex) => {
   let roomNum = await room.split('*').join('');
 
-  // console.log('---------- get game board -> ROOM: ', room);
-  // console.log('---------- get game board -> GAME INDEX: ', gameIndex);
-
   return await knex
     .column(knex.raw(`hex.*`))
     .select()
@@ -94,46 +102,50 @@ const getGameBoard = async (room, gameIndex) => {
 }
 
 /////////////////////// Update origin hex & new hex when player moves ///////////////////////
-const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
-  let playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with user id... eventually
+const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOrigin) => {
+  let playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with user id eventually
 
-  // Updates original hex to no player and no units
-  await knex('hex')
-    .where(knex.raw(`${playerId} = player AND '${originalOrigin.hex_index}' = hex_index`))
-    .update({
-      player: null, // removes the player from the origin hex
-      swordsmen: 0,
-      archers: 0,
-      knights: 0
-    })
+  // Updates original hex
+  if (updatedOrigin.swordsmen === 0 && updatedOrigin.archers === 0 && updatedOrigin.knights === 0) { // if all units were moved, remove player as owner & remove units from hex
+    await knex('hex')
+      .where(knex.raw(`${playerId} = player AND '${originalOrigin[0].hex_index}' = hex_index`))
+      .update({
+        player: null,
+        hex_owner: null,
+        swordsmen: 0,
+        archers: 0,
+        knights: 0
+      })
+  } else { // else update origin hex with units left behind by player
+    await knex('hex')
+      .where(knex.raw(`${playerId} = player AND '${originalOrigin[0].hex_index}' = hex_index`))
+      .update({
+        swordsmen: updatedOrigin.swordsmen,
+        archers: updatedOrigin.archers,
+        knights: updatedOrigin.knights
+      })
+      .then(data => { // then update the hex owner
+        updateHexOwner(originalOrigin[0].hex_index, playerId);
+      })
+  }
 
   // Updates new hex that the player has moved to with current player & units
   await knex('hex')
     .where(knex.raw(`'${newOrigin.index}' = hex_index`))
     .update({
       player: playerId, // moves the current player to the new hex
-      swordsmen: originalOrigin.swordsmen, // updates the new hex with the player's units
-      archers: originalOrigin.archers,
-      knights: originalOrigin.knights
+      hex_owner: playerId, // current player also now owns the hex
+      swordsmen: newOrigin.swordsmen, // updates the new hex with the player's units
+      archers: newOrigin.archers,
+      knights: newOrigin.knights
     })
 
-  // console.log('+++++++++++++++ new hex has gold: +++++++++++++++', newOrigin);
-
   // Fetches the new origin hex
-  let dbHex = await getHex(newOrigin.index);
-
-  // console.log('_____________ new origin index ____________', newOrigin.index);
-
-  // console.log('-------- db hex --------- ', dbHex);
+  let dbHex = await getHex(newOrigin.index); // NOTE: This returns an object
 
   // Updates gold resource for the new origin hex
   if (dbHex[0].has_gold) { // if the new origin hex has gold
-
-    // console.log('+++++++++++++++ hex has GOLD: +++++++++++++++', dbHex);
-    // console.log('player id: ', playerId, 'length', playerId.length, typeof playerId);
-
     if (playerId === '1') { // and if current player is player 1 TODO: update with user id eventually
-      console.log('@@@@@@@@@@@@@@ player 1 has the GOLD @@@@@@@@@@@@@@');
       return await knex('games')
         .where(knex.raw(`${dbHex[0].game_id} = game_id`))
         .increment('p1_gold', 10) // increases p1 gold by 10
@@ -141,7 +153,6 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
           removeHasGold(dbHex[0].hex_index); // removes resource from hex
         })
     } else if (playerId === '2') { // else if current player is player 2 TODO: update with user id eventually
-      console.log('@@@@@@@@@@@@@@  player 2 has the GOLD @@@@@@@@@@@@@@');
       return await knex('games')
         .where(knex.raw(`${dbHex[0].game_id} = game_id`))
         .increment('p2_gold', 10) // increases p2 gold by 10
@@ -153,12 +164,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
 
   // Updates wood resource for the new origin hex
   if (dbHex[0].has_wood) { // if the new origin hex has wood
-
-    // console.log('+++++++++++++++ hex has WOOD: +++++++++++++++', dbHex);
-    // console.log('player id: ', playerId, 'length', playerId.length, typeof playerId);
-
     if (playerId === '1') { // and if current player is player 1 TODO: update with user id eventually
-      console.log('@@@@@@@@@@@@@@ player 1 has the WOOD @@@@@@@@@@@@@@');
       return await knex('games')
         .where(knex.raw(`${dbHex[0].game_id} = game_id`))
         .increment('p1_wood', 10) // increases p1 wood by 10
@@ -166,7 +172,6 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
           removeHasWood(dbHex[0].hex_index); // removes resource from hex
         })
     } else if (playerId === '2') { // else if current player is player 2 TODO: update with user id eventually
-      console.log('@@@@@@@@@@@@@@  player 2 has the WOOD @@@@@@@@@@@@@@');
       return await knex('games')
         .where(knex.raw(`${dbHex[0].game_id} = game_id`))
         .increment('p2_wood', 10) // increases p2 wood by 10
@@ -178,12 +183,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
 
   // Updates metal resource for the new origin hex
   if (dbHex[0].has_metal) { // if the new origin hex has metal
-
-    // console.log('+++++++++++++++ hex has METAL: +++++++++++++++', dbHex);
-    // console.log('player id: ', playerId, 'length', playerId.length, typeof playerId);
-
     if (playerId === '1') { // and if current player is player 1 TODO: update with user id eventually
-      console.log('@@@@@@@@@@@@@@ player 1 has the METAL @@@@@@@@@@@@@@');
       return await knex('games')
         .where(knex.raw(`${dbHex[0].game_id} = game_id`))
         .increment('p1_metal', 10) // increases p1 metal by 10
@@ -191,7 +191,6 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
           removeHasMetal(dbHex[0].hex_index); // removes resource from hex
         })
     } else if (playerId === '2') { // else if current player is player 2 TODO: update with user id eventually
-      console.log('@@@@@@@@@@@@@@  player 2 has the METAL @@@@@@@@@@@@@@');
       return await knex('games')
         .where(knex.raw(`${dbHex[0].game_id} = game_id`))
         .increment('p2_metal', 10) // increases p2 metal by 10
@@ -199,6 +198,27 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer) => {
           removeHasMetal(dbHex[0].hex_index); // removes resource from hex
         })
     }  
+  }
+}
+
+const updateHexOwner = async (hexIndex, player) => { // NOTE: Player comes in as string
+  let hex = await getHex(hexIndex);
+
+  // check if the original hex user was on has units on it
+  if ((hex[0].swordsmen > 0 || hex[0].archers > 0 || hex[0].knights > 0) && (Number(player) === hex[0].player)) { // set current player as owner of hex & removes player as current player
+    await knex('hex')
+      .where(knex.raw(`'${hexIndex}' = hex_index`))
+      .update({
+        hex_owner: player,
+        player: null
+      })
+  } else { // else set the current player & owner on hex to null
+    await knex('hex')
+      .where(knex.raw(`'${hexIndex}' = hex_index`))
+      .update({
+        hex_owner: null,
+        player: null
+      }) 
   }
 }
 
@@ -221,8 +241,130 @@ const removeHasMetal = async (hexIndex) => {
     .update({has_metal: 0})
 }
 
+/////////////////////// Gets user resources from game ///////////////////////
+const getResources = async (room, gameIndex, currentPlayer) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+
+  if (player === '1') { // TODO: update with player id
+    return await knex('games')
+      .select('p1_gold', 'p1_wood', 'p1_metal')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+
+  } else if (player === '2') { // TODO: update with player id
+    return await knex('games')
+      .select('p2_gold', 'p2_wood', 'p2_metal')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+  }
+}
+
+/////////////////////// Updates user resources & units upon purchases ///////////////////////
+const buySwordsmen = async (room, gameIndex, currentPlayer) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+  let gameId = await getGameId(room, gameIndex); // gets the game id to find find the current game and hex the player is on (NOTE: This returns an object)
+
+  if (player === '1') { //TODO: update with player id
+    // console.log('>>>>>>>>>>>>>> player 1 buying SWORDSMEN');
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p1_gold', 10) // decreases the player's gold - 10
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p1_metal', 10) // decreases the player's metal - 10
+
+  } else if (player === '2') { //TODO: update with player id
+    // console.log('>>>>>>>>>>>>>> player 2 buying SWORDSMEN');
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_gold', 10) // decreases the player's gold - 10
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_metal', 10) // decreases the player's metal - 10
+  }
+
+  // then find hex that the current player is on
+  await knex('hex')
+    .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
+    .increment('swordsmen', 10) // increases the units on the player's hex + 10
+};
+
+const buyArchers = async (room, gameIndex, currentPlayer) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+  let gameId = await getGameId(room, gameIndex); // gets the game id to find find the current game and hex the player is on (NOTE: This returns an object)
+
+  if (player === '1') { //TODO: update with player id
+    // console.log('>>>>>>>>>>>>>> player 1 buying ARCHERS');
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p1_gold', 10) // decreases the player's gold - 10
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p1_wood', 20) // decreases the player's wood - 20
+
+  } else if (player === '2') { //TODO: update with player id
+    // console.log('>>>>>>>>>>>>>> player 2 buying ARCHERS');
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_gold', 10) // decreases the player's gold - 10
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_wood', 20) // decreases the player's wood - 20
+  }
+
+  // then find hex that the current player is on
+  await knex('hex')
+    .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
+    .increment('archers', 10) // increases the units on the player's hex + 10
+};
+
+const buyKnights = async (room, gameIndex, currentPlayer) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+  let gameId = await getGameId(room, gameIndex); // gets the game id to find find the current game and hex the player is on (NOTE: This returns an object)
+
+  if (player === '1') { //TODO: update with player id
+    // console.log('>>>>>>>>>>>>>> player 1 buying KNIGHTS');
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p1_gold', 20) // decreases the player's gold - 20
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p1_wood', 20) // decreases the player's wood - 20
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p1_metal', 20) // decreases the player's metal - 20
+
+  } else if (player === '2') { //TODO: update with player id
+    // console.log('>>>>>>>>>>>>>> player 2 buying KNIGHTS');
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_gold', 20) // decreases the player's gold - 20
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_wood', 20) // decreases the player's wood - 20
+
+    await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_metal', 20) // decreases the player's metal - 20
+  }
+
+  // then find hex that the current player is on
+  await knex('hex')
+    .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
+    .increment('knights', 10) // increases the units on the player's hex + 10
+};
+
 /////////////////////// Gets hex based off hex index ///////////////////////
-const getHex = (hexIndex) => {
+const getHex = (hexIndex) => { // NOTE: This will return an OBJECT
   return knex('hex').select()
     .where(knex.raw(`'${hexIndex}' = hex_index`))
 }
@@ -233,6 +375,14 @@ const getGame = (room, gameIndex) => {
   return knex('games').where(
     knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`)
   );
+}
+
+/////////////////////// Gets game ID based off room and game index ///////////////////////
+const getGameId = (room, gameIndex) => { // NOTE: This returns an object
+  let roomNum = room.split('*').join('');
+  return knex('games')
+    .select('game_id')
+    .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
 }
 
 /////////////////////// Fetches games older than 1 day from today's date ///////////////////////
@@ -255,7 +405,6 @@ const deleteGames = async (gameId) => {
 
 /////////////////////// Marks hexes with remove flag = true if game deleted ///////////////////////
 const deleteHex = (gameId) => {
-  // console.log('IN DELETE HEX', gameId);
   return knex('hex')
     .where(`game_id`, gameId)
     .update('remove_hex', 1)
@@ -286,6 +435,7 @@ const gameComplete = async (game) => {
 module.exports = {
   addUser,
   checkUserCreds,
+  insertNewUser,
   findUserById,
   createGame,
   createHex,
@@ -299,5 +449,9 @@ module.exports = {
   getOldGames,
   deleteGames,
   deleteHex,
-  gameComplete
+  gameComplete,
+  getResources,
+  buySwordsmen,
+  buyArchers,
+  buyKnights
 };
