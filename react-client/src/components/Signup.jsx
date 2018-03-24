@@ -17,23 +17,24 @@ class Signup extends React.Component {
   signup(username, password, email) {
     axios.post('/signup', {
       username: this.state.username,
-      email: this.state.password,
-      password: this.state.email
+      email: this.state.email,
+      password: this.state.password
     })
-      .then(data => {
-        console.log('data from signup:', data);
-      })
-      .catch(err => {
-        console.log('error from signup:', err);
-      });
-    history.push('/login');
+    .then(data => {
+      // console.log('data from signup:', data);
+      this.props.history.push('/');
+    })
+    .catch(err => {
+      alert('Username already exists');
+      console.log('error from signup:', err);
+    })
   }
 
   handleChange(e, name) {
     this.setState({
       [name]: e.target.value
     }, () => {
-      console.log('this.state[name]', this.state[name])
+      // console.log(`this.state[${[name]}]`, this.state[name])
     })
   }
 

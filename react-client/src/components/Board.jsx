@@ -51,6 +51,7 @@ class Board extends React.Component {
       this.props.selectHex({}); // initialize selected hex
       this.props.highlightNeighbors([]); // and neighbors
       this.props.updateUnitCounts(10, 10);
+      this.props.switchPlayer('player1');
       !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
     });
     socket.on('move', (move) => { // when socket receives result of move request,
