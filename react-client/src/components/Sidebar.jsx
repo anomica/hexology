@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal } from 'semantic-ui-react';
+import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
@@ -9,7 +9,7 @@ import Login from './Login.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
-import { exitGame, setRoom } from '../../src/actions/actions.js';
+import { exitGame, setRoom, setGameType } from '../../src/actions/actions.js';
 
 class SidebarLeft extends React.Component {
   constructor(props) {
@@ -18,6 +18,8 @@ class SidebarLeft extends React.Component {
     this.state = {
       visible: true,
       newGame: false,
+      newGameModalOpen: false,
+      gameType: 'Public',
       rules: false
     }
 
@@ -37,6 +39,7 @@ class SidebarLeft extends React.Component {
   newGame() {
     this.props.socket.emit('newGame');
     this.props.socket.on('newGame', data => {
+      this.props.setGameType(this.state.gameType);
       this.props.setRoom(data.room);
       this.props.history.push({
         pathname: `/game/room?${data.room}`,
@@ -45,6 +48,10 @@ class SidebarLeft extends React.Component {
         }
       })
     })
+  }
+
+  handleChange(e, { name, value }) {
+    this.setState({ [name]: value });
   }
 
   render() {
@@ -73,7 +80,7 @@ class SidebarLeft extends React.Component {
 
             <Menu.Item
               name='game'
-              onClick={this.newGame.bind(this)}
+              onClick={() => this.setState({ newGameModalOpen: true })}
             >
               <Icon name='gamepad' />
               Start New Game
@@ -122,6 +129,34 @@ class SidebarLeft extends React.Component {
             </Menu.Item>
           </Sidebar>
 
+          <Modal
+            open={this.state.newGameModalOpen}
+            size={'tiny'}
+            closeIcon
+            onClose={() => this.setState({ newGameModalOpen: false })}>
+            <Modal.Header>New Game</Modal.Header>
+            <Modal.Content>
+              <Modal.Description>
+                <Form size={'tiny'} key={'small'}>
+                  <Form.Group widths='equal'>
+                    <Form.Select
+                      required
+                      label
+                      placeholder={'Public'}
+                      options={[{key: 'private', text: 'Private', value: 'private'}, {key: 'public', text: 'Public', value: 'public'}]}
+                      name={'gameType'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Game Type'
+                     />
+                  </Form.Group>
+                </Form>
+              </Modal.Description>
+            </Modal.Content>
+            <Divider/>
+            <Modal.Actions>
+              <Button color={'green'} onClick={this.newGame.bind(this)}>Start Game</Button>
+            </Modal.Actions>
+          </Modal>
 
             {showRules()}
 
@@ -142,7 +177,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ exitGame, setRoom }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, setGameType }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));

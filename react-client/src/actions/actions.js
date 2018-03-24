@@ -40,6 +40,13 @@ export const exitGame = () => (
   }
 )
 
+export const setGameType = (gameType) => (
+  {
+    type: 'SET-GAME-TYPE',
+    payload: gameType
+  }
+)
+
 export const setUserPlayer = (player) => (
   {
     type: 'SET-USER-PLAYER',
