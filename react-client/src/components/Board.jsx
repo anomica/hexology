@@ -61,6 +61,7 @@ class Board extends React.Component {
         });
         setTimeout(() => this.setState({
           combatMessage: 'Combat ends in a bitter draw.',
+          combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       }
@@ -88,14 +89,14 @@ class Board extends React.Component {
     socket.on('combatWin', () => {
       setTimeout(() => this.setState({
         combatMessage: 'You are victorious!',
-        combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
+        combatIcon: 'https://royalarmouries.files.wordpress.com/2015/10/di-2015-3939.jpg'
       }), 2500);
       setTimeout(() => this.resetCombatModal(), 5001);
     });
     socket.on('combatLoss', () => {
       setTimeout(() => this.setState({
         combatMessage: 'Your armies have been bested.',
-        combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
+        combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
       }), 2500);
       setTimeout(() => this.resetCombatModal(), 5001);
     })
@@ -344,19 +345,19 @@ class Board extends React.Component {
               <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
             </Modal.Actions>
           </Modal>
+          <Transition animation={'jiggle'} duration={'2500'} visible={this.state.combatModalOpen}>
             <Modal open={this.state.combatModalOpen} size={'small'} style={{ textAlign: 'center' }}>
               <Modal.Header>{this.state.combatMessage}</Modal.Header>
                 <Modal.Content>
-                  <Transition animation={'jiggle'} duration={'5000'} visible={true}>
                     <Segment>
                       <Image style={{maxWidth: '400px', margin: 'auto'}} src={this.state.combatIcon}/>
                     </Segment>
-                  </Transition>
                 </Modal.Content>
               <Modal.Actions>
                 <Button type='submit' size={'tiny'} onClick={this.skipCombatAnmiation.bind(this)}>Skip</Button>
               </Modal.Actions>
             </Modal>
+          </Transition>
         </div>
       </div>
     );
