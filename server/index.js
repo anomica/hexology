@@ -750,7 +750,9 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
       knights: Math.floor(attackerKnights / 2) || 0,
     };
 
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>> UPDATED ORIGIN: ', updatedOrigin)
+    // update the hex units in the db
+    await db.updateHexUnits(updatedOrigin.hex_index, updatedOrigin.swordsmen, updatedOrigin.archers, updatedOrigin.knights, 'player' + updatedOrigin.player); 
+
 
     ////////////////////////// IF USING GAME OBJECT ON SERVER //////////////
     // let masterTarget = games[gameIndex].board[targetIndex];///////////////////////////////////////////////////////////////////////
@@ -766,10 +768,11 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
       knights: Math.floor(defenderKnights / 2) || 0,
     };
     
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>> UPDATED TARGET: ', updatedTarget)
+    // update the hex units in the db
+    await db.updateHexUnits(updatedTarget.hex_index, updatedTarget.swordsmen, updatedTarget.archers, updatedOrigin.knights, 'player' + updatedTarget.player);
 
-    console.log('/////////////////////////////////////// combat works until here //////////////////////////////')
-    
+    console.log('\n/////////////////////////////////////// combat works until here //////////////////////////////\n')
+
     if (currentPlayer === 'player1') { // and total unit counts need to be reduced
       games[gameIndex].playerOneTotalUnits -= games[gameIndex].playerOneTotalUnits - updatedOrigin.swordsmen - updatedOrigin.archers - updatedOrigin.knights || 0;
       games[gameIndex].playerTwoTotalUnits -= games[gameIndex].playerTwoTotalUnits - updatedTarget.swordsmen - updatedTarget.archers - updatedTarget.knights || 0;
