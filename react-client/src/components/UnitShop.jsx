@@ -51,7 +51,6 @@ class UnitShop extends React.Component {
     this.props.userPlayer === 'player1' ?
     resources = this.props.playerOneResources :
     resources = this.props.playerTwoResources;
-    console.log('resources', resources)
     if (resources.gold >= 10 && resources.metal >= 10 && this.props.userPlayer === this.props.currentPlayer) {
       this.buyUnitsServerRequest({
         type: 'swordsmen',

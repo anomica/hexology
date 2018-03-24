@@ -18,8 +18,6 @@ class UnitBank extends React.Component {
   
   componentDidMount() {
     this.props.socket.on('deployUnits', data => {
-      console.log('deployUnits data:', data);
-      console.log('this.state.unitBeingDeployed:', this.state.unitBeingDeployed);
       this.props.deployUnits(data.player, data.unit, data.quantity, data.playerOneUnitBank, data.playerTwoUnitBank);
     })
   }
@@ -41,9 +39,6 @@ class UnitBank extends React.Component {
     let playerBank;
     this.props.userPlayer === 'player1' ? playerBank = this.props.playerOneUnitBank
     : playerBank = this.props.playerTwoUnitBank;
-    console.log('playerBank:', playerBank);
-    console.log('this.state.unitBeingDeployd', this.state.unitBeingDeployed);
-    console.log('this.state.quantity', this.state.quantity);
     if (this.state.quantity > 0 && this.state.unitBeingDeployed && this.state.quantity <= playerBank[this.state.unitBeingDeployed.toLowerCase()]) {
       this.props.socket.emit('deployUnits', {
         player: this.props.userPlayer, 

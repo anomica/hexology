@@ -183,12 +183,13 @@ export const deployUnits = (player, unit, quantity, playerOneUnitBank, playerTwo
   }
 )
 
-export const addUnitsToHex = (hex, hexIndex) => (
+export const addUnitsToHex = (hex, hexIndex, player) => (
   {
     type: 'ADD-UNITS-TO-HEX',
     payload: {
       hex: hex,
-      hexIndex: hexIndex
+      hexIndex: hexIndex,
+      player: player
     }
   }
 )

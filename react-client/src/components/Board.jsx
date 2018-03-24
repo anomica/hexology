@@ -129,7 +129,7 @@ class Board extends React.Component {
       });
       socket.on('troopsDeployed', data => {
         console.log('data:', data);
-        this.props.addUnitsToHex(data.hex, data.hexIndex);
+        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
       })
     })();
   }

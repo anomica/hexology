@@ -146,7 +146,7 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ exitGame, toggleUnitShop }, dispatch);
+  return bindActionCreators({ exitGame }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TopBar));
