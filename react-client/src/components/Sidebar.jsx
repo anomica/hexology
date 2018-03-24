@@ -95,9 +95,10 @@ class SidebarLeft extends React.Component {
               <p></p>
               <p>Units on Hex:</p>
               <ul style={{marginLeft: '-40px', listStyleType: 'none'}}>
-                <li>Swordsmen (+1)</li>
-                <li>Archers (+2)</li>
-                <li>Knights (+3)</li>
+                <li><strong>S, A, K</strong></li>
+                <li>Swordsmen</li>
+                <li>Archers</li>
+                <li>Knights</li>
               </ul>
               <p>Resources:</p>
               <ul style={{marginLeft: '-40px', listStyleType: 'none'}}>

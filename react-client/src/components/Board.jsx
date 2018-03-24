@@ -50,6 +50,7 @@ class Board extends React.Component {
       this.props.setGameIndex(data.gameIndex); // if so, set game index
       this.props.selectHex({}); // initialize selected hex
       this.props.highlightNeighbors([]); // and neighbors
+      this.props.updateUnitCounts(10, 10);
       !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
     });
     socket.on('move', (move) => { // when socket receives result of move request,
@@ -61,11 +62,8 @@ class Board extends React.Component {
         setTimeout(() => this.setState({
           combatMessage: 'Combat ends in a bitter draw.',
         }), 2500);
-        setTimeout(() => this.setState({
-          combatModalOpen: false,
-          combatMessage: 'May the strongest prevail!',
-        }), 5000);
-      }// TEMP:
+        setTimeout(() => this.resetCombatModal(), 5001);
+      }
       if (move.updatedUnitCounts) {
         this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
       }
@@ -92,28 +90,34 @@ class Board extends React.Component {
         combatMessage: 'You are victorious!',
         combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
       }), 2500);
-      setTimeout(() => this.resetCombatModal());
+      setTimeout(() => this.resetCombatModal(), 5001);
     });
     socket.on('combatLoss', () => {
       setTimeout(() => this.setState({
         combatMessage: 'Your armies have been bested.',
         combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
       }), 2500);
-      setTimeout(() => this.resetCombatModal());
+      setTimeout(() => this.resetCombatModal(), 5001);
+    })
+    socket.on('tieGame', () => {
+      setTimeout(() => {
+        this.setState({ combatMessage: 'The war has ended in a stalemate. Try again.'});
+      }, 2500);
+      setTimeout(() => this.resetCombatModal(), 5001);
     })
     socket.on('winGame', () => {
       setTimeout(() => this.setState({
         combatMessage: 'Congratulations! You have won the battle, and the day!',
         combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
       }), 2500);
-      setTimeout(() => this.resetCombatModal());
+      setTimeout(() => this.resetCombatModal(), 5001);
     });
     socket.on('loseGame', () => {
       setTimeout(() => this.setState({
         combatMessage: 'Your armies have been bested, and your enemy is victorious. Better luck next time.',
         combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
       }), 2500);
-      setTimeout(() => this.resetCombatModal());
+      setTimeout(() => this.resetCombatModal(), 5001);
     });
     socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
       alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
