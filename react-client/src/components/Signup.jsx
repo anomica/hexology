@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
+import { withRouter } from 'react-router';
 
 class Signup extends React.Component {
   constructor(props) {
@@ -16,22 +17,24 @@ class Signup extends React.Component {
   signup(username, password, email) {
     axios.post('/signup', {
       username: this.state.username,
-      email: this.state.password,
-      password: this.state.email
+      email: this.state.email,
+      password: this.state.password
     })
-      .then(data => {
-        console.log('data from signup:', data);
-      })
-      .catch(err => {
-        console.log('error from signup:', err);
-      })
+    .then(data => {
+      // console.log('data from signup:', data);
+      this.props.history.push('/');
+    })
+    .catch(err => {
+      alert('Username already exists');
+      console.log('error from signup:', err);
+    })
   }
 
   handleChange(e, name) {
     this.setState({
       [name]: e.target.value
     }, () => {
-      console.log('this.state[name]', this.state[name])
+      // console.log(`this.state[${[name]}]`, this.state[name])
     })
   }
 
@@ -42,23 +45,23 @@ class Signup extends React.Component {
         <Modal.Content>
           <Modal.Description>
           <Form>
-            <Form.Input 
-              name='username' 
+            <Form.Input
+              name='username'
               onChange={(e) => {this.handleChange(e, 'username')}}
-              label='Username' 
+              label='Username'
               type='text' />
-            <Form.Input 
+            <Form.Input
               name='password'
-              onChange={(e) => {this.handleChange(e, 'password')}} 
-              label='Password' 
+              onChange={(e) => {this.handleChange(e, 'password')}}
+              label='Password'
               type='password' />
-            <Form.Input 
+            <Form.Input
               name='email'
               onChange={(e) => {this.handleChange(e, 'email')}}
-              label='Email' 
+              label='Email'
               type='email' />
-            <Button 
-              onClick={this.signup.bind(this)} 
+            <Button
+              onClick={this.signup.bind(this)}
               type='submit'
               >Submit</Button>
           </Form>
@@ -76,4 +79,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps, null)(Signup);
+export default connect(mapStateToProps, null)(withRouter(Signup));

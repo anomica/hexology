@@ -1,0 +1,39 @@
+Bot will be a selection you can make when creating the game. If it is invoked,
+the script will be called every time it is the opponent's turn.
+
+It will need to know the following at the beginning of each of its turns:
+-its total troop count
+-total enemy troop count
+-its hexes (coordinates, troop count)
+-the neighbors of its hexes (coordinates, troop counts, resources)
+-its next neighbors an extra hex away (coordinates, troop counts, resources)
+-its resources
+-opponent resources
+
+
+
+IN ORDER OF IMPORTANCE
+Check for immediate enemy proximity
+  If it would win, give high priority
+  If it would lose, give moving away high priority
+    Lower priority, but still high, if it can do a lot of damage even in a loss
+  Store enemy proximities in an array with levels of importance, as well as which types of
+    units its lacking in and by how much
+
+By purchasing units it can afford, could it turn an imminent failure into a draw or a win?
+  Which units, and where? Those get top priority and are purchased outright.
+  For hexes with enemies two hexes away, what kinds of troops would help in a fight? Can
+    any of them be afforded now? If so, buy them.
+  If none of these are necessary this turn, do not buy, but instead buy next turn to be
+    reactive.
+
+Check for immediate resource proximity
+  All immediate resource hexes are given high priority, but especially those that could
+    be used to buy units next turn, and especially units that will be needed in a fight
+  In the event of a tie, defer to hexes which would allow it to buy a more diverse army.
+  Resource hexes up to two spaces away are given a medium priority, but if that resource
+    could be used to buy units the AI needs, it is given high priority.
+
+Decide how to spend the three moves, based on priority.
+For each of those three moves, first assume all units are moving.
+If that move will result in a combat, bring as many units as necessary to win.

@@ -73,6 +73,16 @@ export const moveUnits = (origin, originIndex, target, targetIndex) => (
   }
 )
 
+export const updateUnitCounts = (playerOneTotalUnits, playerTwoTotalUnits) => (
+  {
+    type: 'UPDATE-UNIT-COUNTS',
+    payload: {
+      playerOneTotalUnits: playerOneTotalUnits,
+      playerTwoTotalUnits: playerTwoTotalUnits
+    }
+  }
+)
+
 export const reinforceHex = (hexIndex, resourceType) => (
   {
     type: 'REINFORCE-HEX',

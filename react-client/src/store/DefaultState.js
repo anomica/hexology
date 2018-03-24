@@ -1,6 +1,8 @@
 const DefaultState = {
   playerOne: undefined,
   playerTwo: undefined,
+  playerOneTotalUnits: 10,
+  playerTwoTotalUnits: 10,
   playerOneResources: {},
   playerTwoResources: {},
   playerOneUnitBank: {
