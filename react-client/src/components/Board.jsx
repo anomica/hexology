@@ -5,7 +5,7 @@ import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
 import { setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
-         archers, knights, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
+         archers, knights, switchPlayer, drawBoard, setGameIndex, setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -28,6 +28,8 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
+    console.log('this.props in board:', this.props)
+    console.log('state in board: ', this.state)
     let socket = this.props.socket;
     if (this.props.location.state) {
       socket.emit('joinGame', {
@@ -39,6 +41,7 @@ class Board extends React.Component {
       socket.emit('newGame');
       !this.props.playerAssigned && this.props.setUserPlayer('player1'); // so for that client, they should be assigned to player 1
       socket.on('newGame', data => {
+        console.log('data in board: ', data)
         this.props.setRoom(data.room);
       })
     }
@@ -292,6 +295,7 @@ class Board extends React.Component {
 }
 
 const mapStateToProps = (state) => {
+  console.log('SOCKET IN THE BOARD: ', state.state.socket.id)
   return {
     socket: state.state.socket,
     room: state.state.room,
@@ -310,7 +314,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
-    updateResources, swordsmen, archers, knights, switchPlayer, setGameIndex }, dispatch);
+    updateResources, swordsmen, archers, knights, switchPlayer, setGameIndex, setPlayerOne, setPlayerTwo }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);

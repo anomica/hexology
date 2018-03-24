@@ -176,7 +176,19 @@ const reducers = (state = defaultState, action) => {
         ...state,
         currentPlayer: action.payload.currentPlayer
       }
+    case 'SET-PLAYER-ONE':
+      return {
+        ...state,
+        playerOne: action.payload.playerOne
+      }
+    case 'SET-PLAYER-TWO':
+      return {
+        ...state,
+        playerOne: action.payload.playerTwo
+      }
+    
     default: return state;
+    
   }
 }
 

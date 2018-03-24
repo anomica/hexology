@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { setRooms, menuToggle, setSocket } from '../../src/actions/actions.js';
+import { setRooms, menuToggle, setSocket, setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
 import { Button } from 'semantic-ui-react';
 import socketIOClient from "socket.io-client";
 
@@ -33,14 +33,25 @@ class Main extends React.Component {
       this.props.setSocket(socket);
     })();
     axios.get('/persistUser')
-      .then(data => {
-        // console.log('data from session:', data);
+      .then(async results => {
+        // console.log('-----------------------------')
+        // console.log('SESSION DATA:', results);
+        console.log('SESSION PROPS: ', this.props)
+        console.log('this.props.location.playerId', this.props.location.playerId)
+        // console.log('-----------------------------')
+        
+        // if (results.data.length === 1) {
+        //   console.log('A USER IS LOGGED IN ALREADY: ', results.data[0].user_id)
+        //   await this.props.setPlayerOne(results.data[0].user_id);
+        //   // console.log('>>>>>>>> PLAYERONE: SESSION PROPS: ', this.props)
+        // }
       })
       .catch(err => {
         console.log('err from persistUser:', err);
       })
     axios.get('/rooms')
       .then(rooms => {
+        // console.log('=============================== rooms', rooms)
         for (let room in rooms.data) {
           if (room[0] !== '*') {
             delete rooms.data[room]
@@ -66,11 +77,12 @@ class Main extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
+    // playerOne: state.state.playerOne
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setRooms, menuToggle, setSocket }, dispatch)
+  return bindActionCreators({ setRooms, menuToggle, setSocket, setPlayerOne, setPlayerTwo }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);

@@ -142,3 +142,17 @@ export const setGameIndex = (gameIndex) => (
     payload: gameIndex
   }
 )
+
+export const setPlayerOne = (playerOne) => (
+  {
+    type: 'SET-PLAYER-ONE',
+    payload: playerOne
+  }
+)
+
+export const setPlayerTwo = (playerTwo) => (
+  {
+    type: 'SET-PLAYER-TWO',
+    payload: playerTwo
+  }
+)
