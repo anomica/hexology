@@ -67,11 +67,6 @@ const reducers = (state = defaultState, action) => {
         ...state,
         gameIndex: action.payload
       }
-    case 'SET-GAME-TYPE':
-      return {
-        ...state,
-        gameType: action.payload
-      }
     case 'HIGHLIGHT-NEIGHBORS':
       let newState;
       state.neighbors.length ? // if there are neighbors selected,

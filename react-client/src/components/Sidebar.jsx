@@ -9,7 +9,7 @@ import Login from './Login.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
-import { exitGame, setRoom, setGameType } from '../../src/actions/actions.js';
+import { exitGame, setRoom } from '../../src/actions/actions.js';
 
 class SidebarLeft extends React.Component {
   constructor(props) {
@@ -19,7 +19,7 @@ class SidebarLeft extends React.Component {
       visible: true,
       newGame: false,
       newGameModalOpen: false,
-      gameType: 'Public',
+      gameType: 'public',
       rules: false
     }
 
@@ -37,9 +37,8 @@ class SidebarLeft extends React.Component {
   }
 
   newGame() {
-    this.props.socket.emit('newGame');
+    this.props.socket.emit('newGame', { gameType: this.state.gameType });
     this.props.socket.on('newGame', data => {
-      this.props.setGameType(this.state.gameType);
       this.props.setRoom(data.room);
       this.props.history.push({
         pathname: `/game/room?${data.room}`,
@@ -177,7 +176,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ exitGame, setRoom, setGameType }, dispatch);
+  return bindActionCreators({ exitGame, setRoom }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));

@@ -41,14 +41,10 @@ class Board extends React.Component {
         socket.emit('joinGame', {
           room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]
         });
-        !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+        !this.props.playerAssigned && this.props.setUserPlayer('player2');
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (this.props.location.state.extra === 'create') {
-        // socket.emit('newGame');
-        !this.props.playerAssigned && this.props.setUserPlayer('player1'); // so for that client, they should be assigned to player 1
-        // socket.on('newGame', data => {
-        //   this.props.setRoom(data.room);
-        // })
+        !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
       socket.on('gameCreated', data => {
         this.props.drawBoard(data.board); // if the server sends an object, it means that the player is player 2

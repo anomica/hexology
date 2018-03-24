@@ -199,11 +199,12 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     emailHandler.sendEmail(username, email, room, message);
   })
 
-  socket.on('newGame', () => {
-    let newRoom = `*${roomNum}`
+  socket.on('newGame', request => {
+    let newRoom = `*${roomNum}`;
+    let gameType = request.gameType;
     socket.join(newRoom); // create a new room
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
-    socket.broadcast.emit('newRoom', { roomName: newRoom, room: io.sockets.adapter.rooms[newRoom] });
+    gameType === 'public' && socket.broadcast.emit('newRoom', { roomName: newRoom, room: io.sockets.adapter.rooms[newRoom] });
     roomNum++; // increment room count to assign new ro
   })
 
