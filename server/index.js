@@ -235,15 +235,18 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   })
 
   socket.on('buy', data => {
+    console.log('buy:', data);
     buyUnits(data.type, data.player, data.gameIndex, data.socketId, data.room);
   })
 
   socket.on('deployUnits', data => {
+    console.log('data:', data);
     verifyBank(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
   })
 
   socket.on('addUnits', data => {
-    
+    console.log('data from addUnits:', data);
+    deployUnitsOnHex(data.hexIndex, data.gameIndex, data.unit, data.quantity, data.room)
   })
 
   socket.on('disconnect', () => {
@@ -366,11 +369,25 @@ const moveUnits = async (data, socket) => {
 
 const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // verify purchase & update player bank
   if (player === 'player1' && games[gameIndex].playerOneUnitBank[unit] === bank) {
+    console.log('games[gameIndex].playerOneUnitBank[unit]', games[gameIndex].playerOneUnitBank[unit])
     games[gameIndex].playerOneUnitBank[unit] = games[gameIndex].playerOneUnitBank[unit] - quantity;
-    io.to(room).emit('deployUnits', games[gameIndex].playerOneUnitBank[unit])
+    io.to(room).emit('deployUnits', {
+      playerOneUnitBank: games[gameIndex].playerOneUnitBank,
+      playerTwoUnitBank: games[gameIndex].playerTwoUnitBank,
+      unit: unit,
+      player: player,
+      quantity: quantity
+    });
   } else if (player === 'player2') {
+    console.log('games[gameIndex].playerOneUnitBank[unit]', games[gameIndex].playerTwoUnitBank[unit])
     games[gameIndex].playerTwoUnitBank[unit] = games[gameIndex].playerTwoUnitBank[unit] - quantity;
-    io.to(room).emit('deployUnits', games[gameIndex].playerTwoUnitBank[unit])
+    io.to(room).emit('deployUnits', {
+      playerOneUnitBank: games[gameIndex].playerOneUnitBank,
+      playerTwoUnitBank: games[gameIndex].playerTwoUnitBank,
+      unit: unit,
+      player: player,
+      quantity: quantity
+    });
   } else {
     io.to(room).emit('cheating detected');
   }
@@ -458,6 +475,21 @@ const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarge
 
   currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1'; // then player will toggle
   await reinforceHexes(gameIndex, currentPlayer, targetIndex, room, board); // then check to see if there are reinforcements
+}
+
+const deployUnitsOnHex = async (hexIndex, gameIndex, unit, quantity, room) => { // updates a single hex with deployed troops from bank
+  console.log('in deployUnitsOnHex: ', hexIndex, gameIndex, unit, quantity, room);
+  console.log('games[gameIndex].board[hexIndex][unit]', games[gameIndex].board[hexIndex][unit]);
+  games[gameIndex].board[hexIndex][unit] = games[gameIndex].board[hexIndex][unit] + quantity; // need to update DB here
+  let bank;
+  console.log('games[gameIndex].board[hexIndex].player', games[gameIndex].board[hexIndex].player);
+  games[gameIndex].board[hexIndex].player === 'player1' ? bank = games[gameIndex].playerOneUnitBank
+  : bank = games[gameIndex].playerTwoUnitBank;
+  console.log('bank:', bank);
+  io.to(room).emit('troopsDeployed', {
+    hex: games[gameIndex].board[hexIndex],
+    hexIndex: hexIndex
+  });
 }
 
 const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedOrigin, updatedTarget, currentPlayer) => { // if combat,
@@ -826,14 +858,14 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
   /////////////////////////////// IF USING GAME OBJ ON SERVER /////////////////////////////////////
   let game = games[gameIndex], resources, bank;
   if (!game.playerOneUnitBank) {
-    playerOneUnitBank = {
+    game.playerOneUnitBank = {
       archer: 0,
       knight: 0,
       swordsmen: 0
     }
   }
   if (!game.playerTwoUnitBank) {
-    playerTwoUnitBank = {
+    game.playerTwoUnitBank = {
       archer: 0,
       knight: 0,
       swordsmen: 0
@@ -851,7 +883,12 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
       resources.gold -= 10;
       resources.metal -= 10;
       bank.swordsmen += 10;
-      io.to(room).emit('swordsmen');
+      console.log('playerOneUnitBank:', game.playerOneUnitBank);
+      console.log('playerTwoUnitBank:', game.playerTwoUnitBank);
+      io.to(room).emit('swordsmen', {
+        playerOneUnitBank: game.playerOneUnitBank,
+        playerTwoUnitBank: game.playerTwoUnitBank
+      });
       io.to(room).emit('updateResources', {
         playerOneResources: game.playerOneResources,
         playerTwoResources: game.playerTwoResources
@@ -864,7 +901,10 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
       resources.gold -= 10;
       resources.wood -= 20;
       bank.archers += 10;
-      io.to(room).emit('archers');
+      io.to(room).emit('archers', {
+        playerOneUnitBank: game.playerOneUnitBank,
+        playerTwoUnitBank: game.playerTwoUnitBank
+      });
       io.to(room).emit('updateResources', {
         playerOneResources: game.playerOneResources,
         playerTwoResources: game.playerTwoResources
@@ -878,7 +918,10 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
       resources.wood -= 20;
       resources.metal -= 20;
       bank.knights += 10;
-      io.to(room).emit('knights');
+      io.to(room).emit('knights', {
+        playerOneUnitBank: game.playerOneUnitBank,
+        playerTwoUnitBank: game.playerTwoUnitBank
+      });
       io.to(room).emit('updateResources', {
         playerOneResources: game.playerOneResources,
         playerTwoResources: game.playerTwoResources

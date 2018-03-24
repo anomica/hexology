@@ -150,36 +150,35 @@ export const toggleUnitShop = (toggle) => (
   }
 )
 
-export const updateBank = (player, unit) => (
+export const updateBank = (playerOneUnitBank, playerTwoUnitBank) => (
   {
     type: 'UPDATE-BANK',
     payload: {
-      player: player,
-      unit: unit
+      playerOneUnitBank: playerOneUnitBank,
+      playerTwoUnitBank: playerTwoUnitBank
     }
   }
 )
 
-export const deployUnits = (player, unit, quantity, updatedBank) => (
+export const deployUnits = (player, unit, quantity, playerOneUnitBank, playerTwoUnitBank) => (
   {
     type: 'DEPLOY-UNITS',
     payload: {
       player: player,
       unit: unit,
       quantity: quantity,
-      updatedBank: updatedBank
+      playerOneUnitBank: playerOneUnitBank,
+      playerTwoUnitBank: playerTwoUnitBank
     }
   }
 )
 
-export const addUnitsToHex = (hexIndex, unit, quantity, userPlayer) => (
+export const addUnitsToHex = (hex, hexIndex) => (
   {
     type: 'ADD-UNITS-TO-HEX',
     payload: {
-      hexIndex: hexIndex,
-      unit: unit,
-      quantity: quantity,
-      player: userPlayer
+      hex: hex,
+      hexIndex: hexIndex
     }
   }
 )

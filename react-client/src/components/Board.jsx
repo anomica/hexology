@@ -59,6 +59,10 @@ class Board extends React.Component {
     this.props.socket.on('updateResources', data => {
       this.props.updateResources(data.playerOneResources, data.playerTwoResources);
     })
+    socket.on('troopsDeployed', data => {
+      console.log('data:', data);
+      this.props.addUnitsToHex(data.hex, data.hexIndex);
+    })
     socket.on('win', () => {
       alert('You win!');
     });
@@ -166,13 +170,15 @@ class Board extends React.Component {
   }
 
   addUnitsToHex(hexIndex) {
-    this.props.addUnitsToHex(hexIndex, this.props.deployment.unit, this.props.deployment.quantity, this.props.userPlayer);
+    console.log('this.props.deployment:', this.props.deployment);
+    console.log('hexIndex', hexIndex);
     this.props.socket.emit('addUnits', {
       hexIndex: hexIndex,
       unit: this.props.deployment.unit,
       player: this.props.userPlayer,
       quantity: this.props.deployment.quantity,
-      gameIndex: this.props.gameIndex
+      gameIndex: this.props.gameIndex,
+      room: this.props.room
     })
   }
 
@@ -309,8 +315,13 @@ class Board extends React.Component {
         </div> 
           </Grid.Column>
           <Grid.Column width={2}>
+            {this.props.currentPlayer === this.props.userPlayer ?
             <UnitBank />
+            : <div></div>
+            }
           </Grid.Column>
+          
+          
        
         </Grid>
       </div>

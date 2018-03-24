@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Card, Icon, Button, Transition, Header, Popup, Image, Modal, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
-import { updateResources, swordsmen, archers, knights } from '../../src/actions/actions.js';
+import { updateBank, updateResources, swordsmen, archers, knights } from '../../src/actions/actions.js';
 
 class UnitShop extends React.Component {
   constructor(props) {
@@ -14,6 +14,20 @@ class UnitShop extends React.Component {
       archers: true,
       knights: true
     }
+  }
+
+  componentDidMount() {
+    this.props.socket.on('swordsmen', data => {
+      if (this.userPlayer === this.currentPlayer) {
+        this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
+      }
+    });
+    this.props.socket.on('archers', data => {
+      this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
+    });
+    this.props.socket.on('knights', data => {
+      this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
+    });
   }
 
   show() {
@@ -37,8 +51,8 @@ class UnitShop extends React.Component {
     this.props.userPlayer === 'player1' ?
     resources = this.props.playerOneResources :
     resources = this.props.playerTwoResources;
-
-    if (resources.gold >= 10 && resources.metal >= 10) {
+    console.log('resources', resources)
+    if (resources.gold >= 10 && resources.metal >= 10 && this.props.userPlayer === this.props.currentPlayer) {
       this.buyUnitsServerRequest({
         type: 'swordsmen',
         room: this.props.room,
@@ -172,7 +186,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ swordsmen, archers, knights }, dispatch);
+  return bindActionCreators({ updateBank, swordsmen, archers, knights }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(UnitShop);
