@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
 import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
+import { withRouter } from 'react-router';
 
 class Signup extends React.Component {
   constructor(props) {
@@ -67,23 +68,23 @@ class Signup extends React.Component {
         <Modal.Content>
           <Modal.Description>
           <Form>
-            <Form.Input 
-              name='username' 
+            <Form.Input
+              name='username'
               onChange={(e) => {this.handleChange(e, 'username')}}
-              label='Username' 
+              label='Username'
               type='text' />
-            <Form.Input 
+            <Form.Input
               name='password'
-              onChange={(e) => {this.handleChange(e, 'password')}} 
-              label='Password' 
+              onChange={(e) => {this.handleChange(e, 'password')}}
+              label='Password'
               type='password' />
-            <Form.Input 
+            <Form.Input
               name='email'
               onChange={(e) => {this.handleChange(e, 'email')}}
-              label='Email' 
+              label='Email'
               type='email' />
-            <Button 
-              onClick={this.signup.bind(this)} 
+            <Button
+              onClick={this.signup.bind(this)}
               type='submit'
               >Submit</Button>
           </Form>
@@ -105,4 +106,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps, null)(Signup);
+export default connect(mapStateToProps, null)(withRouter(Signup));

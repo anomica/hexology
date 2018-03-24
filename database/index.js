@@ -213,6 +213,23 @@ const updateHexOwner = async (hexIndex, player) => { // NOTE: Player comes in as
   }
 }
 
+/////////////////////// Updates the units on the hex upon combat ///////////////////////
+const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlayer) => {
+  let playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with user id eventually
+
+  console.log('~~~~~~~~~~~~~~~~~~~~~ UPDATING HEX UNITS DURING COMBAT ~~~~~~~~~~~~~~~~~~~~~');
+  // console.log('typeof playerid: ', typeof playerId, '\ncurrent player: ', Number(playerId), '\nswordsmen: ', swordsmen, '\narchers: ', archers, '\nknights: ', knights);
+
+  await knex('hex')
+    .where(knex.raw(`'${hexIndex}' = hex_index AND ${Number(playerId)} = player`))
+    .update({
+      swordsmen: swordsmen,
+      archers: archers,
+      knights: knights
+    })
+  console.log('~~~~~~~~~~~~~~~~~~~~~~~ SUCCESS YASSS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+}
+
 /////////////////////// Removes resource from the hex ///////////////////////
 const removeHasGold = async (hexIndex) => {
   return await knex('hex').select()
@@ -449,5 +466,6 @@ module.exports = {
   getResources,
   buySwordsmen,
   buyArchers,
-  buyKnights
+  buyKnights,
+  updateHexUnits
 };

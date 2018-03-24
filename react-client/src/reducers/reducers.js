@@ -131,10 +131,16 @@ const reducers = (state = defaultState, action) => {
         playerOneResources: action.payload.playerOneResources,
         playerTwoResources: action.payload.playerTwoResources
       }
+    case 'UPDATE-UNIT-COUNTS':
+      return {
+        ...state,
+        playerOneTotalUnits: action.payload.playerOneTotalUnits,
+        playerTwoTotalUnits: action.payload.playerTwoTotalUnits,
+      }
     case 'SWORDSMEN':
-      let playerResources, hexIndex;
+      let playerUnits, hexIndex;
       action.payload.player === 'player1' ?
-      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      playerUnits = 'playerOneTotalUnits' : playerUnits = 'playerTwoTotalUnits';
       newBoardState = state.boardState.slice();
       newBoardState.forEach(hex => {
         if (hex.player === action.payload.player) {
@@ -143,11 +149,12 @@ const reducers = (state = defaultState, action) => {
       })
       return {
         ...state,
-        boardState: newBoardState
+        boardState: newBoardState,
+        [playerUnits]: state[playerUnits] += 10
       }
     case 'ARCHERS':
       action.payload.player === 'player1' ?
-      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      playerUnits = 'playerOneTotalUnits' : playerUnits = 'playerTwoTotalUnits';
       newBoardState = state.boardState.slice();
       newBoardState.forEach(hex => {
         if (hex.player === action.payload.player) {
@@ -157,10 +164,11 @@ const reducers = (state = defaultState, action) => {
       return {
         ...state,
         boardState: newBoardState,
+        [playerUnits]: state[playerUnits] += 10
       }
     case 'KNIGHTS':
       action.payload.player === 'player1' ?
-      playerResources = 'playerOneResources' : playerResources = 'playerTwoResources';
+      playerUnits = 'playerOneTotalUnits' : playerUnits = 'playerTwoTotalUnits';
       newBoardState = state.boardState.slice();
       newBoardState.forEach(hex => {
         if (hex.player === action.payload.player) {
@@ -170,6 +178,7 @@ const reducers = (state = defaultState, action) => {
       return {
         ...state,
         boardState: newBoardState,
+        [playerUnits]: state[playerUnits] += 10,
       }
     case 'SWITCH-PLAYER':
       return {

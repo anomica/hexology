@@ -12,7 +12,7 @@ module.exports = function (passport) {
   });
 
   passport.deserializeUser(async (user, done) => { // what actually gets passed in here as user?
-    console.log('user from passport.deserializedUser:', user);
+    // console.log('user from passport.deserializedUser:', user);
     // const userProfile = await db.findUserById(user);
     // console.log('deserializedUser:', userProfile);
     done(null, user);
