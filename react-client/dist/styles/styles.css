@@ -63,6 +63,18 @@ g.metal > g > polygon {
   fill: gray;
 }
 
+g.swordsmen > g > polygon {
+  cursor: url(https://png.icons8.com/metro/50/000000/sword.png), auto;
+}
+
+g.archer > g > polygon {
+  cursor: url(https://png.icons8.com/windows/50/000000/archer.png), auto;
+}
+
+g.knight > g > polygon {
+  cursor: url(https://png.icons8.com/ios/50/000000/knight-shield-filled.png), auto;
+}
+
 .flex {
   display: flex;
 }

@@ -2,17 +2,19 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Transition, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
-import { setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition, 
+         Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
+import { addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
-
 import SidebarLeft from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
+import UnitShop from './UnitShop.jsx';
+import UnitBank from './UnitBank.jsx';
 
 class Board extends React.Component {
   constructor(props) {
@@ -125,6 +127,10 @@ class Board extends React.Component {
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
+      socket.on('troopsDeployed', data => {
+        console.log('data:', data);
+        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+      })
     })();
   }
 
@@ -234,6 +240,19 @@ class Board extends React.Component {
     }
   }
 
+  addUnitsToHex(hexIndex) {
+    console.log('this.props.deployment:', this.props.deployment);
+    console.log('hexIndex', hexIndex);
+    this.props.socket.emit('addUnits', {
+      hexIndex: hexIndex,
+      unit: this.props.deployment.unit,
+      player: this.props.userPlayer,
+      quantity: this.props.deployment.quantity,
+      gameIndex: this.props.gameIndex,
+      room: this.props.room
+    })
+  }
+
   sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {
     const move = { // package outputs
       updatedOrigin: updatedOrigin,
@@ -269,12 +288,19 @@ class Board extends React.Component {
     return (
       <div>
         <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
-        <SidebarLeft />
-        <TopBar />
+
+        <Grid>
+          <Grid.Column width={2}>
+            <SidebarLeft />
+          </Grid.Column>
+          <Grid.Column width={16}>
+            <TopBar />
+          </Grid.Column>
+          <Grid.Column width={14}>
         <div className="Board">
           <HexGrid height={800} viewBox="-50 -50 150 150">
             <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
-              {this.props.boardState ? this.props.boardState.map(hex => {
+              {this.props.boardState ? this.props.boardState.map((hex, index) => {
                 let targetClass = '';
                 if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
                   targetClass += 'opponent';
@@ -291,10 +317,18 @@ class Board extends React.Component {
                 } else if (hex.hasMetal) {
                   targetClass += 'metal';
                 }
+                if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
+                  targetClass += ' swordsmen';
+                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archer') {
+                  targetClass += ' archer';
+                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knight') {
+                  targetClass += ' knight';
+                }
                 return <Hexagon
                   key={uuidv4()}
                   className={targetClass}
                   onClick={() => {
+                    this.props.deployment ? this.addUnitsToHex(index) :
                     this.handleClick(hex);
                     this.setState({ hex: hex });
                   }}
@@ -302,10 +336,10 @@ class Board extends React.Component {
                   r={hex.coordinates[1]}
                   s={hex.coordinates[2]}>
                   <Text>
-                    {/*<img src="https://png.icons8.com/metro/50/000000/sword.png"/>*/}
+                    <img src="https://png.icons8.com/metro/50/000000/sword.png"/>
                     {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
-                    {/*<img src="https://png.icons8.com/windows/50/000000/archer.png"/>*/}
-                    {/*<img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>*/}
+                    <img src="https://png.icons8.com/windows/50/000000/archer.png"/>
+                    <img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>
                   </Text>
                 </Hexagon>
               }): <div></div>}
@@ -329,6 +363,7 @@ class Board extends React.Component {
               })
               this.handleMoveClick(this.state.hex);
             }}/>
+          
           <Modal open={this.state.modalOpen} size={'small'}
             style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
             <Modal.Header>Move Troops</Modal.Header>
@@ -348,20 +383,28 @@ class Board extends React.Component {
               <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
             </Modal.Actions>
           </Modal>
-          <Transition animation={'jiggle'} duration={'2500'} visible={this.state.combatModalOpen}>
-            <Modal open={this.state.combatModalOpen} size={'small'} style={{ textAlign: 'center' }}>
-              <Modal.Header>{this.state.combatMessage}</Modal.Header>
-                <Modal.Content>
-                    <Segment>
-                      <Image style={{maxWidth: '400px', margin: 'auto'}} src={this.state.combatIcon}/>
-                    </Segment>
-                </Modal.Content>
-              <Modal.Actions>
-                <Button type='submit' size={'tiny'} onClick={this.skipCombatAnmiation.bind(this)}>Skip</Button>
-              </Modal.Actions>
-            </Modal>
-          </Transition>
-        </div>
+        </div> 
+          </Grid.Column>
+          <Grid.Column width={2}>
+            {this.props.currentPlayer === this.props.userPlayer ?
+            <UnitBank />
+            : <div></div>
+            }
+          </Grid.Column>
+        </Grid>
+        <Transition animation={'jiggle'} duration={'2500'} visible={this.state.combatModalOpen}>
+          <Modal open={this.state.combatModalOpen} size={'small'} style={{ textAlign: 'center' }}>
+            <Modal.Header>{this.state.combatMessage}</Modal.Header>
+              <Modal.Content>
+                  <Segment>
+                    <Image style={{maxWidth: '400px', margin: 'auto'}} src={this.state.combatIcon}/>
+                  </Segment>
+              </Modal.Content>
+            <Modal.Actions>
+              <Button type='submit' size={'tiny'} onClick={this.skipCombatAnmiation.bind(this)}>Skip</Button>
+            </Modal.Actions>
+          </Modal>
+        </Transition>
       </div>
     );
   }
@@ -379,12 +422,13 @@ const mapStateToProps = (state) => {
     playerAssigned: state.state.playerAssigned,
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
-    playerTwoResources: state.state.playerTwoResources
+    playerTwoResources: state.state.playerTwoResources,
+    deployment: state.state.deployment
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex }, dispatch);

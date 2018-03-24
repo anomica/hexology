@@ -5,7 +5,6 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
 import { exitGame } from '../../src/actions/actions.js';
-
 import UnitShop from './UnitShop.jsx';
 
 class TopBar extends React.Component {
@@ -26,6 +25,7 @@ class TopBar extends React.Component {
     this.props.socket.emit('leaveRoom', { room: this.props.room });
     this.props.history.push('/');
   }
+
 
   sendEmail() {
     this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' })

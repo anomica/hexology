@@ -136,54 +136,41 @@ const reducers = (state = defaultState, action) => {
         playerOneTotalUnits: action.payload.playerOneTotalUnits,
         playerTwoTotalUnits: action.payload.playerTwoTotalUnits,
       }
-    case 'SWORDSMEN':
-      let playerUnits, hexIndex;
-      action.payload.player === 'player1' ?
-      playerUnits = 'playerOneTotalUnits' : playerUnits = 'playerTwoTotalUnits';
-      newBoardState = state.boardState.slice();
-      newBoardState.forEach(hex => {
-        if (hex.player === action.payload.player) {
-          hex.swordsmen += 10;
-        }
-      })
-      return {
-        ...state,
-        boardState: newBoardState,
-        [playerUnits]: state[playerUnits] += 10
-      }
-    case 'ARCHERS':
-      action.payload.player === 'player1' ?
-      playerUnits = 'playerOneTotalUnits' : playerUnits = 'playerTwoTotalUnits';
-      newBoardState = state.boardState.slice();
-      newBoardState.forEach(hex => {
-        if (hex.player === action.payload.player) {
-          hex.archers += 10;
-        }
-      })
-      return {
-        ...state,
-        boardState: newBoardState,
-        [playerUnits]: state[playerUnits] += 10
-      }
-    case 'KNIGHTS':
-      action.payload.player === 'player1' ?
-      playerUnits = 'playerOneTotalUnits' : playerUnits = 'playerTwoTotalUnits';
-      newBoardState = state.boardState.slice();
-      newBoardState.forEach(hex => {
-        if (hex.player === action.payload.player) {
-          hex.knights += 10;
-        }
-      })
-      return {
-        ...state,
-        boardState: newBoardState,
-        [playerUnits]: state[playerUnits] += 10,
-      }
     case 'SWITCH-PLAYER':
       return {
         ...state,
         currentPlayer: action.payload.currentPlayer
       }
+    case 'UPDATE-BANK': // add to player's unit bank after cashing in resources
+      return {
+        ...state,
+        playerOneUnitBank: action.payload.playerOneUnitBank,
+        playerTwoUnitBank: action.payload.playerTwoUnitBank
+      }
+    case 'DEPLOY-UNITS': // change deployment state and update playerbank
+      return {
+        ...state,
+        deployment: {
+          unit: action.payload.unit,
+          quantity: action.payload.quantity,
+          player: action.payload.player
+        },
+        playerOneUnitBank: action.payload.playerOneUnitBank,
+        playerTwoUnitBank: action.payload.playerTwoUnitBank
+      }
+    case 'ADD-UNITS-TO-HEX': // update hex with new unit count and update player's bank
+      let playerUnits, hexIndex;
+      action.payload.player === 'player1' ?
+      playerUnits = 'playerOneTotalUnits' : playerUnits = 'playerTwoTotalUnits';
+      newBoardState = state.boardState.slice();
+      newBoardState.splice(action.payload.hexIndex, 1, action.payload.hex);
+      return {
+        ...state,
+        boardState: newBoardState,
+        deployment: null,
+        [playerUnits]: state[playerUnits] += 10
+      }
+      
     default: return state;
   }
 }

@@ -32,6 +32,7 @@ class Main extends React.Component {
       let socket = await socketIOClient('http://127.0.0.1:3000');
       this.props.setSocket(socket);
     })();
+
     axios.get('/persistUser')
       .then(data => {
         // console.log('data from session:', data);
