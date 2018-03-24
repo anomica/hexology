@@ -9,6 +9,7 @@ const uuidv4 = require('uuid/v4');
 const app = express();
 const http = require("http");
 const server = http.createServer(app);
+const emailHandler = require('./emailhandler.js');
 var cors = require('cors');
 const socketIo = require("socket.io");
 const io = socketIo(server);
@@ -189,6 +190,14 @@ setInterval(findOpenRooms, 1000);
 
 io.on('connection', async (socket) => { // initialize socket on user connection
   console.log('User connected');
+
+  socket.on('sendEmail', request => {
+    let username = request.username;
+    let email = request.email;
+    let message = request.message;
+    let room = request.room;
+    emailHandler.sendEmail(username, email, room, message);
+  })
 
   socket.on('newGame', () => {
     let newRoom = `*${roomNum}`
