@@ -9,6 +9,7 @@ const uuidv4 = require('uuid/v4');
 const app = express();
 const http = require("http");
 const server = http.createServer(app);
+const emailHandler = require('./emailhandler.js');
 var cors = require('cors');
 const socketIo = require("socket.io");
 const io = socketIo(server);
@@ -190,11 +191,20 @@ setInterval(findOpenRooms, 1000);
 io.on('connection', async (socket) => { // initialize socket on user connection
   console.log('User connected');
 
-  socket.on('newGame', () => {
-    let newRoom = `*${roomNum}`
+  socket.on('sendEmail', request => {
+    let username = request.username;
+    let email = request.email;
+    let message = request.message;
+    let room = request.room;
+    emailHandler.sendEmail(username, email, room, message);
+  })
+
+  socket.on('newGame', request => {
+    let newRoom = `*${roomNum}`;
+    let gameType = request.gameType;
     socket.join(newRoom); // create a new room
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
-    socket.broadcast.emit('newRoom', { roomName: newRoom, room: io.sockets.adapter.rooms[newRoom] });
+    gameType === 'public' && socket.broadcast.emit('newRoom', { roomName: newRoom, room: io.sockets.adapter.rooms[newRoom] });
     roomNum++; // increment room count to assign new ro
   })
 
@@ -239,6 +249,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('buy', data => {
     buyUnits(data.type, data.player, data.gameIndex, data.socketId, data.room);
+  })
+
+  socket.on('leaveRoom', data => {
+    socket.leave(data.room);
   })
 
   socket.on('disconnect', () => {
