@@ -39,8 +39,7 @@ class UnitShop extends React.Component {
         room: this.props.room,
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
-        socketId: this.props.socket.id,
-        room: this.props.room
+        socketId: this.props.socket.id
       });
       this.setState({
         swordsmen: !this.state.swordsmen
@@ -62,8 +61,7 @@ class UnitShop extends React.Component {
         room: this.props.room,
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
-        socketId: this.props.socket.id,
-        room: this.props.room
+        socketId: this.props.socket.id
       });
       this.setState({
         archers: !this.state.archers
@@ -85,8 +83,7 @@ class UnitShop extends React.Component {
         room: this.props.room,
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
-        socketId: this.props.socket.id,
-        room: this.props.room
+        socketId: this.props.socket.id
       });
       this.setState({
         knights: !this.state.knights

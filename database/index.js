@@ -152,6 +152,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
         })
     }
   }
+  console.log('gold updated in db')
 
   // Updates wood resource for the new origin hex
   if (dbHex[0].has_wood) { // if the new origin hex has wood
@@ -171,6 +172,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
         })
     }  
   }
+  console.log('wood updated in db')
 
   // Updates metal resource for the new origin hex
   if (dbHex[0].has_metal) { // if the new origin hex has metal
@@ -190,6 +192,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
         })
     }  
   }
+  console.log('metal updated in db')
 }
 
 const updateHexOwner = async (hexIndex, player) => { // NOTE: Player comes in as string
@@ -218,7 +221,6 @@ const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlay
   let playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with user id eventually
 
   console.log('~~~~~~~~~~~~~~~~~~~~~ UPDATING HEX UNITS DURING COMBAT ~~~~~~~~~~~~~~~~~~~~~');
-  // console.log('typeof playerid: ', typeof playerId, '\ncurrent player: ', Number(playerId), '\nswordsmen: ', swordsmen, '\narchers: ', archers, '\nknights: ', knights);
 
   await knex('hex')
     .where(knex.raw(`'${hexIndex}' = hex_index AND ${Number(playerId)} = player`))
@@ -337,7 +339,7 @@ const buyKnights = async (room, gameIndex, currentPlayer) => {
   let gameId = await getGameId(room, gameIndex); // gets the game id to find find the current game and hex the player is on (NOTE: This returns an object)
 
   if (player === '1') { //TODO: update with player id
-    // console.log('>>>>>>>>>>>>>> player 1 buying KNIGHTS');
+    console.log('>>>>>>>>>>>>>> player 1 buying KNIGHTS in the DB');
     await knex('games')
       .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
       .decrement('p1_gold', 20) // decreases the player's gold - 20
@@ -351,7 +353,7 @@ const buyKnights = async (room, gameIndex, currentPlayer) => {
       .decrement('p1_metal', 20) // decreases the player's metal - 20
 
   } else if (player === '2') { //TODO: update with player id
-    // console.log('>>>>>>>>>>>>>> player 2 buying KNIGHTS');
+    console.log('>>>>>>>>>>>>>> player 2 buying KNIGHTS in the DB');
     await knex('games')
       .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
       .decrement('p2_gold', 20) // decreases the player's gold - 20

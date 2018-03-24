@@ -634,22 +634,28 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
   console.log('\noriginal defender army size: ', originalDefenderArmySize)
 
   attackerArchers && defenderArchers ? attackerKnights -= defenderArchers : null; // first, archers pick off knights from afar
-  // console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif ATTACKER has ARCHERS (${attackerArchers}) && DEFENDER has ARCHERS (${defenderArchers}) \nthen subtract ATTACKER KNIGHTS (${attackerKnights}) by DEFENDER ARCHERS ${defenderArchers}\nFORMULA: ${attackerKnights} - ${defenderArchers} \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif ATTACKER has ARCHERS (${attackerArchers}) && DEFENDER has ARCHERS (${defenderArchers}) \nthen subtract ATTACKER KNIGHTS (${attackerKnights}) by DEFENDER ARCHERS ${defenderArchers}\nFORMULA: ${attackerKnights} - ${defenderArchers} \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log('ATTACKER KNIGHTS: ', attackerKnights -= defenderArchers)
 
   defenderKnights && attackerArchers ? defenderKnights -= attackerArchers : null;
-  // console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif DEFENDER has KNIGHTS (${defenderKnights}) && ATTACKER has archers (${attackerArchers}) \nthen subtract DEFENDER KNIGHTS (${defenderKnights}) by ATTACKER ARCHERS ${attackerArchers}\nFORMULA: ${defenderKnights} - ${attackerArchers} \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif DEFENDER has KNIGHTS (${defenderKnights}) && ATTACKER has archers (${attackerArchers}) \nthen subtract DEFENDER KNIGHTS (${defenderKnights}) by ATTACKER ARCHERS ${attackerArchers}\nFORMULA: ${defenderKnights} - ${attackerArchers} \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log('DEFENDER KNIGHTS: ', defenderKnights -= attackerArchers)
 
   attackerSwordsmen && defenderKnights ? attackerSwordsmen -= (defenderKnights * 3) : null; // then, knights crash against swordsmen
-  // console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif ATTACKER has SWORDSMEN (${attackerSwordsmen}) && DEFENDER has KNIGHTS (${defenderKnights}) \nthen subtract ATTACKER SWORDSMEN (${attackerSwordsmen}) by DEFENDER KNIGHTS (x3) ${defenderKnights * 3} \nFORMULA: ${attackerSwordsmen} - (${defenderKnights} * 3 = ${defenderKnights * 3}) \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif ATTACKER has SWORDSMEN (${attackerSwordsmen}) && DEFENDER has KNIGHTS (${defenderKnights}) \nthen subtract ATTACKER SWORDSMEN (${attackerSwordsmen}) by DEFENDER KNIGHTS (x3) ${defenderKnights * 3} \nFORMULA: ${attackerSwordsmen} - (${defenderKnights} * 3 = ${defenderKnights * 3}) \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log('ATTACKER SWORDSMEN: ', attackerSwordsmen -= (defenderKnights * 3))
 
   defenderSwordsmen && attackerKnights ? defenderSwordsmen -= (attackerKnights * 3) : null;
-  // console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif DEFENDER has SWORDSMEN (${defenderSwordsmen}) && ATTACKER has KNIGHTS (${attackerKnights}) \nthen subtract DEFENDER SWORDSMEN (${defenderSwordsmen}) by ATTACKER KNIGHTS (x3) ${attackerKnights * 3} \nFORMULA: ${defenderSwordsmen} - (${attackerKnights} * 3 = ${attackerKnights * 3})\n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif DEFENDER has SWORDSMEN (${defenderSwordsmen}) && ATTACKER has KNIGHTS (${attackerKnights}) \nthen subtract DEFENDER SWORDSMEN (${defenderSwordsmen}) by ATTACKER KNIGHTS (x3) ${attackerKnights * 3} \nFORMULA: ${defenderSwordsmen} - (${attackerKnights} * 3 = ${attackerKnights * 3})\n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log('DEFENDER SWORDSMEN: ', defenderSwordsmen -= (attackerKnights * 3))
 
   attackerArchers && defenderSwordsmen ? attackerArchers -= (defenderSwordsmen * 2) : null; // finally, swordsmen take out archers
-  // console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif ATTACKER has ARCHERS (${attackerArchers}) && DEFENDER has SWORDSMEN (${defenderSwordsmen}) \nthen subtract ATTACKER ARCHERS (${attackerArchers}) by DEFENDER SWORDSMEN (x2) ${defenderSwordsmen * 2} \nFORMULA: ${attackerArchers} - (${defenderSwordsmen} * 2 = ${defenderSwordsmen * 2}) \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif ATTACKER has ARCHERS (${attackerArchers}) && DEFENDER has SWORDSMEN (${defenderSwordsmen}) \nthen subtract ATTACKER ARCHERS (${attackerArchers}) by DEFENDER SWORDSMEN (x2) ${defenderSwordsmen * 2} \nFORMULA: ${attackerArchers} - (${defenderSwordsmen} * 2 = ${defenderSwordsmen * 2}) \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log('ATTACKER ARCHERS: ', attackerArchers -= (defenderSwordsmen * 2))
 
   defenderArchers && attackerSwordsmen ? defenderArchers -= (attackerSwordsmen * 2) : null;
-  // console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif DEFENDER has ARCHERS (${defenderArchers}) && ATTACKER has SWORDSMEN (${attackerSwordsmen}) \nthen subtract DEFENDER ARCHERS (${defenderArchers}) by ATTACKER SWORDSMEN (x2) ${attackerSwordsmen * 2} \nFORMULA: ${defenderArchers} - (${attackerSwordsmen} * 2 = ${attackerSwordsmen * 2}) \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif DEFENDER has ARCHERS (${defenderArchers}) && ATTACKER has SWORDSMEN (${attackerSwordsmen}) \nthen subtract DEFENDER ARCHERS (${defenderArchers}) by ATTACKER SWORDSMEN (x2) ${attackerSwordsmen * 2} \nFORMULA: ${defenderArchers} - (${attackerSwordsmen} * 2 = ${attackerSwordsmen * 2}) \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
+  console.log('DEFENDER ARCHERS: ', defenderArchers -= (attackerSwordsmen * 2))
 
   if (attackerSwordsmen < 0) attackerSwordsmen = 0; // no numbers should go below zero
   if (attackerKnights < 0) attackerKnights = 0;
@@ -661,28 +667,55 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
   let attackerUnitsLost = originalAttackerArmySize - attackerSwordsmen - attackerArchers - attackerKnights;
   let defenderUnitsLost = originalDefenderArmySize - defenderSwordsmen - defenderArchers - defenderKnights;
   
-  console.log('DEFENDER PLAYER TYPE: ', typeof defender[0].player)
+  ///////////////////////////////////////////// IF USING DATABASE ///////////////////////////////////////
+  let attackerArmySize;
+  let defenderArmySize;
 
   if (defender[0].player === 1) { // if the defender is player 1
     console.log('`````````````````````````````````` DEFENDER is PLAYER 1 SON ``````````````````````````````````')
     // find the hex that player 1 is on in the db & update the units on the hex with the DEFENDER units
-    await db.updateHexUnits(defender[0].hex_index, defenderSwordsmen, defenderArchers, defenderKnights, 'player1');
-    console.log('player 1 is updated')
+    await db.updateHexUnits(defender[0].hex_index, defenderSwordsmen, defenderArchers, defenderKnights, 'player1'); // TODO: update with user id
+    console.log('\nplayer 1 is updated')
+
+    // get the updated defender hex
+    let defenderHex = await db.getHex(defender[0].hex_index); // returns an object
+    defenderArmySize = defenderHex[0].swordsmen + defenderHex[0].archers + defenderHex[0].knights;
+    console.log('\nupdated defender hex -> player 1: ', defenderHex);
+    console.log('\nupdated defender army size: ', defenderArmySize);
+
     // then find the hex that player 2 is on in the db & update the units on the hex with the ATTACKER units
-    await db.updateHexUnits(attacker[0].hex_index, attackerSwordsmen, attackerArchers, attackerKnights, 'player2');
-    console.log('player 2 is updated')
+    await db.updateHexUnits(attacker[0].hex_index, attackerSwordsmen, attackerArchers, attackerKnights, 'player2'); // TODO: update with user id
+    console.log('\nplayer 2 is updated')
+
+    // get the updated attacker hex
+    let attackerHex = await db.getHex(attacker[0].hex_index);
+    attackerArmySize = attackerHex[0].swordsmen + attackerHex[0].archers + attackerHex[0].knights;
+    console.log('\nupdated attacker hex -> player 2: ', attackerHex);
+    console.log('\nupdated attacker army size: ', attackerArmySize);
+
   } else if (defender[0].player === 2) { // else if the defender is player 2
     console.log('`````````````````````````````````` DEFENDER is PLAYER 2 SON ``````````````````````````````````')
     // find the hex that player 2 is on in the db & update the units on the hex with the DEFENDER units
-    await db.updateHexUnits(defender[0].hex_index, defenderSwordsmen, defenderArchers, defenderKnights, 'player2');
+    await db.updateHexUnits(defender[0].hex_index, defenderSwordsmen, defenderArchers, defenderKnights, 'player2'); // TODO: update with user id
     console.log('player 2 is updated')
+
+    // get the updated defender hex
+    let defenderHex = await db.getHex(defender[0].hex_index); // returns an object
+    defenderArmySize = defenderHex[0].swordsmen + defenderHex[0].archers + defenderHex[0].knights;
+    console.log('\nupdated defender hex -> player 2: ', defenderHex);
+    console.log('\nupdated defender army size: ', defenderArmySize);
+
     // then find the hex that player 1 is on in the db & update the units on the hex with the ATTACKER units
-    await db.updateHexUnits(attacker[0].hex_index, attackerSwordsmen, attackerArchers, attackerKnights, 'player1');
+    await db.updateHexUnits(attacker[0].hex_index, attackerSwordsmen, attackerArchers, attackerKnights, 'player1'); // TODO: update with user id
     console.log('player 1 is updated')
+
+    // get the updated attacker hex
+    let attackerHex = await db.getHex(attacker[0].hex_index);
+    attackerArmySize = attackerHex[0].swordsmen + attackerHex[0].archers + attackerHex[0].knights;
+    console.log('\nupdated attacker hex -> player 2: ', attackerHex);
+    console.log('\nupdated attacker army size: ', attackerArmySize)
   }
 
-  console.log('\nattacker units lost:', attackerUnitsLost)
-  console.log('\ndefender units lost: ', defenderUnitsLost)
   ///////////////////////////////////////////////////////////////////////////////////////////////////
 
   console.log('__________________COMBAT WORKS UP UNTIL THIS PART YAYYYYYYYYYYYY__________________________')
@@ -695,8 +728,8 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
     games[gameIndex].playerTwoTotalUnits -= attackerUnitsLost;
   }
 
-  let attackerArmySize = attackerArchers + attackerSwordsmen + attackerKnights;
-  let defenderArmySize = defenderSwordsmen + defenderArchers + defenderKnights;
+  // let attackerArmySize = attackerArchers + attackerSwordsmen + attackerKnights;
+  // let defenderArmySize = defenderSwordsmen + defenderArchers + defenderKnights;
 
   if (defenderArmySize === attackerArmySize) { // assess if there is a tie
     let masterOrigin = games[gameIndex].board[originIndex]; // if there is, huge side loses half their units
@@ -955,9 +988,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
             metal: p2Resources[0].p2_metal
           }
         });
-        // console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[ resources ]]]]]]]]]]]]]]]]]]]]]]]]]')
-        // console.log(p1Resources)
-        // console.log(p2Resources)
+
       } else { // if not enough resources
         // console.log('~~~~~~~~~~~ player 1 is too poor to buy SWORDSMEN');
         io.to(socketId).emit('not enough resources');
@@ -984,9 +1015,6 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
   
-        // console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[ resources ]]]]]]]]]]]]]]]]]]]]]]]]]');
-        // console.log(p1Resources);
-        // console.log(p2Resources);
       } else {
         // if not enough resources
         // console.log('~~~~~~~~~~~ player 2 is too poor to buy SWORDSMEN');
@@ -995,13 +1023,12 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
     }
   }
   
-  // TODO: no longer updating on the front end for archers...?
   if (type === 'archers') { // if buying archers
     // console.log('LETS BUY SOME ----> ARCHERS');
     if (player === 'player1') { // for player 1
       if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_wood >= 20) { // check if player has enough resources to purchase unit
   
-        db.buyArchers(room, gameIndex, player); // update units and resources in the db
+        await db.buyArchers(room, gameIndex, player); // update units and resources in the db
   
         let p1Resources = await db.getResources(room, gameIndex, 'player1');
         let p2Resources = await db.getResources(room, gameIndex, 'player2');
@@ -1020,14 +1047,14 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
             metal: p2Resources[0].p2_metal
           }
         });
-  
+
       } else { // if not enough resources
         // console.log('~~~~~~~~~~~ player 1 too poor to buy ARCHERS');
         io.to(socketId).emit('not enough resources');
       }
     } else if (player === 'player2') { // else same for player 2
       if (currentPlayerResources[0].p2_gold >= 10 && currentPlayerResources[0].p2_wood >= 20) {
-        db.buyArchers(room, gameIndex, player);
+        await db.buyArchers(room, gameIndex, player);
   
         let p1Resources = await db.getResources(room, gameIndex, 'player1');
         let p2Resources = await db.getResources(room, gameIndex, 'player2');
@@ -1046,7 +1073,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
             metal: p2Resources[0].p2_metal
           }
         });
-  
+
       } else { // if not enough resources
         // console.log('~~~~~~~~~~~ player 2 too poor to buy ARCHERS');
         io.to(socketId).emit('not enough resources');
@@ -1055,68 +1082,11 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
   }
 
   if (type === 'knights') { // if buying knights
-    console.log('LETS BUY SOME ----> KNIGHTS');
-    if (player === 'player1') { // for player 1
-      if (currentPlayerResources[0].p1_gold >= 20 && currentPlayerResources[0].p1_wood >= 20 && currentPlayerResources[0].p1_metal >= 20) {
-        // check if player has enough resources to purchase unit
-        db.buyKnights(room, gameIndex, player); // update units and resources in the db
-
-        let p1Resources = await db.getResources(room, gameIndex, 'player1');
-        let p2Resources = await db.getResources(room, gameIndex, 'player2');
-
-        await io.to(socketId).emit('knights');
-
-        await io.to(room).emit('updateResources', {
-          playerOneResources: {
-            gold: p1Resources[0].p1_gold,
-            wood: p1Resources[0].p1_wood,
-            metal: p1Resources[0].p1_metal
-          },
-          playerTwoResources: {
-            gold: p2Resources[0].p2_gold,
-            wood: p2Resources[0].p2_wood,
-            metal: p2Resources[0].p2_metal
-          }
-        });
-
-      } else { // if not enough resources
-        console.log('~~~~~~~~~~~ player 1 too poor to buy KNIGHTS');
-        io.to(socketId).emit('not enough resources');
-      }
-    } else if (player === 'player2') { // else same for player 2
-      if (currentPlayerResources[0].p2_gold >= 20 && currentPlayerResources[0].p2_wood >= 20 && currentPlayerResources[0].p2_metal >= 20) {
-        db.buyKnights(room, gameIndex, player);
-
-        let p1Resources = await db.getResources(room, gameIndex, 'player1');
-        let p2Resources = await db.getResources(room, gameIndex, 'player2');
-
-        await io.to(socketId).emit('knights');
-
-        await io.to(room).emit('updateResources', {
-          playerOneResources: {
-            gold: p1Resources[0].p1_gold,
-            wood: p1Resources[0].p1_wood,
-            metal: p1Resources[0].p1_metal
-          },
-          playerTwoResources: {
-            gold: p2Resources[0].p2_gold,
-            wood: p2Resources[0].p2_wood,
-            metal: p2Resources[0].p2_metal
-          }
-        });
-
-      } else { // if not enough resources
-        console.log('~~~~~~~~~~~ player 2 too poor to buy KNIGHTS');
-        io.to(socketId).emit('not enough resources');
-      }
-    }
-  }
-  if (type === 'knights') { // if buying knights
     // console.log('LETS BUY SOME ----> KNIGHTS');
+
     if (player === 'player1') { // for player 1
-      if (currentPlayerResources[0].p1_gold >= 20 && currentPlayerResources[0].p1_wood >= 20 && currentPlayerResources[0].p1_metal >= 20) {
-        // check if player has enough resources to purchase unit
-        db.buyKnights(room, gameIndex, player); // update units and resources in the db
+      if (currentPlayerResources[0].p1_gold >= 20 && currentPlayerResources[0].p1_wood >= 20 && currentPlayerResources[0].p1_metal >= 20) { // check if player has enough resources to purchase unit
+        await db.buyKnights(room, gameIndex, player); // update units and resources in the db
 
         let p1Resources = await db.getResources(room, gameIndex, 'player1');
         let p2Resources = await db.getResources(room, gameIndex, 'player2');
@@ -1142,7 +1112,8 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
       }
     } else if (player === 'player2') { // else same for player 2
       if (currentPlayerResources[0].p2_gold >= 20 && currentPlayerResources[0].p2_wood >= 20 && currentPlayerResources[0].p2_metal >= 20) {
-        db.buyKnights(room, gameIndex, player);
+
+        await db.buyKnights(room, gameIndex, player);
 
         let p1Resources = await db.getResources(room, gameIndex, 'player1');
         let p2Resources = await db.getResources(room, gameIndex, 'player2');
