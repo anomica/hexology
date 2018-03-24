@@ -35,6 +35,37 @@ const reducers = (state = defaultState, action) => {
         ...state,
         room: null
       }
+    case 'RESET-BOARD':
+      return {
+        ...state,
+        playerOne: undefined,
+        playerTwo: undefined,
+        playerOneTotalUnits: 10,
+        playerTwoTotalUnits: 10,
+        playerOneResources: {},
+        playerTwoResources: {},
+        playerOneUnitBank: {
+            swordsmen: 0,
+            knight: 0,
+            archer: 0
+        },
+        playerTwoUnitBank: {
+            swordsmen: 0,
+            knight: 0,
+            archer: 0
+        },
+        playerAssigned: false,
+        userPlayer: undefined,
+        currentPlayer: 'player1',
+        gameIndex: null,
+        selectedHex: {},
+        boardState: null,
+        winner: null,
+        neighbors: [],
+        menuVisible: true,
+        showUnitShop: false,
+        deployment: null
+      }
     case 'SELECT-HEX': // select hex on user click
       return {
         ...state,
@@ -170,7 +201,7 @@ const reducers = (state = defaultState, action) => {
         deployment: null,
         [playerUnits]: state[playerUnits] += 10
       }
-      
+
     default: return state;
   }
 }

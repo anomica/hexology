@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition, 
+import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
 import { addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
@@ -24,7 +24,7 @@ class Board extends React.Component {
       modalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://pixabay.com/get/eb37b90e2bf7053ed1584d05fb0938c9bd22ffd41cb3104994f9c970a0/sword-2281334_1280.png',
+      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
       confirmOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
@@ -137,7 +137,7 @@ class Board extends React.Component {
   resetCombatModal() {
     this.setState({
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://pixabay.com/get/eb37b90e2bf7053ed1584d05fb0938c9bd22ffd41cb3104994f9c970a0/sword-2281334_1280.png',
+      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
     })
   }
 
@@ -336,10 +336,7 @@ class Board extends React.Component {
                   r={hex.coordinates[1]}
                   s={hex.coordinates[2]}>
                   <Text>
-                    <img src="https://png.icons8.com/metro/50/000000/sword.png"/>
                     {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
-                    <img src="https://png.icons8.com/windows/50/000000/archer.png"/>
-                    <img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>
                   </Text>
                 </Hexagon>
               }): <div></div>}
@@ -363,7 +360,7 @@ class Board extends React.Component {
               })
               this.handleMoveClick(this.state.hex);
             }}/>
-          
+
           <Modal open={this.state.modalOpen} size={'small'}
             style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
             <Modal.Header>Move Troops</Modal.Header>
@@ -383,7 +380,7 @@ class Board extends React.Component {
               <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
             </Modal.Actions>
           </Modal>
-        </div> 
+        </div>
           </Grid.Column>
           <Grid.Column width={2}>
             {this.props.currentPlayer === this.props.userPlayer ?

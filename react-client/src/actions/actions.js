@@ -153,6 +153,12 @@ export const setGameIndex = (gameIndex) => (
   }
 )
 
+export const resetBoard = () => (
+  {
+    type: 'RESET-BOARD'
+  }
+)
+
 export const toggleUnitShop = (toggle) => (
   {
     type: 'TOGGLE-UNIT-SHOP',
