@@ -238,6 +238,14 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     buyUnits(data.type, data.player, data.gameIndex, data.socketId, data.room);
   })
 
+  socket.on('deployUnits', data => {
+    verifyBank(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
+  })
+
+  socket.on('addUnits', data => {
+    
+  })
+
   socket.on('disconnect', () => {
     console.log('user disconnected');
   })
@@ -355,6 +363,18 @@ const moveUnits = async (data, socket) => {
     await io.to(room).emit('failure');
   }
 };
+
+const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // verify purchase & update player bank
+  if (player === 'player1' && games[gameIndex].playerOneUnitBank[unit] === bank) {
+    games[gameIndex].playerOneUnitBank[unit] = games[gameIndex].playerOneUnitBank[unit] - quantity;
+    io.to(room).emit('deployUnits', games[gameIndex].playerOneUnitBank[unit])
+  } else if (player === 'player2') {
+    games[gameIndex].playerTwoUnitBank[unit] = games[gameIndex].playerTwoUnitBank[unit] - quantity;
+    io.to(room).emit('deployUnits', games[gameIndex].playerTwoUnitBank[unit])
+  } else {
+    io.to(room).emit('cheating detected');
+  }
+}
 
 const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb) => { // to check move legality,
 
@@ -617,7 +637,7 @@ const deleteOldGames = async () => {
 setInterval(deleteOldGames, 86400000);
 
 const buyUnits = async (type, player, gameIndex, socketId, room) => {
-
+  // ********* need to add stuff in here for updating unitBanks for each player *********
   ///////////////////////////////////// IF USING DATABASE ///////////////////////////////////////
   // let game = await db.getGameBoard(room, gameIndex);
   // let currentPlayerResources = await db.getResources(room, gameIndex, player); // returns an object
@@ -804,17 +824,33 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
   /////////////////////////////////////////////////////////////////////////////////////////////////
   
   /////////////////////////////// IF USING GAME OBJ ON SERVER /////////////////////////////////////
-  let game = games[gameIndex], resources;
-  player === 'player1' ? resources = game.playerOneResources : resources = game.playerTwoResources;
+  let game = games[gameIndex], resources, bank;
+  if (!game.playerOneUnitBank) {
+    playerOneUnitBank = {
+      archer: 0,
+      knight: 0,
+      swordsmen: 0
+    }
+  }
+  if (!game.playerTwoUnitBank) {
+    playerTwoUnitBank = {
+      archer: 0,
+      knight: 0,
+      swordsmen: 0
+    }
+  }
+  if (player === 'player1') {
+    resources = game.playerOneResources;
+    bank = game.playerOneUnitBank;
+  } else {
+    resources = game.playerTwoResources;
+    bank = game.playerTwoUnitBank;
+  }
   if (type === 'swordsmen') {
     if (resources.gold >= 10 && resources.metal >= 10) {
       resources.gold -= 10;
       resources.metal -= 10;
-      game.board.forEach(hex => {
-        if (hex.player === player) {
-          hex.swordsmen += 10;
-        }
-      })
+      bank.swordsmen += 10;
       io.to(room).emit('swordsmen');
       io.to(room).emit('updateResources', {
         playerOneResources: game.playerOneResources,
@@ -827,11 +863,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
     if (resources.gold >= 10 && resources.wood >= 20) {
       resources.gold -= 10;
       resources.wood -= 20;
-      game.board.forEach(hex => {
-        if (hex.player === player) {
-          hex.archers += 10;
-        }
-      })
+      bank.archers += 10;
       io.to(room).emit('archers');
       io.to(room).emit('updateResources', {
         playerOneResources: game.playerOneResources,
@@ -845,11 +877,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
       resources.gold -= 20;
       resources.wood -= 20;
       resources.metal -= 20;
-      game.board.forEach(hex => {
-        if (hex.player === player) {
-          hex.knights += 10;
-        }
-      })
+      bank.knights += 10;
       io.to(room).emit('knights');
       io.to(room).emit('updateResources', {
         playerOneResources: game.playerOneResources,

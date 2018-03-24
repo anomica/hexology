@@ -209,7 +209,8 @@ const reducers = (state = defaultState, action) => {
         deployment: {
           unit: action.payload.unit,
           quantity: action.payload.quantity,
-          player: action.payload.player
+          player: action.payload.player,
+          updatedBank: action.payload.updatedBank
         }
       }
     case 'ADD-UNITS-TO-HEX': // update hex with new unit count and subtract units from player's bank
@@ -218,6 +219,7 @@ const reducers = (state = defaultState, action) => {
       let playerBank;
       let playerBankObj;
       let unitToUpdate;
+      let newBank = state.deployment.updatedBank;
       if (action.payload.player === 'player1') {
         playerBank = 'playerOneUnitBank';
         playerBankObj = state.playerOneUnitBank;
@@ -243,7 +245,7 @@ const reducers = (state = defaultState, action) => {
         deployment: null, 
         [playerBank]: {
           ...playerBank,
-          [unitToUpdate]: playerBankObj[unitToUpdate] - action.payload.quantity
+          [unitToUpdate]: newBank
         }
       }
       

@@ -160,13 +160,14 @@ export const updateBank = (player, unit) => (
   }
 )
 
-export const deployUnits = (player, unit, quantity) => (
+export const deployUnits = (player, unit, quantity, updatedBank) => (
   {
     type: 'DEPLOY-UNITS',
     payload: {
       player: player,
       unit: unit,
-      quantity: quantity
+      quantity: quantity,
+      updatedBank: updatedBank
     }
   }
 )

@@ -15,6 +15,12 @@ class UnitBank extends React.Component {
     }
   }
 
+  componentDidMount() {
+    this.props.socket.on('deployUnits', data => {
+      this.props.deployUnits(this.props.userPlayer, this.state.unitBeingDeployed.toLowerCase(), this.state.quantity, data);
+    })
+  }
+
   handleOpen(unit) {
     this.setState({
       open: true,
@@ -29,12 +35,18 @@ class UnitBank extends React.Component {
   }
 
   handleSubmit() {
-    console.log('quantity:', this.state.quantity);
     let playerBank;
     this.props.userPlayer === 'player1' ? playerBank = this.props.playerOneUnitBank
     : playerBank = this.props.playerTwoUnitBank;
     if (this.state.quantity > 0 && this.state.unitBeingDeployed && this.state.quantity < playerBank[this.state.unitBeingDeployed.toLowerCase()]) {
-      this.props.deployUnits(this.props.userPlayer, this.state.unitBeingDeployed.toLowerCase(), this.state.quantity);
+      this.props.socket.emit('deployUnits', {
+        player: this.props.userPlayer, 
+        unit: this.state.unitBeingDeployed.toLowerCase(), 
+        quantity: this.state.quantity,
+        bank: playerBank[this.state.unitBeingDeployed.toLowerCase()],
+        gameIndex: this.props.gameIndex,
+        room: this.props.room
+      })
     } else {
       alert('hey yo this doesnt meet the submit requirements');
     }
@@ -42,8 +54,6 @@ class UnitBank extends React.Component {
 
   componentDidMount() {
     this.props.socket.on('swordsmen', () => {
-      console.log('received swordsmen transmition');
-      console.log('this.props.userPlayer', this.props.userPlayer);
       this.props.updateBank(this.props.userPlayer, 'swordsmen');
     });
     this.props.socket.on('archers', () => {
@@ -132,7 +142,9 @@ const mapStateToProps = (state) => {
     playerOneUnitBank: state.state.playerOneUnitBank,
     playerTwoUnitBank: state.state.playerTwoUnitBank,
     currentPlayer: state.state.currentPlayer,
-    deployment: state.state.deployment
+    deployment: state.state.deployment,
+    gameIndex: state.state.gameIndex,
+    room: state.state.room,
   }
 }
 

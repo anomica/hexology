@@ -167,6 +167,13 @@ class Board extends React.Component {
 
   addUnitsToHex(hexIndex) {
     this.props.addUnitsToHex(hexIndex, this.props.deployment.unit, this.props.deployment.quantity, this.props.userPlayer);
+    this.props.socket.emit('addUnits', {
+      hexIndex: hexIndex,
+      unit: this.props.deployment.unit,
+      player: this.props.userPlayer,
+      quantity: this.props.deployment.quantity,
+      gameIndex: this.props.gameIndex
+    })
   }
 
   sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {

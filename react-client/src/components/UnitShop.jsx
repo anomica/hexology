@@ -172,7 +172,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ updateResources, swordsmen, archers, knights }, dispatch);
+  return bindActionCreators({ swordsmen, archers, knights }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(UnitShop);
