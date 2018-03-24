@@ -25,7 +25,7 @@ const sendEmail = (username, email, room, message) => {
 
   transporter.sendMail(mailOptions, (err, info) => {
     if (err) console.error(err);
-    console.log(`Invitation sent by ${username}: ${info}`);
+    console.log(`Invitation sent by ${username} to ${email}: ${info.messageId}`);
   })
 }
 

@@ -251,6 +251,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     buyUnits(data.type, data.player, data.gameIndex, data.socketId, data.room);
   })
 
+  socket.on('leaveRoom', data => {
+    socket.leave(data.room);
+  })
+
   socket.on('disconnect', () => {
     console.log('user disconnected');
   })

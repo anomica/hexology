@@ -23,7 +23,7 @@ class TopBar extends React.Component {
 
   exitGame() {
     this.props.exitGame();
-    this.props.socket.close();
+    this.props.socket.emit('leaveRoom', { room: this.props.room });
     this.props.history.push('/');
   }
 
@@ -46,7 +46,7 @@ class TopBar extends React.Component {
     return (
       <Segment className={'topBar'} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
-        <Button style={{right: '10px', top: '20px', position: 'absolute'}} onClick={exitGame}>Exit Game</Button>
+        <Button style={{right: '10px', top: '20px', position: 'absolute'}} onClick={this.exitGame.bind(this)}>Exit Game</Button>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : 'player two'}!</Header>
         {this.props.boardState ? null :
           (this.state.inviteSent ? <Segment>Invite sent to {this.state.email}</Segment> :

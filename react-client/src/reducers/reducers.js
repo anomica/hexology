@@ -33,7 +33,6 @@ const reducers = (state = defaultState, action) => {
     case 'EXIT-GAME':
       return {
         ...state,
-        socket: null,
         room: null
       }
     case 'SELECT-HEX': // select hex on user click
