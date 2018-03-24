@@ -720,6 +720,7 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
 
   console.log('__________________COMBAT WORKS UP UNTIL THIS PART YAYYYYYYYYYYYY__________________________')
 
+  /////////////////////////// SHOULD NOT BE NEEDING THIS AFTER DB WORKS ///////////////////////////
   if (currentPlayer === 'player1') { // and total unit counts need to be reduced
     games[gameIndex].playerOneTotalUnits -= attackerUnitsLost;
     games[gameIndex].playerTwoTotalUnits -= defenderUnitsLost;
@@ -727,26 +728,48 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
     games[gameIndex].playerOneTotalUnits -= defenderUnitsLost;
     games[gameIndex].playerTwoTotalUnits -= attackerUnitsLost;
   }
+  /////////////////////////////////////////////////////////////////////////////////////////////////
 
   // let attackerArmySize = attackerArchers + attackerSwordsmen + attackerKnights;
   // let defenderArmySize = defenderSwordsmen + defenderArchers + defenderKnights;
 
   if (defenderArmySize === attackerArmySize) { // assess if there is a tie
-    let masterOrigin = games[gameIndex].board[originIndex]; // if there is, huge side loses half their units
+
+    ////////////////////////// IF USING GAME OBJECT ON SERVER //////////////
+    // let masterOrigin = games[gameIndex].board[originIndex]; // if there is, huge side loses half their units
+    ///////////////////////////////////////////////////////////////////////
+
+    ////////////////////////// IF USING DATABASE //////////////////////////
+    let masterOrigin = await db.getHex(originIndex); // if there is, huge side loses half their units / NOTE: This returns an object
+    ///////////////////////////////////////////////////////////////////////
+
     updatedOrigin = {
-      ...masterOrigin,
+      ...masterOrigin['0'], // for some reason the object returns at string '0'
       swordsmen: Math.floor(attackerSwordsmen / 2) || 0,
       archers: Math.floor(attackerArchers / 2) || 0,
       knights: Math.floor(attackerKnights / 2) || 0,
     };
-    let masterTarget = games[gameIndex].board[targetIndex]
+
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>> UPDATED ORIGIN: ', updatedOrigin)
+
+    ////////////////////////// IF USING GAME OBJECT ON SERVER //////////////
+    // let masterTarget = games[gameIndex].board[targetIndex];///////////////////////////////////////////////////////////////////////
+
+    ////////////////////////// IF USING DATABASE //////////////////////////
+    let masterTarget = await db.getHex(targetIndex); // returns an object
+    ///////////////////////////////////////////////////////////////////////
+
     updatedTarget = {
-      ...masterTarget,
+      ...masterTarget[0],
       swordsmen: Math.floor(defenderSwordsmen / 2) || 0,
       archers: Math.floor(defenderArchers / 2) || 0,
       knights: Math.floor(defenderKnights / 2) || 0,
     };
+    
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>> UPDATED TARGET: ', updatedTarget)
 
+    console.log('/////////////////////////////////////// combat works until here //////////////////////////////')
+    
     if (currentPlayer === 'player1') { // and total unit counts need to be reduced
       games[gameIndex].playerOneTotalUnits -= games[gameIndex].playerOneTotalUnits - updatedOrigin.swordsmen - updatedOrigin.archers - updatedOrigin.knights || 0;
       games[gameIndex].playerTwoTotalUnits -= games[gameIndex].playerTwoTotalUnits - updatedTarget.swordsmen - updatedTarget.archers - updatedTarget.knights || 0;
