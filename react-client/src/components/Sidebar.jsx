@@ -9,7 +9,7 @@ import Login from './Login.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
-import { exitGame } from '../../src/actions/actions.js';
+import { exitGame, setRoom } from '../../src/actions/actions.js';
 
 class SidebarLeft extends React.Component {
   constructor(props) {
@@ -32,6 +32,19 @@ class SidebarLeft extends React.Component {
 
   toggleRules() {
     this.setState({ rules: !this.state.rules });
+  }
+
+  newGame() {
+    this.props.socket.emit('newGame');
+    this.props.socket.on('newGame', data => {
+      this.props.setRoom(data.room);
+      this.props.history.push({
+        pathname: `/game/room?${data.room}`,
+        state: {
+          extra: 'create',
+        }
+      })
+    })
   }
 
   render() {
@@ -59,8 +72,8 @@ class SidebarLeft extends React.Component {
           <Sidebar style={{top: 0}} as={Menu} animation='scale down' width='thin' visible={menuVisible} icon='labeled' vertical inverted>
 
             <Menu.Item
-              as={Link} to='/game'
               name='game'
+              onClick={this.newGame.bind(this)}
             >
               <Icon name='gamepad' />
               Start New Game
@@ -129,7 +142,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ exitGame }, dispatch);
+  return bindActionCreators({ exitGame, setRoom }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));

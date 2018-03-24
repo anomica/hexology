@@ -16,7 +16,8 @@ class TopBar extends React.Component {
       modalOpen: false,
       email: '',
       message: '',
-      inviteSent: false
+      inviteSent: false,
+      buttonMessage: 'Invite'
     }
   }
 
@@ -27,13 +28,14 @@ class TopBar extends React.Component {
   }
 
   sendEmail() {
-    this.setState({ inviteSent: true })
+    this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' })
     this.props.socket.emit('sendEmail', {
       username: 'test', // change this to reflect logged in user
       email: this.state.email,
       message: this.state.message,
       room: this.props.room
     })
+    setTimeout(() => this.setState({ modalOpen: false }), 2000);
   }
 
   handleChange(e, {name, value}) {
@@ -46,7 +48,21 @@ class TopBar extends React.Component {
         <Header as='h1'>Hexology</Header>
         <Button style={{right: '10px', top: '20px', position: 'absolute'}} onClick={exitGame}>Exit Game</Button>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : 'player two'}!</Header>
-        {this.props.boardState ? null : <Segment>Want to play with a friend? <Button onClick={() => this.setState({ modalOpen: true })}>Click Here</Button></Segment>}
+        {this.props.boardState ? null :
+          (this.state.inviteSent ? <Segment>Invite sent to {this.state.email}</Segment> :
+            <Segment>Want to play with a friend?
+              <Button
+                size={'tiny'}
+                color={'blue'}
+                compact
+                style={{marginLeft: '20px'}}
+                onClick={() => this.setState({ modalOpen: true })}
+                >
+                Click Here
+              </Button>
+            </Segment>
+          )
+        }
         <Segment.Group horizontal>
           {this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
             <Segment>
@@ -108,7 +124,7 @@ class TopBar extends React.Component {
           </Modal.Content>
           <Divider/>
           <Modal.Actions>
-            <Button onClick={() => this.state.inviteSent ? null : this.sendEmail()}>Invite</Button>
+            <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
           </Modal.Actions>
         </Modal>
       </Segment>
