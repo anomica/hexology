@@ -36,22 +36,15 @@ class Main extends React.Component {
       .then(async results => {
         // console.log('-----------------------------')
         // console.log('SESSION DATA:', results);
-        console.log('SESSION PROPS: ', this.props)
-        console.log('this.props.location.playerId', this.props.location.playerId)
+        // console.log('SESSION PROPS: ', this.props)
+        // console.log('this.props.location.playerId', this.props.location.playerId)
         // console.log('-----------------------------')
-        
-        // if (results.data.length === 1) {
-        //   console.log('A USER IS LOGGED IN ALREADY: ', results.data[0].user_id)
-        //   await this.props.setPlayerOne(results.data[0].user_id);
-        //   // console.log('>>>>>>>> PLAYERONE: SESSION PROPS: ', this.props)
-        // }
       })
       .catch(err => {
         console.log('err from persistUser:', err);
       })
     axios.get('/rooms')
       .then(rooms => {
-        // console.log('=============================== rooms', rooms)
         for (let room in rooms.data) {
           if (room[0] !== '*') {
             delete rooms.data[room]

@@ -132,7 +132,15 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
     })
 
   // Fetches the new origin hex
-  let dbHex = await getHex(newOrigin.index); // NOTE: This returns an object
+  let newOriginHex;
+
+  if (newOrigin.index !== undefined) {
+    newOriginHex = await newOrigin.index;
+  } else {
+    newOriginHex = await newOrigin.hex_index;
+  }
+
+  let dbHex = await getHex(newOriginHex); // NOTE: This returns an object
 
   // Updates gold resource for the new origin hex
   if (dbHex[0].has_gold) { // if the new origin hex has gold
@@ -152,7 +160,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
         })
     }
   }
-  console.log('gold updated in db')
+  // console.log('gold updated in db')
 
   // Updates wood resource for the new origin hex
   if (dbHex[0].has_wood) { // if the new origin hex has wood
@@ -172,7 +180,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
         })
     }  
   }
-  console.log('wood updated in db')
+  // console.log('wood updated in db')
 
   // Updates metal resource for the new origin hex
   if (dbHex[0].has_metal) { // if the new origin hex has metal
@@ -192,7 +200,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
         })
     }  
   }
-  console.log('metal updated in db')
+  // console.log('metal updated in db')
 }
 
 const updateHexOwner = async (hexIndex, player) => { // NOTE: Player comes in as string
@@ -218,18 +226,53 @@ const updateHexOwner = async (hexIndex, player) => { // NOTE: Player comes in as
 
 /////////////////////// Updates the units on the hex upon combat ///////////////////////
 const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlayer) => {
-  let playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with user id eventually
+  // console.log('\n~~~~~~~~~~~~~~~~~~~~~ UPDATING HEX UNITS DURING COMBAT IN DB ~~~~~~~~~~~~~~~~~~~~~\n');
+  
+  let playerId;
 
-  console.log('~~~~~~~~~~~~~~~~~~~~~ UPDATING HEX UNITS DURING COMBAT ~~~~~~~~~~~~~~~~~~~~~');
+  if (currentPlayer) { // if current player exists from server req
+    // console.log('player exists')
+    playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with user id eventually
+    await knex('hex')
+      .where(knex.raw(`'${hexIndex}' = hex_index AND ${Number(playerId)} = player`))
+      .update({
+        swordsmen: swordsmen,
+        archers: archers,
+        knights: knights
+      })
+
+  } else { // if player from server needs to be removed
+    // console.log('\n~~~~~~~~~ player is NULL ~~~~~~~~~\n')
+    playerId = null;
+    await knex('hex')
+      .where(knex.raw(`'${hexIndex}' = hex_index`))
+      .update({
+        player: null,
+        swordsmen: swordsmen,
+        archers: archers,
+        knights: knights
+      })
+  }
+
+  // console.log('\n~~~~~~~~~~~~~~~~~~~~~~~ SUCCESS UPDATING HEX UNITS IN DB YASSS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+}
+
+/////////////////////// Switches player/owner of hex during combat /////////////////////
+const switchHexOwner = async (hexIndex, updatedOwner) => {
+  let ownerId = null;
+
+  if (updatedOwner) { // if there is an owner to be updated
+    ownerId = await updatedOwner[updatedOwner.length - 1]; // update with the owner id
+  }
+
+  // console.log('\n~~~~~~~~~~ switching the owner of the hex ~~~~~~~~~~~~ \n');
 
   await knex('hex')
-    .where(knex.raw(`'${hexIndex}' = hex_index AND ${Number(playerId)} = player`))
+    .where(knex.raw(`'${hexIndex}' = hex_index`))
     .update({
-      swordsmen: swordsmen,
-      archers: archers,
-      knights: knights
+      player: ownerId,
+      hex_owner: ownerId
     })
-  console.log('~~~~~~~~~~~~~~~~~~~~~~~ SUCCESS YASSS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 }
 
 /////////////////////// Removes resource from the hex ///////////////////////
@@ -339,7 +382,7 @@ const buyKnights = async (room, gameIndex, currentPlayer) => {
   let gameId = await getGameId(room, gameIndex); // gets the game id to find find the current game and hex the player is on (NOTE: This returns an object)
 
   if (player === '1') { //TODO: update with player id
-    console.log('>>>>>>>>>>>>>> player 1 buying KNIGHTS in the DB');
+    // console.log('>>>>>>>>>>>>>> player 1 buying KNIGHTS in the DB');
     await knex('games')
       .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
       .decrement('p1_gold', 20) // decreases the player's gold - 20
@@ -353,7 +396,7 @@ const buyKnights = async (room, gameIndex, currentPlayer) => {
       .decrement('p1_metal', 20) // decreases the player's metal - 20
 
   } else if (player === '2') { //TODO: update with player id
-    console.log('>>>>>>>>>>>>>> player 2 buying KNIGHTS in the DB');
+    // console.log('>>>>>>>>>>>>>> player 2 buying KNIGHTS in the DB');
     await knex('games')
       .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
       .decrement('p2_gold', 20) // decreases the player's gold - 20
@@ -469,5 +512,6 @@ module.exports = {
   buySwordsmen,
   buyArchers,
   buyKnights,
-  updateHexUnits
+  updateHexUnits,
+  switchHexOwner
 };

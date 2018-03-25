@@ -24,28 +24,7 @@ class Signup extends React.Component {
       password: this.state.password
     })
     .then(async user => {
-      let newUserId = await user.data[0].user_id;
-      // console.log('----------------------------------')
-      // console.log('data from signup:', user, '\n\n');
-
-      // console.log('this props in signup: ', this.props)
-      // console.log('user id: ', newUserId)
-      // console.log('----------------------------------')
-
-      // this.setState({ userId: newUserId });
-
-      // await this.props.setPlayerOne(newUserId);
-
-      if (!this.props.location.p1) {
-        console.log('p1 does not exist yet');
-
-        this.props.history.push({
-          pathname: '/game',
-          playerId: newUserId
-        });
-
-      }
-
+      // console.log(user)
     })
     .catch(err => {
       alert('Username already exists');
@@ -97,12 +76,8 @@ class Signup extends React.Component {
 }
 
 const mapStateToProps = (state) => {
-  // console.log('+++++++++++++++++++++++++++++++++++++++++');
-  // console.log('state: ', state)
-  // console.log('SOCKET IN SIGNUP: ', state.state.socket.id);
   return {
     socket: state.state.socket.id
-    // playerOne: state.state.playerOne
   }
 }
 

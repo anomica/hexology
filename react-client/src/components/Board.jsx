@@ -31,8 +31,6 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-    console.log('this.props in board:', this.props)
-    console.log('state in board: ', this.state)
     let socket = this.props.socket;
     if (this.props.location.state) {
       socket.emit('joinGame', {
@@ -44,7 +42,6 @@ class Board extends React.Component {
       socket.emit('newGame');
       !this.props.playerAssigned && this.props.setUserPlayer('player1'); // so for that client, they should be assigned to player 1
       socket.on('newGame', data => {
-        console.log('data in board: ', data)
         this.props.setRoom(data.room);
       })
     }
@@ -369,7 +366,6 @@ class Board extends React.Component {
 }
 
 const mapStateToProps = (state) => {
-  console.log('SOCKET IN THE BOARD: ', state.state.socket.id)
   return {
     socket: state.state.socket,
     room: state.state.room,

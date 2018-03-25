@@ -226,7 +226,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       room: room
     }
 
-    console.log('------------------ THIS IS THE ORIGINAL BOARDDDDDD:', board);
+    // console.log('------------------ THIS IS THE ORIGINAL BOARDDDDDD:', board);
 
     /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
     await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
@@ -285,7 +285,7 @@ const moveUnits = async (data, socket) => {
     let collision = await checkForCollision(updatedOrigin.index, updatedTarget.index, gameIndex, room); // check for collision
     ////////////////////////////////////////////////////////////////////////////////////////
 
-    console.log('........................................checking for collision after legal move.............\n', collision)
+    // console.log('........................................checking for collision after legal move.............\n', collision)
 
     //////////////////////////// IF USING GAME OBJECT ON SERVER ////////////////////////////
     // let collision = await checkForCollision(originIndex, targetIndex, gameIndex, room); // check for collision
@@ -293,7 +293,7 @@ const moveUnits = async (data, socket) => {
 
     if (collision) {
       if (collision === 'friendly') { // if collision and collision is friendly,
-        console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& COLLISION IS FRIENDLY &&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+        // console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& COLLISION IS FRIENDLY &&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
         let result = await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room, board); // update hexes without combat occuring
 
         let move = {
@@ -310,24 +310,24 @@ const moveUnits = async (data, socket) => {
         await io.to(room).emit('move', move); // then send back okay to move units
       } else {
 
-        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ COMBAT COMBAT COMBAT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-
         io.to(room).emit('combat');
 
         /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
         let result = await resolveCombat(updatedOrigin.index, updatedTarget.index, gameIndex, room, updatedOrigin, updatedTarget, currentPlayer); //otherwise, roll for combat
         /////////////////////////////////////////////////////////////////////////////////////////////
 
-        console.log('result of combat: ', result)
+        console.log('\n===================\nresult of combat:\n', result)
 
         /////////////////////////////// UNCOMMENT WHEN USING GAME OBJECT ON SERVER //////////////////
         // let result = await resolveCombat(originIndex, targetIndex, gameIndex, room, updatedOrigin, updatedTarget, currentPlayer); //otherwise, roll for combat
         /////////////////////////////////////////////////////////////////////////////////////////////
 
         if (result === 'tie') { // game tie
-          console.log('===================================================== TIE =================================')
+          console.log('\n===================================================== TIE =================================\n')
           io.to(room).emit('tieGame');
+
           const board = await gameInit(5, 4);
+
           let gameIndex = uuidv4();
 
           //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
@@ -362,25 +362,27 @@ const moveUnits = async (data, socket) => {
         }
 
         if (result.tie === true) {
-          console.log('****************************** result.tie = true ******************************')
+          console.log('\n****************************** result.tie = true ******************************\n')
           io.to(room).emit('move', result); // individual combat tie but someone still has units
           return;
         }
 
+        // if the game is over
         if (result.gameOver) {  // if attacker wins, need to change hexes and send back board
 
-          console.log('^^^^^^^^^^^^^^^^^^^^^^^^^ ATTACKER WON ^^^^^^^^^^^^^^^^^^^^^^^^')
+          console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^ GAME IS OVER ^^^^^^^^^^^^^^^^^^^^^^^^\n')
 
           if (result.gameOver === 'player1' && currentPlayer === 'player1' ||
           result.gameOver === 'player2' && currentPlayer === 'player2') {
 
-            console.log('result.gameOver: ', result.gameOver)
-            console.log('currentPlayer: ', currentPlayer)
+            console.log('\n%%%%%%%%%%%%%%%%%%%%%%%%\nresult.gameOver -> WINNER :\n', result.gameOver)
+            console.log('\ncurrentPlayer:\n', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%')
 
             io.to(socketId).emit('winGame'); // the attacker gets a personal win message
             socket.to(room).emit('loseGame'); // while the rest of the room (defender) gets lose message
 
           } else {
+
             io.to(socketId).emit('loseGame');
             socket.to(room).emit('winGame');
           }
@@ -416,33 +418,86 @@ const moveUnits = async (data, socket) => {
           /////////////////////////////////////////////////////////////////////////////////////////////
 
           setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000); // send game board to user
-        } else {
+
+        } else { // if the game is not over
+          console.log('>>>>>>>>>>>>>>>>>>>>>>>> GAME NOT OVER YET <<<<<<<<<<<<<<<<<<<<<<<<<');
+
           await updateHexes(originIndex, result.updatedOrigin, targetIndex, result.updatedTarget, gameIndex, currentPlayer, room, board); // if move is to unoccupied hex, execute move
 
+          /////////////////////////////////// IF USING DATABASE //////////////////////////////
+          let updatedOriginPlayer = null;
+          let updatedTargetPlayer = null;
+
+          if (result.updatedOrigin.player) {
+            updatedOriginPlayer = 'player' + result.updatedOrigin.player;
+          }
+
+          if (result.updatedTarget.player) {
+            updatedTargetPlayer = 'player' + result.updatedTarget.player;
+          }
+
           let move = {
-            updatedOrigin: result.updatedOrigin,
-            updatedTarget: result.updatedTarget,
+            updatedOrigin: {
+              coordinates: [result.updatedOrigin.coordinate_0, result.updatedOrigin.coordinate_1, result.updatedOrigin.coordinate_2],
+              index: result.updatedOrigin.hex_index,
+              swordsmen: result.updatedOrigin.swordsmen,
+              archers: result.updatedOrigin.archers,
+              knights: result.updatedOrigin.knights,
+              player: updatedOriginPlayer
+            },
+            updatedTarget: {
+              coordinates: [result.updatedTarget.coordinate_0, result.updatedTarget.coordinate_1, result.updatedTarget.coordinate_2],
+              index: result.updatedTarget.hex_index,
+              swordsmen: result.updatedTarget.swordsmen,
+              archers: result.updatedTarget.archers,
+              knights: result.updatedTarget.knights,
+              player: updatedTargetPlayer
+            },
             originIndex: originIndex,
             targetIndex: targetIndex,
             updatedUnitCounts: {
               playerOneTotalUnits: games[gameIndex].playerOneTotalUnits,
-              playerTwoTotalUnits: games[gameIndex].playerTwoTotalUnits
+              playerTwoTotalUnits:  games[gameIndex].playerTwoTotalUnits
             }
           }
+          //////////////////////////////////////////////////////////////////////////////////
+
+          ///////////////////////// IF USING GAME OBJECT ON SERVER /////////////////////////
+          // let move = {
+          //   updatedOrigin: result.updatedOrigin,
+          //   updatedTarget: result.updatedTarget,
+          //   originIndex: originIndex,
+          //   targetIndex: targetIndex,
+          //   updatedUnitCounts: {
+          //     playerOneTotalUnits: games[gameIndex].playerOneTotalUnits,
+          //     playerTwoTotalUnits: games[gameIndex].playerTwoTotalUnits
+          //   }
+          // }
+          /////////////////////////////////////////////////////////////////////////////////
+
+          console.log('\n---------> move when game isnt over:\n', move);
 
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-          await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
+          await db.updateDbHexes(masterOrigin, move.updatedTarget, currentPlayer, move.updatedOrigin); // updates the original hex and new hex in the db for the current player
           /////////////////////////////////////////////////////////////////////////////////////////////
 
-          io.to(room).emit('move', move);
+          let moveUpdateOrigin = await db.getHex(move.updatedOrigin.index);
+          let moveUpdateTarget = await db.getHex(move.updatedTarget.index);
+
+          console.log('\nmove updated origin from DB:\n', moveUpdateOrigin);
+          console.log('\nmove update target from DB\n:', moveUpdateTarget);
+
+          await io.to(room).emit('move', move);
 
           if (result.flag === 'attacker') {
-            io.to(socketId).emit('combatWin');
-            socket.to(room).emit('combatLoss');
+            console.log('---------> combat goes to the ATTACKER');
+            await io.to(socketId).emit('combatWin');
+            await socket.to(room).emit('combatLoss');
             
           } else if (result.flag === 'defender') {
-            io.to(socketId).emit('combatLoss');
-            socket.to(room).emit('combatWin');
+            console.log('---------> combat goes to the DEFENDER');
+            await io.to(socketId).emit('combatLoss');
+            await socket.to(room).emit('combatWin');
           }
         }
       }
@@ -455,6 +510,8 @@ const moveUnits = async (data, socket) => {
         targetIndex: targetIndex,
         updatedTarget: updatedTarget
       };
+
+      console.log('\n_______________________________________________________________\nMOVE for ', currentPlayer, '\n', move, '\n_______________________________________________________________\n')
 
       /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
       await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
@@ -470,16 +527,16 @@ const moveUnits = async (data, socket) => {
 
 const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb) => { // to check move legality,
 
-  console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CHECKING LEGAL MOVE');
-  console.log('masterOrigCs: ', masterOrigCs);
-  console.log('origCs: ', origCs);
-  console.log('masterTarCs: ', masterTarCs);
-  console.log('tarCs: ', tarCs);
+  // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CHECKING LEGAL MOVE');
+  // console.log('masterOrigCs: ', masterOrigCs);
+  // console.log('origCs: ', origCs);
+  // console.log('masterTarCs: ', masterTarCs);
+  // console.log('tarCs: ', tarCs);
 
   let isLegal = false;
   if (await masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] && // make sure all coordinates match between origin
       masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES MATCH');
+    // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES MATCH');
 
     /////////////////////////// IF USING GAMES OBJECT ON SERVER ///////////////////////////////////
     // if (masterOrigin.archers === updatedOrigin.archers + updatedTarget.archers &&
@@ -496,22 +553,22 @@ const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, 
       isLegal = true;
       return true;
     } else { // master origin units do not match updated origin units + updated target units
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MISMATCH IN UNITS');
-      console.log('master origin archers: ',  masterOrigin[0].archers)
-      console.log('should equal')
-      console.log('updated origin archers: ', updatedOrigin.archers, ' updated target knights: ', updatedTarget.archers)
+      // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MISMATCH IN UNITS');
+      // console.log('master origin archers: ',  masterOrigin[0].archers)
+      // console.log('should equal')
+      // console.log('updated origin archers: ', updatedOrigin.archers, ' updated target knights: ', updatedTarget.archers)
 
-      console.log('\n', 'master origin knights: ', masterOrigin[0].knights, '\nshould equal\nupdated origin knights; ', updatedOrigin.knights, '\nupdated target knights: ', updatedTarget.knights)
+      // console.log('\n', 'master origin knights: ', masterOrigin[0].knights, '\nshould equal\nupdated origin knights; ', updatedOrigin.knights, '\nupdated target knights: ', updatedTarget.knights)
 
-      console.log('\n', 'master origin swordsmen: ', masterOrigin[0].swordsmen, '\nshould equal\nupdated origin swordsmen; ', updatedOrigin.swordsmen, '\nupdated target swordsmen: ', updatedTarget.swordsmen)
+      // console.log('\n', 'master origin swordsmen: ', masterOrigin[0].swordsmen, '\nshould equal\nupdated origin swordsmen; ', updatedOrigin.swordsmen, '\nupdated target swordsmen: ', updatedTarget.swordsmen)
 
       return false;
     }
   } else {
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES DO NOT MATCH');
-    console.log('masterOrigin: ', masterOrigin);
-    console.log('updatedOrigin: ', updatedOrigin);
-    console.log('updatedTarget: ', updatedTarget);
+    // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES DO NOT MATCH');
+    // console.log('masterOrigin: ', masterOrigin);
+    // console.log('updatedOrigin: ', updatedOrigin);
+    // console.log('updatedTarget: ', updatedTarget);
     return false;
   }
 }
@@ -597,64 +654,101 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
 
   // let attackerUnitsLost = originalAttackerArmySize - attackerSwordsmen - attackerArchers - attackerKnights;
   // let defenderUnitsLost = originalDefenderArmySize - defenderSwordsmen - defenderArchers - defenderKnights;
+  
+  // if (currentPlayer === 'player1') { // and total unit counts need to be reduced
+  //   games[gameIndex].playerOneTotalUnits -= attackerUnitsLost;
+  //   games[gameIndex].playerTwoTotalUnits -= defenderUnitsLost;
+  // } else {
+  //   games[gameIndex].playerOneTotalUnits -= defenderUnitsLost;
+  //   games[gameIndex].playerTwoTotalUnits -= attackerUnitsLost;
+  // }
+  
+  // let attackerArmySize = attackerArchers + attackerSwordsmen + attackerKnights;
+  // let defenderArmySize = defenderSwordsmen + defenderArchers + defenderKnights;
+
+  // if (defenderArmySize === attackerArmySize) { // assess if there is a tie
+    // let masterOrigin = games[gameIndex].board[originIndex]; // if there is, huge side loses half their units
+    // updatedOrigin = {
+    //   ...masterOrigin,
+    //   swordsmen: Math.floor(attackerSwordsmen / 2) || 0,
+    //   archers: Math.floor(attackerArchers / 2) || 0,
+    //   knights: Math.floor(attackerKnights / 2) || 0,
+    // };
+
+    // let masterTarget = games[gameIndex].board[targetIndex];
+    // updatedTarget = {
+    //   ...masterTarget,
+    //   swordsmen: Math.floor(defenderSwordsmen / 2) || 0,
+    //   archers: Math.floor(defenderArchers / 2) || 0,
+    //   knights: Math.floor(defenderKnights / 2) || 0,
+    // };
+
+    // if (currentPlayer === 'player1') { // and total unit counts need to be reduced
+    //   games[gameIndex].playerOneTotalUnits -= games[gameIndex].playerOneTotalUnits - updatedOrigin.swordsmen - updatedOrigin.archers - updatedOrigin.knights || 0;
+    //   games[gameIndex].playerTwoTotalUnits -= games[gameIndex].playerTwoTotalUnits - updatedTarget.swordsmen - updatedTarget.archers - updatedTarget.knights || 0;
+    // } else {
+    //   games[gameIndex].playerOneTotalUnits -= games[gameIndex].playerOneTotalUnits - updatedTarget.swordsmen - updatedTarget.archers - updatedTarget.knights || 0;
+    //   games[gameIndex].playerTwoTotalUnits -= games[gameIndex].playerTwoTotalUnits - updatedOrigin.swordsmen - updatedOrigin.archers - updatedOrigin.knights || 0;
+    // }
+
+    // if (games[gameIndex].playerOneTotalUnits === 0 && games[gameIndex].playerTwoTotalUnits === 0) {
+    //   return 'tie';
+    // }
+
+    // await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer); // update the board
+
+    // return {
+    //   tie: true,
+    //   updatedOrigin: updatedOrigin,
+    //   updatedTarget: updatedTarget,
+    //   originIndex: originIndex,
+    //   targetIndex: targetIndex,
+    //   updatedUnitCounts: {
+    //     playerOneTotalUnits: games[gameIndex].playerOneTotalUnits,
+    //     playerTwoTotalUnits: games[gameIndex].playerTwoTotalUnits
+    //   }
+    // };
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< made it inside resolving combat >>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+  console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< FIRST!!!! INSIDE RESOLVE COMBAT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+
   ////////////////////////////////// IF USING DATABASE //////////////////////////////////////////////
-  // seems to only work when the attacker wins...
   let attacker = await db.getHex(originIndex); // get attacking hex (NOTE: returns an object)
-  let defender = await db.getHex(targetIndex); // and defending hex (NOTE: returns an object)
-
-  console.log('++++++++++++++++++++++++++++++++ THIS IS THE ATTACKER')
-  console.log(attacker)
-
-  console.log('++++++++++++++++++++++++++++++++ THIS IS THE DEFENDER')
-  console.log(defender)
-
   let attackerPlayer = attacker[0].player;
-  let defenderPlayer = defender[0].player;
-  let flag;
-
   let attackerSwordsmen = attacker[0].swordsmen;
   let attackerKnights = attacker[0].knights;
   let attackerArchers = attacker[0].archers;
+  let originalAttackerArmySize = attackerSwordsmen + attackerKnights + attackerArchers;
 
-  console.log('ATTACKER\nswordsmen: ', attackerSwordsmen, '\nknights: ', attackerKnights, '\narchers: ', attackerArchers, '\n')
-
+  let defender = await db.getHex(targetIndex); // and defending hex (NOTE: returns an object)
+  let defenderPlayer = defender[0].player;
   let defenderSwordsmen = defender[0].swordsmen;
   let defenderKnights = defender[0].knights;
   let defenderArchers = defender[0].archers;
-
-  console.log('DEFENDER\nswordsmen: ', defenderSwordsmen, '\nknights: ', defenderKnights, '\narchers: ', defenderArchers, '\n')
-
-  let originalAttackerArmySize = attackerSwordsmen + attackerKnights + attackerArchers;
   let originalDefenderArmySize = defenderSwordsmen + defenderKnights + defenderArchers;
 
-  console.log('\noriginal attacker army size: ', originalAttackerArmySize)
-  console.log('\noriginal defender army size: ', originalDefenderArmySize)
+  let flag; // will eventually return 'defender' or 'attacker'
+
+  console.log('  ATTACKER: ', attacker[0].player)
+  console.log('  DEFENDER: ', defender[0].player)
 
   attackerArchers && defenderArchers ? attackerKnights -= defenderArchers : null; // first, archers pick off knights from afar
-  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif ATTACKER has ARCHERS (${attackerArchers}) && DEFENDER has ARCHERS (${defenderArchers}) \nthen subtract ATTACKER KNIGHTS (${attackerKnights}) by DEFENDER ARCHERS ${defenderArchers}\nFORMULA: ${attackerKnights} - ${defenderArchers} \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
-  console.log('ATTACKER KNIGHTS: ', attackerKnights -= defenderArchers)
+  console.log('\nATTACKER KNIGHTS: ', attackerKnights -= defenderArchers)
 
   defenderKnights && attackerArchers ? defenderKnights -= attackerArchers : null;
-  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif DEFENDER has KNIGHTS (${defenderKnights}) && ATTACKER has archers (${attackerArchers}) \nthen subtract DEFENDER KNIGHTS (${defenderKnights}) by ATTACKER ARCHERS ${attackerArchers}\nFORMULA: ${defenderKnights} - ${attackerArchers} \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
   console.log('DEFENDER KNIGHTS: ', defenderKnights -= attackerArchers)
 
   attackerSwordsmen && defenderKnights ? attackerSwordsmen -= (defenderKnights * 3) : null; // then, knights crash against swordsmen
-  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif ATTACKER has SWORDSMEN (${attackerSwordsmen}) && DEFENDER has KNIGHTS (${defenderKnights}) \nthen subtract ATTACKER SWORDSMEN (${attackerSwordsmen}) by DEFENDER KNIGHTS (x3) ${defenderKnights * 3} \nFORMULA: ${attackerSwordsmen} - (${defenderKnights} * 3 = ${defenderKnights * 3}) \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
-  console.log('ATTACKER SWORDSMEN: ', attackerSwordsmen -= (defenderKnights * 3))
+  console.log('\nATTACKER SWORDSMEN: ', attackerSwordsmen -= (defenderKnights * 3))
 
   defenderSwordsmen && attackerKnights ? defenderSwordsmen -= (attackerKnights * 3) : null;
-  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif DEFENDER has SWORDSMEN (${defenderSwordsmen}) && ATTACKER has KNIGHTS (${attackerKnights}) \nthen subtract DEFENDER SWORDSMEN (${defenderSwordsmen}) by ATTACKER KNIGHTS (x3) ${attackerKnights * 3} \nFORMULA: ${defenderSwordsmen} - (${attackerKnights} * 3 = ${attackerKnights * 3})\n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
   console.log('DEFENDER SWORDSMEN: ', defenderSwordsmen -= (attackerKnights * 3))
 
   attackerArchers && defenderSwordsmen ? attackerArchers -= (defenderSwordsmen * 2) : null; // finally, swordsmen take out archers
-  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif ATTACKER has ARCHERS (${attackerArchers}) && DEFENDER has SWORDSMEN (${defenderSwordsmen}) \nthen subtract ATTACKER ARCHERS (${attackerArchers}) by DEFENDER SWORDSMEN (x2) ${defenderSwordsmen * 2} \nFORMULA: ${attackerArchers} - (${defenderSwordsmen} * 2 = ${defenderSwordsmen * 2}) \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
-  console.log('ATTACKER ARCHERS: ', attackerArchers -= (defenderSwordsmen * 2))
+  console.log('\nATTACKER ARCHERS: ', attackerArchers -= (defenderSwordsmen * 2))
 
   defenderArchers && attackerSwordsmen ? defenderArchers -= (attackerSwordsmen * 2) : null;
-  console.log(`\n$$$$$$$$$$$$$$$$$$$$$$$$$$\nif DEFENDER has ARCHERS (${defenderArchers}) && ATTACKER has SWORDSMEN (${attackerSwordsmen}) \nthen subtract DEFENDER ARCHERS (${defenderArchers}) by ATTACKER SWORDSMEN (x2) ${attackerSwordsmen * 2} \nFORMULA: ${defenderArchers} - (${attackerSwordsmen} * 2 = ${attackerSwordsmen * 2}) \n$$$$$$$$$$$$$$$$$$$$$$$$$$$\n`)
   console.log('DEFENDER ARCHERS: ', defenderArchers -= (attackerSwordsmen * 2))
 
   if (attackerSwordsmen < 0) attackerSwordsmen = 0; // no numbers should go below zero
@@ -664,85 +758,55 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
   if (defenderKnights < 0) defenderKnights = 0;
   if (defenderArchers < 0) defenderArchers = 0;
 
+  console.log('\n-------------------------------- UNITS FLOORED ------------------------------')
+  console.log('ATTACKER SWORDSMEN: ',attackerSwordsmen);
+  console.log('ATTACKER ARCHERS: ', attackerArchers)
+  console.log('ATTACKER KNIGHTS: ', attackerKnights)
+
+  console.log('\nDEFENDER SWORDSMEN: ', defenderSwordsmen);
+  console.log('DEFENDER ARCHERS: ', defenderArchers)
+  console.log('DEFENDER KNIGHTS: ', defenderKnights,)
+  console.log('-------------------------------------------------------------------------------')
+
   let attackerUnitsLost = originalAttackerArmySize - attackerSwordsmen - attackerArchers - attackerKnights;
+
   let defenderUnitsLost = originalDefenderArmySize - defenderSwordsmen - defenderArchers - defenderKnights;
   
-  ///////////////////////////////////////////// IF USING DATABASE ///////////////////////////////////////
   let attackerArmySize;
   let defenderArmySize;
 
   if (defender[0].player === 1) { // if the defender is player 1
-    console.log('`````````````````````````````````` DEFENDER is PLAYER 1 SON ``````````````````````````````````')
     // find the hex that player 1 is on in the db & update the units on the hex with the DEFENDER units
     await db.updateHexUnits(defender[0].hex_index, defenderSwordsmen, defenderArchers, defenderKnights, 'player1'); // TODO: update with user id
-    console.log('\nplayer 1 is updated')
 
-    // get the updated defender hex
-    let defenderHex = await db.getHex(defender[0].hex_index); // returns an object
-    defenderArmySize = defenderHex[0].swordsmen + defenderHex[0].archers + defenderHex[0].knights;
-    console.log('\nupdated defender hex -> player 1: ', defenderHex);
-    console.log('\nupdated defender army size: ', defenderArmySize);
+    let defenderHex = await db.getHex(defender[0].hex_index); // get the updated defender hex
+
+    defenderArmySize = await defenderHex[0].swordsmen + defenderHex[0].archers + defenderHex[0].knights;
 
     // then find the hex that player 2 is on in the db & update the units on the hex with the ATTACKER units
     await db.updateHexUnits(attacker[0].hex_index, attackerSwordsmen, attackerArchers, attackerKnights, 'player2'); // TODO: update with user id
-    console.log('\nplayer 2 is updated')
 
-    // get the updated attacker hex
-    let attackerHex = await db.getHex(attacker[0].hex_index);
-    attackerArmySize = attackerHex[0].swordsmen + attackerHex[0].archers + attackerHex[0].knights;
-    console.log('\nupdated attacker hex -> player 2: ', attackerHex);
-    console.log('\nupdated attacker army size: ', attackerArmySize);
+    let attackerHex = await db.getHex(attacker[0].hex_index); // get the updated attacker hex
+    attackerArmySize = await attackerHex[0].swordsmen + attackerHex[0].archers + attackerHex[0].knights;
 
   } else if (defender[0].player === 2) { // else if the defender is player 2
-    console.log('`````````````````````````````````` DEFENDER is PLAYER 2 SON ``````````````````````````````````')
     // find the hex that player 2 is on in the db & update the units on the hex with the DEFENDER units
     await db.updateHexUnits(defender[0].hex_index, defenderSwordsmen, defenderArchers, defenderKnights, 'player2'); // TODO: update with user id
-    console.log('player 2 is updated')
 
     // get the updated defender hex
     let defenderHex = await db.getHex(defender[0].hex_index); // returns an object
-    defenderArmySize = defenderHex[0].swordsmen + defenderHex[0].archers + defenderHex[0].knights;
-    console.log('\nupdated defender hex -> player 2: ', defenderHex);
-    console.log('\nupdated defender army size: ', defenderArmySize);
+    defenderArmySize = await defenderHex[0].swordsmen + defenderHex[0].archers + defenderHex[0].knights; // total units for player
 
     // then find the hex that player 1 is on in the db & update the units on the hex with the ATTACKER units
     await db.updateHexUnits(attacker[0].hex_index, attackerSwordsmen, attackerArchers, attackerKnights, 'player1'); // TODO: update with user id
-    console.log('player 1 is updated')
 
     // get the updated attacker hex
-    let attackerHex = await db.getHex(attacker[0].hex_index);
-    attackerArmySize = attackerHex[0].swordsmen + attackerHex[0].archers + attackerHex[0].knights;
-    console.log('\nupdated attacker hex -> player 2: ', attackerHex);
-    console.log('\nupdated attacker army size: ', attackerArmySize)
+    let attackerHex = await db.getHex(attacker[0].hex_index); // returns an object
+    attackerArmySize = await attackerHex[0].swordsmen + attackerHex[0].archers + attackerHex[0].knights; // total units for player
   }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-  console.log('__________________COMBAT WORKS UP UNTIL THIS PART YAYYYYYYYYYYYY__________________________')
-
-  /////////////////////////// SHOULD NOT BE NEEDING THIS AFTER DB WORKS ///////////////////////////
-  if (currentPlayer === 'player1') { // and total unit counts need to be reduced
-    games[gameIndex].playerOneTotalUnits -= attackerUnitsLost;
-    games[gameIndex].playerTwoTotalUnits -= defenderUnitsLost;
-  } else {
-    games[gameIndex].playerOneTotalUnits -= defenderUnitsLost;
-    games[gameIndex].playerTwoTotalUnits -= attackerUnitsLost;
-  }
-  /////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // let attackerArmySize = attackerArchers + attackerSwordsmen + attackerKnights;
-  // let defenderArmySize = defenderSwordsmen + defenderArchers + defenderKnights;
 
   if (defenderArmySize === attackerArmySize) { // assess if there is a tie
-
-    ////////////////////////// IF USING GAME OBJECT ON SERVER //////////////
-    // let masterOrigin = games[gameIndex].board[originIndex]; // if there is, huge side loses half their units
-    ///////////////////////////////////////////////////////////////////////
-
-    ////////////////////////// IF USING DATABASE //////////////////////////
     let masterOrigin = await db.getHex(originIndex); // if there is, huge side loses half their units / NOTE: This returns an object
-    ///////////////////////////////////////////////////////////////////////
-
     updatedOrigin = {
       ...masterOrigin['0'], // for some reason the object returns at string '0'
       swordsmen: Math.floor(attackerSwordsmen / 2) || 0,
@@ -753,13 +817,7 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
     // update the hex units in the db
     await db.updateHexUnits(updatedOrigin.hex_index, updatedOrigin.swordsmen, updatedOrigin.archers, updatedOrigin.knights, 'player' + updatedOrigin.player); 
 
-
-    ////////////////////////// IF USING GAME OBJECT ON SERVER //////////////
-    // let masterTarget = games[gameIndex].board[targetIndex];///////////////////////////////////////////////////////////////////////
-
-    ////////////////////////// IF USING DATABASE //////////////////////////
     let masterTarget = await db.getHex(targetIndex); // returns an object
-    ///////////////////////////////////////////////////////////////////////
 
     updatedTarget = {
       ...masterTarget[0],
@@ -770,21 +828,33 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
     
     // update the hex units in the db
     await db.updateHexUnits(updatedTarget.hex_index, updatedTarget.swordsmen, updatedTarget.archers, updatedOrigin.knights, 'player' + updatedTarget.player);
+    
+    let p1TotalUnits;
+    let p2TotalUnits;
 
-    console.log('\n/////////////////////////////////////// combat works until here //////////////////////////////\n')
-
-    if (currentPlayer === 'player1') { // and total unit counts need to be reduced
-      games[gameIndex].playerOneTotalUnits -= games[gameIndex].playerOneTotalUnits - updatedOrigin.swordsmen - updatedOrigin.archers - updatedOrigin.knights || 0;
-      games[gameIndex].playerTwoTotalUnits -= games[gameIndex].playerTwoTotalUnits - updatedTarget.swordsmen - updatedTarget.archers - updatedTarget.knights || 0;
+    if (updatedOrigin.player === 1) {
+      p1TotalUnits = await updatedOrigin.swordsmen + updatedOrigin.archers + updatedOrigin.knights;
+      p2TotalUnits = await updatedTarget.swordsmen, updatedTarget.archers, updatedOrigin.knights;
     } else {
-      games[gameIndex].playerOneTotalUnits -= games[gameIndex].playerOneTotalUnits - updatedTarget.swordsmen - updatedTarget.archers - updatedTarget.knights || 0;
-      games[gameIndex].playerTwoTotalUnits -= games[gameIndex].playerTwoTotalUnits - updatedOrigin.swordsmen - updatedOrigin.archers - updatedOrigin.knights || 0;
+      p1TotalUnits = await updatedTarget.swordsmen, updatedTarget.archers, updatedOrigin.knights
+      p2TotalUnits = await updatedOrigin.swordsmen + updatedOrigin.archers + updatedOrigin.knights;
     }
 
-    if (games[gameIndex].playerOneTotalUnits === 0 && games[gameIndex].playerTwoTotalUnits === 0) {
+    if (p1TotalUnits === 0 && p2TotalUnits === 0) { // if neither players have any units, return tie
       return 'tie';
     }
-    await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer); // update the board
+
+    // console.log('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    // console.log('originIndex: ', originIndex)
+    // console.log('updatedOrigin: ', updatedOrigin)
+    // console.log('targetIndex: ', targetIndex)
+    // console.log('updatedTarget: ', updatedTarget)
+    // console.log('gameIndex: ', gameIndex)
+    // console.log('currentPlayer: ', currentPlayer)
+
+    // let gb = await db.getGameBoard(room, gameIndex)
+    // console.log('\n GAME FROM DB: ', gb);
+    // console.log('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
     return {
       tie: true,
@@ -793,107 +863,299 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
       originIndex: originIndex,
       targetIndex: targetIndex,
       updatedUnitCounts: {
-        playerOneTotalUnits: games[gameIndex].playerOneTotalUnits,
-        playerTwoTotalUnits: games[gameIndex].playerTwoTotalUnits,
+        playerOneTotalUnits: p1TotalUnits,
+        playerTwoTotalUnits: p2TotalUnits
       }
     };
+    ///////////////////////////////////////////////////////////////////////////////////////////
   }
 
-    // console.log('hiiiiiiiiiiiiiii', defenderArmySize, attackerArmySize);
+  if (defenderArmySize > attackerArmySize) { // if after initial skirmish, defender army is bigger
+    
+    console.log('\n#######################################\nDEFENDER ARMY SIZE > ATTCKER ARMY SIZE:\n  DEFENDER ARMY SIZE: ', defenderArmySize, '\n  ATTACKER ARMY SIZE: ', attackerArmySize)
 
-  if (defenderArmySize > attackerArmySize) { // if after initial skirmish, defnder army is bigger
     while (attackerArmySize > 0) { // eliminate all attackers, starting with s, then a, then k
+      console.log('\n--- ELIMINATING ALL ATTACKERS: (WHILE ATTACKER ARMY > 0):\n  CURRENT ATTACKER SIZE: ', attackerArmySize)
       if (attackerSwordsmen) {
         attackerSwordsmen--;
+        console.log('1) REDUCING ATTACKER SWORDSMEN BY 1:\nNEW ATTACKER SWORDSMEN: ', attackerSwordsmen)
       } else if (attackerArchers) {
         attackerArchers--;
+        console.log('2) REDUCING ATTACKER ARCHERS BY 1:\nNEW ATTACKER ARCHERS: ', attackerArchers)
+
       } else if (attackerKnights) {
         attackerKnights--;
+        console.log('3) REDUCING ATTACKER KNIGHTS BY 1:\nNEW ATTACKER KNIGHTS: ', attackerKnights)
       }
 
       if (defenderSwordsmen) { // and a defender for each attacker unit, same order
         defenderSwordsmen--;
-      } else  if (defenderArchers) {
-        defenderArchers--;
-      } else if (defenderKnights) {
-        defenderKnights--;
-      }
-      defenderArmySize--;
-      attackerArmySize--;
-    }
-  } else if (attackerArmySize > defenderArmySize) { // otherwise, if attacker army is bigger,
-    while (defenderArmySize > 0) { // eliminate all defenders, same order
-      if (defenderSwordsmen) {
-        defenderSwordsmen--;
+        console.log('\n4) REDUCING DEFENDER SWORDSMEN BY 1:\nNEW DEFENDER SWORDSMEN: ', defenderSwordsmen)
+
       } else if (defenderArchers) {
         defenderArchers--;
+        console.log('5) REDUCING DEFENDER ARCHERS BY 1:\nNEW DEFENDER ARCHERS: ', defenderArchers)
+
       } else if (defenderKnights) {
         defenderKnights--;
+        console.log('6) REDUCING DEFENDER KNIGHTS BY 1:\nNEW DEFENDER KNIGHTS: ', defenderKnights)
+
+      }
+
+      defenderArmySize--;
+      attackerArmySize--;
+
+      console.log('\nDEFENDER ARMY SIZE DECREASED BY 1:\nNEW DEFENDER SIZE: ', defenderArmySize)
+      console.log('ATTACKER ARMY SIZE DECREASED BY 1:\nNEW ATTACKER SIZE: ', attackerArmySize)
+      console.log('#######################################')
+    }
+
+  } else if (attackerArmySize > defenderArmySize) { // otherwise, if attacker army is bigger,
+
+    console.log('\n#######################################\nATTACKER ARMY SIZE > DEFENDER ARMY SIZE: \n  ATTACKER ARMY SIZE:', attackerArmySize, '\n  DEFENDER ARMY SIZE: ', defenderArmySize)
+
+    while (defenderArmySize > 0) { // eliminate all defenders, same order
+      console.log('\n--- ELIMINATING ALL DEFENDERS: (WHILE DEFENDER ARMY > 0):\n NEW DEFENDER SIZE: ', defenderArmySize)
+
+      if (defenderSwordsmen) {
+        defenderSwordsmen--;
+        console.log('1) REDUCING DEFENDER SWORDSMEN BY 1:\nNEW DEFENDER SWORDSMEN: ', defenderSwordsmen)
+
+      } else if (defenderArchers) {
+        defenderArchers--;
+        console.log('2) REDUCING DEFENDER ARCHERS BY 1:\nNEW DEFENDER ARCHERS: ', defenderArchers)
+
+      } else if (defenderKnights) {
+        defenderKnights--;
+        console.log('3) REDUCING DEFENDER KNIGHTS BY 1:\nNEW DEFENDER KNIGHTS: ', defenderKnights)
+        
       }
 
       if (attackerSwordsmen) { // and an attacker for each defender unit, same order
         attackerSwordsmen--;
-      } else  if (attackerArchers) {
+        console.log('\n4) REDUCING ATTACKER SWORDSMEN BY 1:\nNEW ATTACKER SWORDSMEN: ', attackerSwordsmen)
+
+      } else if (attackerArchers) {
         attackerArchers--;
+        console.log('5) REDUCING ATTACKER ARCHERS BY 1:\nNEW ATTACKER ARCHERS: ', attackerArchers)
+
       } else if (attackerKnights) {
         attackerKnights--;
+        console.log('6) REDUCING ATTACKER KNIGHTS BY 1:\nNEW ATTACKER KNIGHTS: ', attackerKnights)
+
       }
+
       attackerArmySize--;
       defenderArmySize--;
+
+      console.log('\nDEFENDER ARMY SIZE DECREASE BY 1:\nNEW DEFENDER SIZE: ', defenderArmySize)
+      console.log('ATTACKER ARMY SIZE DECREASE BY 1:\nNEW ATTACKER SIZE: ', attackerArmySize)
+      console.log('#######################################')
+
     }
   }
 
-  if (currentPlayer === 'player1') {
-    games[gameIndex].playerOneTotalUnits -= originalAttackerArmySize - attackerArmySize;
-    games[gameIndex].playerTwoTotalUnits -= originalDefenderArmySize - defenderArmySize;
-  } else {
-    games[gameIndex].playerOneTotalUnits -= originalDefenderArmySize - defenderArmySize;
-    games[gameIndex].playerTwoTotalUnits -= originalAttackerArmySize - attackerArmySize;
-  }
+  ///////////////////////// IF USING GAME OBJECT ON SERVER ///////////////////////////////
+  ////////////////////////// SHOULDN'T BE NEEDED AFTER DB WORKS //////////////////////////
+  // if (currentPlayer === 'player1') {
+  //   games[gameIndex].playerOneTotalUnits -= originalAttackerArmySize - attackerArmySize;
+  //   games[gameIndex].playerTwoTotalUnits -= originalDefenderArmySize - defenderArmySize;
+  // } else {
+  //   games[gameIndex].playerOneTotalUnits -= originalDefenderArmySize - defenderArmySize;
+  //   games[gameIndex].playerTwoTotalUnits -= originalAttackerArmySize - attackerArmySize;
+  // }
+  ///////////////////////////////////////////////////////////////////////////////////////
 
   defenderArmySize = defenderSwordsmen + defenderArchers + defenderKnights; // reassess army size
   attackerArmySize = attackerArchers + attackerSwordsmen + attackerKnights; // reassess army size
+
+  console.log(`\n....................\nREASSESS DEFENDER ARMY SIZE:\ndefenderArmySize (${defenderArmySize}) = defenderSwordsmen (${defenderSwordsmen}) + defenderArchers (${defenderArchers}) + defenderKnights (${defenderKnights})\n....................\n`)
+
+  console.log(`\n....................\nREASSESS ATTACKER ARMY SIZE:\nattackerArmySize (${attackerArmySize}) = attackerSwordsmen (${attackerSwordsmen}) + attckerArchers (${attackerArchers}) + attackerKnights (${attackerKnights})\n....................\n`)
+
   if (attackerArmySize) {
+    console.log('~~~~~~~~~~~~~~~~~~~ the ATTACKER has an army left over ~~~~~~~~~~~~~~~~~~~');
+    let origTarget = await db.getHex(updatedTarget.index); // original target hex from db (returns an object)
+
     updatedTarget = {
-      ...updatedTarget,
+      // IF USING GAME OBJ ON SERVER ////
+      // ...updatedTarget,
+      ///////////////////////////////////
+
+      //////// IF USING DATABASE ///////
+      ...origTarget[0],
+      //////////////////////////////////
+
       swordsmen: attackerSwordsmen,
       knights: attackerKnights,
       archers: attackerArchers,
-      player: attackerPlayer
+      player: attackerPlayer,
+      hex_owner: attackerPlayer
     }
+    
+    if (origTarget[0].player !== updatedTarget.player) { // if original player on the hex is not the attacker
+      await db.updateHexUnits(updatedTarget.hex_index, attackerSwordsmen, attackerArchers, attackerKnights, 'player' + origTarget[0].player); // update units on hex in the db (for original player/owner of hex)
+
+      await db.switchHexOwner(updatedTarget.hex_index, 'player' + updatedTarget.player); // then update the hex player/owner in the db with the attacker player
+    }
+
+    let dbUpdatedOrigin = await db.getHex(updatedOrigin.index);
+
+    console.log('\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ORIGIN HEX BEFORE UPDATING IN DB\n', dbUpdatedOrigin, '\n');
+
+    updatedOrigin = {
+      ...dbUpdatedOrigin[0],
+      swordsmen: defenderSwordsmen,
+      archers: defenderArchers,
+      knights: defenderKnights,
+      player: null,
+      hex_owner: null
+    }
+
+    console.log('\nUPDATED ORIGIN OBJECT\n', updatedOrigin)
+
+    await db.updateHexUnits(updatedOrigin.hex_index, updatedOrigin.swordsmen, updatedOrigin.archers, updatedOrigin.knights, 'player' + dbUpdatedOrigin[0].player);
+
+    await db.switchHexOwner(updatedOrigin.hex_index, null);
+
+    let dbUpdatedOrigin2 = await db.getHex(updatedOrigin.hex_index);
+
+    console.log('\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ORIGIN HEX AFTER UPDATING IN DB \n', dbUpdatedOrigin2, '\n');
+
     flag = 'attacker';
+
   } else if (defenderArmySize) {
+    console.log('~~~~~~~~~~~~~~~~~~~ the DEFENDER has an army left over ~~~~~~~~~~~~~~~~~~~')
+
+    let origHex = await db.getHex(updatedOrigin.index); // original origin hex from db (returns an object)
+
+    // console.log('\n---------------------- origin hex from db:\n', origHex, '\n----------------------');
+
     updatedOrigin = { // reinitialize hex they left
-      ...updatedOrigin,
-      swordsmen: updatedOrigin.swordsmen + attackerSwordsmen, // if there are units left behind, make sure they stay
-      archers: updatedOrigin.knights + attackerKnights,
-      knights: updatedOrigin.archers + attackerArchers,
-      player: null
+      /////////////////// IF USING GAME OBJ ON SERVER ///////////////
+      // ...updatedOrigin,
+      // swordsmen: updatedOrigin.swordsmen + attackerSwordsmen, // if there are units left behind, make sure they stay
+      // archers: updatedOrigin.knights + attackerKnights,
+      // knights: updatedOrigin.archers + attackerArchers,
+      // player: null,
+      // hex_owner: null
+      //////////////////////////////////////////////////////////////
+
+      ////////////////////// IF USING DATABASE /////////////////////
+      ...origHex[0],
+      swordsmen: attackerSwordsmen, // if there are units left behind, make sure they stay
+      archers: attackerKnights,
+      knights: attackerArchers,
+      player: null,
+      hex_owner: null
+      // swordsmen: origHex[0].swordsmen + attackerSwordsmen, // if there are units left behind, make sure they stay
+      // archers: origHex[0].knights + attackerKnights,
+      // knights: origHex[0].archers + attackerArchers,
+      /////////////////////////////////////////////////////////////
     }
-    updatedOrigin.swordsmen + updatedOrigin.archers + updatedOrigin.knights > 0 ? updatedOrigin.player = attackerPlayer : null;
+
+    // console.log('\n+++++++++++++++++++++++++++++++++ updated origin from db:\n', updatedOrigin, '\n+++++++++++++++++++++++++++++++++');
+
+    if (origHex[0].player !== updatedOrigin.player) { // if original player on the hex is not null
+
+      await db.updateHexUnits(updatedOrigin.hex_index, updatedOrigin.swordsmen, updatedOrigin.archers, updatedOrigin.knights, 'player' + origHex[0].player); // update units on hex in the db (for original player/owner of hex)
+
+      await db.switchHexOwner(updatedOrigin.hex_index, null); // then update the hex player/owner in the db with null
+    }
+
+    ////////////////////////////////////// IF USING GAME OBJECT ON SERVER ///////////////////////////////
+    // updatedOrigin.swordsmen + updatedOrigin.archers + updatedOrigin.knights > 0 ? updatedOrigin.player = attackerPlayer : null;
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //////////////////////////////////////// IF USING DATABASE //////////////////////////////////////////
+    if (updatedOrigin.swordsmen + updatedOrigin.archers + updatedOrigin.knights > 0) {
+      updatedOrigin.player = attackerPlayer;
+      updatedOrigin.hex_owner = attackerPlayer;
+
+      await db.switchHexOwner(updatedOrigin.hex_index, 'player' + attackerPlayer);
+
+    } else {
+      updatedOrigin.player = null;
+      updatedOrigin.hex_owner = null;
+
+      await db.switchHexOwner(updatedOrigin.hex_index, null);
+    }
+    
+    let origTarget = await db.getHex(updatedTarget.index); // original target hex from db (returns an object)
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
     updatedTarget = { //
-      ...updatedTarget,
+      /// IF USING GAME OBJECT ON SERVER ///
+      // ...updatedTarget,
+      //////////////////////////////////////
+
+      ///////// IF USING DATABASE //////////
+      ...origTarget[0],
+      //////////////////////////////////////
+
       swordsmen: defenderSwordsmen,
       knights: defenderKnights,
       archers: defenderArchers,
-      player: defenderPlayer
+      player: defenderPlayer,
+      hex_owner: defenderPlayer
     }
+
+    if (origTarget[0].player !== updatedTarget.player) { // if original player on the hex is not the defender
+
+      await db.updateHexUnits(updatedTarget.hex_index, updatedTarget.swordsmen, updatedTarget.archers, updatedTarget.knights, 'player' + origTarget[0].player); // update units on hex in the db (for original player/owner of hex)
+
+      await db.switchHexOwner(updatedTarget.hex_index, 'player' + updatedTarget.player); // then update the hex player/owner in the db with the defender player
+
+    }
+
     flag = 'defender';
   }
+
   /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
   // let masterOrigin = await db.getHex(updatedOrigin.index);
   // await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin);
   /////////////////////////////////////////////////////////////////////////////////////////////
 
-  if (games[gameIndex].playerOneTotalUnits < 0) {
-    games[gameIndex.playerOneTotalUnits] = 0;
-  }
-  if (games[gameIndex].playerTwoTotalUnits < 0) {
-    games[gameIndex.playerTwoTotalUnits] = 0;
-  }
+  ////////// SHOULD NOT BE NEEDED AFTER DB WORKS //////////
+  // if (games[gameIndex].playerOneTotalUnits < 0) {
+  //   games[gameIndex.playerOneTotalUnits] = 0;
+  // }
+  // if (games[gameIndex].playerTwoTotalUnits < 0) {
+  //   games[gameIndex.playerTwoTotalUnits] = 0;
+  // }
+  ////////////////////////////////////////////////////////
+
+  let finalP1Units = 0;
+  let finalP2Units = 0;
+
+  let finalBoard = await db.getGameBoard(room, gameIndex); // get the final game board
+
+  finalBoard.forEach( hex => {
+    if (hex.hex_owner === 1) { // if player 1 owns the hex
+      console.log('\nplayer 1 hex: (swordsmen + archers + knights) ', hex.swordsmen + hex.archers + hex.knights);
+      finalP1Units += hex.swordsmen + hex.archers + hex.knights;
+    } else if (hex.hex_owner === 2) { // if player 2 owns the hex
+      console.log('\nplayer 2 hex: (swordsmen + archers + knights) ', hex.swordsmen + hex.archers + hex.knights);
+      finalP2Units += hex.swordsmen + hex.archers + hex.knights;
+    }
+  });
+
+  console.log('final p1 units: ', finalP1Units);
+  console.log('final p2 units: ', finalP2Units)
+
+  // let finalP1Units = await db.getTotalUnits(gameIndex, room, 'player1');
+  // console.log('\n<<<<<<<<<<<<<<<<<<<<<<<<<<< final p1 units >>>>>>>>>>>>>>>>>>>>>>>>>\n', finalP1Units, '\n');
+  // let finalP2Units = ;
 
   return {
-    gameOver: await checkForWin(games[gameIndex].playerOneTotalUnits, games[gameIndex].playerTwoTotalUnits),
+    /////////////////////////////////// IF USING GAME OBJECT ON SERVER ///////////////////////////////////////////
+    // gameOver: await checkForWin(games[gameIndex].playerOneTotalUnits, games[gameIndex].playerTwoTotalUnits),
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //////////////////////////////////// IF USING DATABASE //////////////////////////////////////////////////////
+    gameOver: await checkForWin(finalP1Units, finalP2Units),
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     updatedOrigin: updatedOrigin,
     updatedTarget: updatedTarget,
     flag: flag
@@ -1050,9 +1312,11 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
   }
   
   if (type === 'archers') { // if buying archers
-    // console.log('LETS BUY SOME ----> ARCHERS');
+    // console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LETS BUY SOME ----> ARCHERS');
     if (player === 'player1') { // for player 1
       if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_wood >= 20) { // check if player has enough resources to purchase unit
+        // console.log('\n[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
+        // console.log('player 1 is buying archers');
   
         await db.buyArchers(room, gameIndex, player); // update units and resources in the db
   
@@ -1074,12 +1338,21 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
+        // console.log('\nRESOURCES AFTER BUYING ARCHERS (PLAYER 1)')
+        // console.log('PLAYER 1 resources:\n', p1Resources);
+        // console.log('\nPLAYER 2 resources:\n', p2Resources);
+        // console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]\n')
+
       } else { // if not enough resources
         // console.log('~~~~~~~~~~~ player 1 too poor to buy ARCHERS');
         io.to(socketId).emit('not enough resources');
       }
     } else if (player === 'player2') { // else same for player 2
       if (currentPlayerResources[0].p2_gold >= 10 && currentPlayerResources[0].p2_wood >= 20) {
+
+        // console.log('\n[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')
+        // console.log('player 2 is buying archers')
+
         await db.buyArchers(room, gameIndex, player);
   
         let p1Resources = await db.getResources(room, gameIndex, 'player1');
@@ -1099,6 +1372,11 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
             metal: p2Resources[0].p2_metal
           }
         });
+
+        // console.log('\nRESOURCES AFTER BUYING ARCHERS (PLAYER 2)')
+        // console.log('PLAYER 1 resources:\n', p1Resources);
+        // console.log('\nPLAYER 2 resources:\n', p2Resources);
+        // console.log('[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]\n')
 
       } else { // if not enough resources
         // console.log('~~~~~~~~~~~ player 2 too poor to buy ARCHERS');
