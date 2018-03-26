@@ -31,7 +31,7 @@ class Login extends React.Component {
     })
       .then(data => {
         console.log('data from login', data);
-        // this.props.login(data.data[0].username);
+        this.props.login(data.data.username);
         this.handleClose();
       })
       .catch(err => {

@@ -23,9 +23,7 @@ module.exports = function (passport) {
     passReqToCallback: true
   },
     async (req, username, password, cb) => {
-      console.log('req.body, username, password:', req.body, username, password);
       const userInfo = await db.checkUserCreds(username);
-      console.log('userInfo:', userInfo);
       if (userInfo.length) {
         let user = userInfo[0];
         bcrypt.compare(password, user.password, (err, res) => {

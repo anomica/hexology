@@ -208,9 +208,12 @@ export const login = (username) => (
   }
 )
 
-export const setPlayer = (player) => (
+export const setLoggedInPlayer = (user1, user2) => (
   {
-    type: 'SET-PLAYER',
-    payload: player
+    type: 'SET-LOGGED-IN-PLAYER',
+    payload: {
+      player1: user1,
+      player2: user2
+    }
   }
 )

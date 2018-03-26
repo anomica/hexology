@@ -244,6 +244,11 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
   })
 
+  socket.on('setLoggedInUser', data => {
+    console.log('data:', data);
+    assignLoggedInUser(data.username, data.player, data.gameIndex, data.room)
+  });
+
   socket.on('move', data => { // move listener
     moveUnits(data, socket); // pass move data and socket to function to assess move
   })
@@ -272,6 +277,16 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     console.log('user disconnected');
   })
 })
+
+const assignLoggedInUser = (username, player, gameIndex, room) => { // need to save to DB 
+  let user;
+  username === null ? user = 'anonymous' : user = username;
+  games[gameIndex][player] = user;
+  io.to(room).emit('setLoggedInUser', { // need to pull from DB here
+    player1: games[gameIndex].player1,
+    player2: games[gameIndex].player2
+  })
+}
 
 const moveUnits = async (data, socket) => {
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW

@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition, 
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
-import { addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -55,9 +55,14 @@ class Board extends React.Component {
         this.props.highlightNeighbors([]); // and neighbors
         this.props.updateUnitCounts(10, 10);
         this.props.switchPlayer('player1');
-        
         console.log('this.state.loggedInUser:', this.props.loggedInUser);
         !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+        socket.emit('setLoggedInUser', {
+          username: this.props.loggedInUser,
+          player: this.props.userPlayer,
+          gameIndex: data.gameIndex,
+          room: data.room
+        })
       });
       socket.on('move', (move) => { // when socket receives result of move request,
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
@@ -76,6 +81,9 @@ class Board extends React.Component {
         }
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
       });
+      socket.on('setLoggedInUser', data => {
+        this.props.setLoggedInPlayer(data.player1, data.player2);
+      })
       socket.on('combat', () => {
         this.setState({ combatModalOpen: true });
         setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
@@ -427,12 +435,14 @@ const mapStateToProps = (state) => {
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
     deployment: state.state.deployment,
-    loggedInUser: state.state.loggedInUser
+    loggedInUser: state.state.loggedInUser,
+    playerOne: state.state.playerOne,
+    playerTwo: state.state.playerTwo
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex }, dispatch);

@@ -172,7 +172,6 @@ const reducers = (state = defaultState, action) => {
       }
     case 'TOGGLE-LOGIN-SIGNUP':
       let type;
-      console.log('type', action.payload)
       action.payload === 'signup' ? type = 'showSignup' 
       : type = 'showLogin';
       return {
@@ -180,16 +179,16 @@ const reducers = (state = defaultState, action) => {
         [type]: !state[type]
       }
     case 'LOGIN':
-      console.log('user:', action.payload);
       return {
         ...state,
         loggedInUser: action.payload
       }
-    case 'SET-PLAYER': 
-
+    case 'SET-LOGGED-IN-PLAYER': 
+      console.log('action.payload:', action.payload);
       return {
         ...state,
-        
+        playerOne: action.payload.player1,
+        playerTwo: action.payload.player2
       }
     default: return state;
 
