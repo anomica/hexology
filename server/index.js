@@ -267,6 +267,9 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('leaveRoom', data => {
     socket.leave(data.room);
+    socket.broadcast.emit('deleteRoom', data.room);
+    room && io.to(room).emit('disconnect');
+    delete io.sockets.adapter.rooms[room];
   })
 
   socket.on('disconnect', () => {

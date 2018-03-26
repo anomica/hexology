@@ -4,7 +4,7 @@ import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
 import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
-import { exitGame, setRoom, resetBoard } from '../../src/actions/actions.js';
+import { exitGame, setRoom, deleteRoom, resetBoard } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
 
 class TopBar extends React.Component {
@@ -24,6 +24,8 @@ class TopBar extends React.Component {
     this.props.exitGame();
     this.props.setRoom(null);
     this.props.resetBoard();
+    this.props.deleteRoom(this.props.room);
+    this.props.socket.emit('disconnect');
     this.props.socket.emit('leaveRoom', { room: this.props.room });
     this.props.history.push('/');
   }
@@ -148,7 +150,7 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ exitGame, setRoom, resetBoard }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, deleteRoom, resetBoard }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TopBar));
