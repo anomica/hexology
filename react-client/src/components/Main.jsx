@@ -35,7 +35,7 @@ class Main extends React.Component {
 
     axios.get('/persistUser')
       .then(data => {
-        // console.log('data from session:', data);
+        console.log('data from session:', data);
       })
       .catch(err => {
         console.log('err from persistUser:', err);

@@ -172,8 +172,9 @@ const reducers = (state = defaultState, action) => {
       }
     case 'TOGGLE-LOGIN-SIGNUP':
       let type;
+      console.log('type', action.payload)
       action.payload === 'signup' ? type = 'showSignup' 
-      : type = 'showLoginlogin';
+      : type = 'showLogin';
       return {
         ...state,
         [type]: !state[type]

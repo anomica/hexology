@@ -53,6 +53,7 @@ class SidebarLeft extends React.Component {
   showLoginOrSignupModal(type) {
     console.log('fired, type', type);
     this.props.toggleLoginSignup(type);
+    setTimeout(() => {console.log('this.state.showLogin', this.state.showLogin)})
   }
 
   handleChange(e, { name, value }) {
@@ -179,7 +180,8 @@ const mapStateToProps = (state) => {
     currentPlayer: state.state.currentPlayer,
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
-    playerTwoResources: state.state.playerTwoResources
+    playerTwoResources: state.state.playerTwoResources,
+    showLogin: state.state.showLogin
   }
 }
 

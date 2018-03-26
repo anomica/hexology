@@ -24,8 +24,8 @@ class Signup extends React.Component {
       password: this.state.password
     })
     .then(data => {
-      // console.log('data from signup:', data);
-      this.props.history.push('/');
+      console.log('data from signup:', data);
+      this.handleClose();
     })
     .catch(err => {
       alert('Username already exists');
