@@ -284,7 +284,7 @@ const getPlayerTotalUnits = async (room, gameIndex, currentPlayer) => {
     return await knex('games')
       .select('p1_total_units')
       .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
-      .then(totalUnits => console.log('\nplayer 1 results yo: ', totalUnits))
+      // .then(totalUnits => console.log('\nplayer 1 results yo: ', totalUnits))
       // should return something like this:
       // [{ p1_total_units: 10 }]
 
@@ -293,7 +293,7 @@ const getPlayerTotalUnits = async (room, gameIndex, currentPlayer) => {
     return await knex('games')
       .select('p2_total_units')
       .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
-      .then(totalUnits => console.log('\nplayer 2 results yo: ', totalUnits))
+      // .then(totalUnits => console.log('\nplayer 2 results yo: ', totalUnits))
       // should return something like this:
       // [{ p2_total_units: 10 }]
   }
@@ -337,6 +337,57 @@ const increasePlayerBank = async (room, gameIndex, currentPlayer, type, quantity
         .increment('p1_knights_bank', quantity)
     }
   }
+}
+
+//////////////// Updates a player's total units in game //////////////////
+const updatePlayerTotalUnits = async (room, gameIndex, currentPlayer, quantity, action) => { // action will be 'increase' or 'replace' or 'subtract'
+  let playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+
+  console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\ninside updating players total units in the db...\n');
+
+  if (playerId === '1') { // if player 1
+    if (action === 'increase') { // if adding to player's total units
+      console.log('\nADDDING units to PLAYER 1 total units in the game...\n');
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .increment('p1_total_units', quantity) // increases the player's units by the quantity
+
+    } else if (action === 'decrease') { // if subtracting units from the player's total units
+      console.log('\nSUBTRACTING units from PLAYER 1 total units in the game...\n');
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .decrement('p1_total_units', quantity) // decreases the player's units by the quantity
+
+    } else if (action === 'replace') { // replace total units
+      console.log('\nREPLACING units from PLAYER 1 total units in the game..\n');
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .update('p1_total_units', quantity) // replaces the player's units by the quantity
+    }
+
+  } else if (playerId === '2') { // else if player 2
+
+    if (action === 'increase') { // if adding to player's total units
+      console.log('\nADDING units to PLAYER 2 total units in the game...\n');
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .increment('p2_total_units', quantity) // increases the player's units by the quantity
+
+    } else if (action === 'decrease') { // if subtracting units from the player's total units
+      console.log('\nSUBTRACTING units from PLAYER 2 total units in the game...\n');
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .decrement('p2_total_units', quantity) // decreases the player's units by the quantity
+
+    } else if (action === 'replace') { // replace total units
+      console.log('\nREPLACING units from PLAYER 1 total units in the game..\n');
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .update('p2_total_units', quantity) // replaces the player's units by the quantity
+    }
+  }
+  console.log('\ntotal units for player has been updated in the db...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
 }
 
 ////////////////// Deploy units from player bank to hex & decrease bank in game //////////////////
@@ -403,37 +454,50 @@ const deployUnits = async (room, hexIndex, gameIndex, type, quantity, currentPla
 
 /////////////////////// Decreases the player bank upon deploying units ///////////////////////
 const decreasePlayerBank = async (room, gameIndex, currentPlayer, type, quantity) => {
+  console.log('\n----------------------------------------------------------------------------\nDECREASING BANK IN GAME\n----------------------------------------------------------------------------\n')
+
   let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
   let roomNum = await room.split('*').join('');
 
   if (player === '1') { // if decreasing bank for player 1
     if (type === 'swordsmen') { // if type is swordsmen for player 1
+      console.log('\n----------------------------------------------------------------------------\nDECREASING PLAYER 1 SWORDSMEN BANK IN GAME\n----------------------------------------------------------------------------\n')
       await knex('games')
         .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
         .decrement('p1_swordsmen_bank', quantity)
     }
     if (type === 'archers') { // if type is archers for player 1
+      console.log('\n----------------------------------------------------------------------------\nDECREASING PLAYER 1 ARCHERS BANK IN GAME\n----------------------------------------------------------------------------\n')
+
       await knex('games')
         .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
         .decrement('p1_archers_bank', quantity)
     }
     if (type === 'knights') { // if type is knights for player 1
+      console.log('\n----------------------------------------------------------------------------\nDECREASING PLAYER 1 KNIGHTS BANK IN GAME\n----------------------------------------------------------------------------\n')
+
       await knex('games')
         .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
         .decrement('p1_knights_bank', quantity)
     }
   } else if (player === '2') { // if decreasing bank for player 2
     if (type === 'swordsmen') { // if type is swordsmen for player 2
+      console.log('\n----------------------------------------------------------------------------\nDECREASING PLAYER 2 SWORDSMEN BANK IN GAME\n----------------------------------------------------------------------------\n')
+
       await knex('games')
-      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
-      .decrement('p2_swordsmen_bank', quantity)
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .decrement('p2_swordsmen_bank', quantity)
     }
     if (type === 'archers') { // if type is archers for player 2
+      console.log('\n----------------------------------------------------------------------------\nDECREASING PLAYER 2 ARCHERS BANK IN GAME\n----------------------------------------------------------------------------\n')
+
       await knex('games')
         .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
         .decrement('p2_archers_bank', quantity)
     }
     if (type === 'knights') { // if type is knights for player 2
+      console.log('\n----------------------------------------------------------------------------\nDECREASING PLAYER 2 KNIGHTS BANK IN GAME\n----------------------------------------------------------------------------\n')
+
       await knex('games')
         .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
         .decrement('p1_knights_bank', quantity)
@@ -700,5 +764,6 @@ module.exports = {
   increasePlayerBank,
   deployUnits,
   decreasePlayerBank,
-  getPlayerBank
+  getPlayerBank,
+  updatePlayerTotalUnits
 };
