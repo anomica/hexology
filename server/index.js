@@ -191,6 +191,8 @@ setInterval(findOpenRooms, 1000);
 io.on('connection', async (socket) => { // initialize socket on user connection
   console.log('User connected');
 
+  let room; // track room that client is in, when they enter a room, to help with disconnect
+
   socket.on('sendEmail', request => {
     let username = request.username;
     let email = request.email;
@@ -201,6 +203,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('newGame', request => {
     let newRoom = `*${roomNum}`;
+    room = newRoom;
     let gameType = request.gameType;
     socket.join(newRoom); // create a new room
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
@@ -212,6 +215,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     await socket.join(data.room);
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
+    room = data.room;
 
     //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
@@ -254,12 +258,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
 
   socket.on('deployUnits', data => {
-    console.log('data:', data);
     verifyBank(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
   })
 
   socket.on('addUnits', data => {
-    console.log('data from addUnits:', data);
     deployUnitsOnHex(data.hexIndex, data.gameIndex, data.unit, data.quantity, data.room)
   });
 
@@ -268,6 +270,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   })
 
   socket.on('disconnect', () => {
+    room && io.to(room).emit('disconnect');
     console.log('user disconnected');
   })
 })
@@ -612,7 +615,7 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
   let originalAttackerArmySize = attackerSwordsmen + attackerKnights + attackerArchers;
   let originalDefenderArmySize = defenderSwordsmen + defenderKnights + defenderArchers;
 
-  attackerArchers && defenderArchers ? attackerKnights -= defenderArchers : null; // first, archers pick off knights from afar
+  attackerKnights && defenderArchers ? attackerKnights -= defenderArchers : null; // first, archers pick off knights from afar
   defenderKnights && attackerArchers ? defenderKnights -= attackerArchers : null;
 
   attackerSwordsmen && defenderKnights ? attackerSwordsmen -= (defenderKnights * 3) : null; // then, knights crash against swordsmen
@@ -710,8 +713,6 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
     };
   }
 
-    // console.log('hiiiiiiiiiiiiiii', defenderArmySize, attackerArmySize);
-
   if (defenderArmySize > attackerArmySize) { // if after initial skirmish, defnder army is bigger
     while (attackerArmySize > 0) { // eliminate all attackers, starting with s, then a, then k
       if (attackerSwordsmen) {
@@ -779,7 +780,7 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
       swordsmen: updatedOrigin.swordsmen + attackerSwordsmen, // if there are units left behind, make sure they stay
       archers: updatedOrigin.knights + attackerKnights,
       knights: updatedOrigin.archers + attackerArchers,
-      player: null
+      player: attackerSwordsmen || attackerArchers || attackerKnights ? attackerPlayer : null
     }
     updatedOrigin.swordsmen + updatedOrigin.archers + updatedOrigin.knights > 0 ? updatedOrigin.player = attackerPlayer : null;
     updatedTarget = { //

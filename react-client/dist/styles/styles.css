@@ -91,6 +91,11 @@ g.knight > g > polygon {
   width: 80%;
 }
 
+.chatIcon {
+  float: right;
+  cursor: pointer;
+}
+
 @media only screen and (min-width: 1800px) {
   .topBar {
     width: 90%;
