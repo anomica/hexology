@@ -10,9 +10,10 @@ const RoomsList = props => {
 
   const joinGame = (room) => {
     props.history.push({
-      pathname: '/game',
+      pathname: `/game/room?${room}`,
       state: {
-        detail: room
+        detail: room,
+        extra: 'join'
       }
     })
   }

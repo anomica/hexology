@@ -1,0 +1,12 @@
+version: '3'
+services:
+    backend:
+        image: node-api
+        ports:
+            - "8000:8000"
+    frontend:
+        image: react-nginx
+        ports:
+            - "8080:8080"
+        depends_on:
+            - backend

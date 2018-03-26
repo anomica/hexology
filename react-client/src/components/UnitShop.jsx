@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Button, Transition, Header, Popup, Image, Modal, Content, Description, Label } from 'semantic-ui-react';
-import { updateResources, swordsmen, archers, knights } from '../../src/actions/actions.js';
+import { Card, Icon, Button, Transition, Header, Popup, Image, Modal, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
+import { updateBank, updateResources, swordsmen, archers, knights } from '../../src/actions/actions.js';
 
 class UnitShop extends React.Component {
   constructor(props) {
@@ -16,11 +16,30 @@ class UnitShop extends React.Component {
     }
   }
 
-  show() {
-    this.setState({ open: true });
+  componentDidMount() {
+    this.props.socket.on('swordsmen', data => {
+      if (this.userPlayer === this.currentPlayer) {
+        this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
+      }
+    });
+    this.props.socket.on('archers', data => {
+      this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
+    });
+    this.props.socket.on('knights', data => {
+      this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
+    });
   }
+
+  show() {
+    this.setState({
+      open: true
+    })
+  }
+
   close() {
-    this.setState({ open: false });
+    this.setState({
+      open: false
+    })
   }
 
   buyUnitsServerRequest(buy) {
@@ -32,8 +51,7 @@ class UnitShop extends React.Component {
     this.props.userPlayer === 'player1' ?
     resources = this.props.playerOneResources :
     resources = this.props.playerTwoResources;
-
-    if (resources.gold >= 10 && resources.metal >= 10) {
+    if (resources.gold >= 10 && resources.metal >= 10 && this.props.userPlayer === this.props.currentPlayer) {
       this.buyUnitsServerRequest({
         type: 'swordsmen',
         room: this.props.room,
@@ -94,40 +112,50 @@ class UnitShop extends React.Component {
   }
 
   render() {
+    let styles = {
+      sidebar: {
+        float: 'right',
+        display: 'block',
+        height: '100%',
+        width: '30%',
+        minWidth: '360px'
+      }
+    }
+
     return (
       <div>
-        <Popup trigger={<Button style={{marginTop: '30px'}} secondary onClick={() => this.show('blurring')}>Unit Store</Button>}>
+        <Popup trigger={<Button style={{ marginTop: '30px' }} secondary onClick={() => this.show('blurring')}>Unit Store</Button>}>
           <Popup.Header>Spend your resources on new units!</Popup.Header>
         </Popup>
 
         <Modal open={this.state.open} className={'unitShop'} size={'small'}
-          style={{textAlign: 'center'}} closeIcon onClose={this.close.bind(this)}>
+          style={{ textAlign: 'center' }} closeIcon onClose={this.close.bind(this)}>
           <Modal.Header>Unit Shop</Modal.Header>
           <Modal.Content>
             <Modal.Description>
               Your Resources: {this.props.userPlayer === 'player1' ?
-              `${this.props.playerOneResources.gold} Gold, ${this.props.playerOneResources.wood} Wood, ${this.props.playerOneResources.metal} Metal` :
-              `${this.props.playerTwoResources.gold} Gold, ${this.props.playerTwoResources.wood} Wood, ${this.props.playerTwoResources.metal} Metal`
-            }
+                `${this.props.playerOneResources.gold} Gold, ${this.props.playerOneResources.wood} Wood, ${this.props.playerOneResources.metal} Metal` :
+                `${this.props.playerTwoResources.gold} Gold, ${this.props.playerTwoResources.wood} Wood, ${this.props.playerTwoResources.metal} Metal`
+              }
             </Modal.Description>
             <Modal.Description>
-              <Transition  animation={'jiggle'} duration={'1000'} visible={this.state.swordsmen}>
+              <Transition animation={'jiggle'} duration={'1000'} visible={this.state.swordsmen}>
                 <Label color='blue' image className={'unitType'} onClick={this.buySwordsmen.bind(this)}>
-                  <Image src="https://png.icons8.com/metro/50/000000/sword.png"/>
+                  <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
                   Swordsmen
                   <Label.Detail>Cost: 10 gold, 10 metal</Label.Detail>
                 </Label>
               </Transition>
               <Transition animation={'jiggle'} duration={'1000'} visible={this.state.archers}>
                 <Label color='green' image className={'unitType'} onClick={this.buyArchers.bind(this)}>
-                  <Image src="https://png.icons8.com/windows/50/000000/archer.png"/>
+                  <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
                   Archer
                   <Label.Detail>Cost: 10 gold, 20 wood</Label.Detail>
                 </Label>
               </Transition>
               <Transition animation={'jiggle'} duration={'1000'} visible={this.state.knights}>
                 <Label color='grey' image className={'unitType'} onClick={this.buyKnights.bind(this)}>
-                  <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>
+                  <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
                   Knight
                   <Label.Detail>Cost: 20 gold, 20 metal, 20 wood</Label.Detail>
                 </Label>
@@ -148,12 +176,13 @@ const mapStateToProps = (state) => {
     playerTwoResources: state.state.playerTwoResources,
     currentPlayer: state.state.currentPlayer,
     userPlayer: state.state.userPlayer,
-    gameIndex: state.state.gameIndex
+    gameIndex: state.state.gameIndex,
+    showUnitShop: state.state.showUnitShop
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ updateResources, swordsmen, archers, knights }, dispatch);
+  return bindActionCreators({ updateBank, swordsmen, archers, knights }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(UnitShop);

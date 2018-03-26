@@ -2,17 +2,19 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Transition, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
-import { setRoom, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
+         Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
+import { addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
-
 import SidebarLeft from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
+import UnitShop from './UnitShop.jsx';
+import UnitBank from './UnitBank.jsx';
 
 class Board extends React.Component {
   constructor(props) {
@@ -22,7 +24,7 @@ class Board extends React.Component {
       modalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://pixabay.com/get/eb37b90e2bf7053ed1584d05fb0938c9bd22ffd41cb3104994f9c970a0/sword-2281334_1280.png',
+      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
       confirmOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
@@ -31,105 +33,111 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-    let socket = this.props.socket;
-    if (this.props.location.state) {
-      socket.emit('joinGame', {
-        room: this.props.location.state.detail
-      });
-      !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
-      this.props.setRoom(this.props.location.state.detail);
-    } else {
-      socket.emit('newGame');
-      !this.props.playerAssigned && this.props.setUserPlayer('player1'); // so for that client, they should be assigned to player 1
-      socket.on('newGame', data => {
-        this.props.setRoom(data.room);
-      })
-    }
-    socket.on('gameCreated', data => {
-      this.props.drawBoard(data.board); // if the server sends an object, it means that the player is player 2
-      this.props.setGameIndex(data.gameIndex); // if so, set game index
-      this.props.selectHex({}); // initialize selected hex
-      this.props.highlightNeighbors([]); // and neighbors
-      this.props.updateUnitCounts(10, 10);
-      this.props.switchPlayer('player1');
-      !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
-    });
-    socket.on('move', (move) => { // when socket receives result of move request,
-      this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
-      if (move.tie) {
-        this.setState({
-          combatModalOpen: true,
+    (async () => {
+      let socket = this.props.socket;
+      if (!this.props.location.state || this.props.location.state.extra === 'join') {
+        if (!socket) {
+          socket = await socketIOClient('http://127.0.0.1:3000');
+          this.props.setSocket(socket);
+        }
+        socket.emit('joinGame', {
+          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]
         });
+        !this.props.playerAssigned && this.props.setUserPlayer('player2');
+        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
+      } else if (this.props.location.state.extra === 'create') {
+        !this.props.playerAssigned && this.props.setUserPlayer('player1');
+      }
+      socket.on('gameCreated', data => {
+        this.props.drawBoard(data.board); // if the server sends an object, it means that the player is player 2
+        this.props.setGameIndex(data.gameIndex); // if so, set game index
+        this.props.selectHex({}); // initialize selected hex
+        this.props.highlightNeighbors([]); // and neighbors
+        this.props.updateUnitCounts(10, 10);
+        this.props.switchPlayer('player1');
+        !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+      });
+      socket.on('move', (move) => { // when socket receives result of move request,
+        this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
+        if (move.tie) {
+          this.setState({
+            combatModalOpen: true,
+          });
+          setTimeout(() => this.setState({
+            combatMessage: 'Combat ends in a bitter draw.',
+            combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
+          }), 2500);
+          setTimeout(() => this.resetCombatModal(), 5001);
+        }
+        if (move.updatedUnitCounts) {
+          this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
+        }
+        this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
+      });
+      socket.on('combat', () => {
+        this.setState({ combatModalOpen: true });
+        setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
+      })
+      this.props.socket.on('updateResources', data => {
+        this.props.updateResources(data.playerOneResources, data.playerTwoResources);
+      })
+      this.props.socket.on('swordsmen', () => {
+        this.props.swordsmen(this.props.currentPlayer);
+      });
+      this.props.socket.on('archers', () => {
+        this.props.archers(this.props.currentPlayer);
+      });
+      this.props.socket.on('knights', () => {
+        this.props.knights(this.props.currentPlayer);
+      });
+      socket.on('combatWin', () => {
         setTimeout(() => this.setState({
-          combatMessage: 'Combat ends in a bitter draw.',
-          combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
+          combatMessage: 'You are victorious!',
+          combatIcon: 'https://royalarmouries.files.wordpress.com/2015/10/di-2015-3939.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
-      }
-      if (move.updatedUnitCounts) {
-        this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
-      }
-      this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
-    });
-    socket.on('combat', () => {
-      this.setState({ combatModalOpen: true });
-      setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
-    })
-    this.props.socket.on('updateResources', data => {
-      this.props.updateResources(data.playerOneResources, data.playerTwoResources);
-    })
-    this.props.socket.on('swordsmen', () => {
-      this.props.swordsmen(this.props.currentPlayer);
-    });
-    this.props.socket.on('archers', () => {
-      this.props.archers(this.props.currentPlayer);
-    });
-    this.props.socket.on('knights', () => {
-      this.props.knights(this.props.currentPlayer);
-    });
-    socket.on('combatWin', () => {
-      setTimeout(() => this.setState({
-        combatMessage: 'You are victorious!',
-        combatIcon: 'https://royalarmouries.files.wordpress.com/2015/10/di-2015-3939.jpg'
-      }), 2500);
-      setTimeout(() => this.resetCombatModal(), 5001);
-    });
-    socket.on('combatLoss', () => {
-      setTimeout(() => this.setState({
-        combatMessage: 'Your armies have been bested.',
-        combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
-      }), 2500);
-      setTimeout(() => this.resetCombatModal(), 5001);
-    })
-    socket.on('tieGame', () => {
-      setTimeout(() => {
-        this.setState({ combatMessage: 'The war has ended in a stalemate. Try again.'});
-      }, 2500);
-      setTimeout(() => this.resetCombatModal(), 5001);
-    })
-    socket.on('winGame', () => {
-      setTimeout(() => this.setState({
-        combatMessage: 'Congratulations! You have won the battle, and the day!',
-        combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
-      }), 2500);
-      setTimeout(() => this.resetCombatModal(), 5001);
-    });
-    socket.on('loseGame', () => {
-      setTimeout(() => this.setState({
-        combatMessage: 'Your armies have been bested, and your enemy is victorious. Better luck next time.',
-        combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
-      }), 2500);
-      setTimeout(() => this.resetCombatModal(), 5001);
-    });
-    socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
-      alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
-    });
+      });
+      socket.on('combatLoss', () => {
+        setTimeout(() => this.setState({
+          combatMessage: 'Your armies have been bested.',
+          combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
+        }), 2500);
+        setTimeout(() => this.resetCombatModal(), 5001);
+      })
+      socket.on('tieGame', () => {
+        setTimeout(() => {
+          this.setState({ combatMessage: 'The war has ended in a stalemate. Try again.'});
+        }, 2500);
+        setTimeout(() => this.resetCombatModal(), 5001);
+      })
+      socket.on('winGame', () => {
+        setTimeout(() => this.setState({
+          combatMessage: 'Congratulations! You have won the battle, and the day!',
+          combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
+        }), 2500);
+        setTimeout(() => this.resetCombatModal(), 5001);
+      });
+      socket.on('loseGame', () => {
+        setTimeout(() => this.setState({
+          combatMessage: 'Your armies have been bested, and your enemy is victorious. Better luck next time.',
+          combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
+        }), 2500);
+        setTimeout(() => this.resetCombatModal(), 5001);
+      });
+      socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
+        alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
+      });
+      socket.on('troopsDeployed', data => {
+        console.log('troops deployed data:', data);
+        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+      })
+    })();
   }
 
   resetCombatModal() {
     this.setState({
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://pixabay.com/get/eb37b90e2bf7053ed1584d05fb0938c9bd22ffd41cb3104994f9c970a0/sword-2281334_1280.png',
+      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
     })
   }
 
@@ -232,6 +240,21 @@ class Board extends React.Component {
     }
   }
 
+  addUnitsToHex(hexIndex, hex) {
+    console.log('this.props.deployment:', this.props.deployment);
+    console.log('hexIndex', hexIndex);
+    console.log('this.props', this.props)
+    this.props.socket.emit('addUnits', {
+      hexIndex: hexIndex,
+      unit: this.props.deployment.unit,
+      player: this.props.userPlayer,
+      quantity: this.props.deployment.quantity,
+      gameIndex: this.props.gameIndex,
+      room: this.props.room,
+      hexLongIndex: hex.index
+    })
+  }
+
   sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex) {
     const move = { // package outputs
       updatedOrigin: updatedOrigin,
@@ -267,12 +290,19 @@ class Board extends React.Component {
     return (
       <div>
         <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
-        <SidebarLeft />
-        <TopBar />
+
+        <Grid>
+          <Grid.Column width={2}>
+            <SidebarLeft />
+          </Grid.Column>
+          <Grid.Column width={16}>
+            <TopBar />
+          </Grid.Column>
+          <Grid.Column width={14}>
         <div className="Board">
           <HexGrid height={800} viewBox="-50 -50 150 150">
             <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
-              {this.props.boardState ? this.props.boardState.map(hex => {
+              {this.props.boardState ? this.props.boardState.map((hex, index) => {
                 let targetClass = '';
                 if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
                   targetClass += 'opponent';
@@ -289,10 +319,18 @@ class Board extends React.Component {
                 } else if (hex.hasMetal) {
                   targetClass += 'metal';
                 }
+                if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
+                  targetClass += ' swordsmen';
+                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archer') {
+                  targetClass += ' archer';
+                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knight') {
+                  targetClass += ' knight';
+                }
                 return <Hexagon
                   key={uuidv4()}
                   className={targetClass}
                   onClick={() => {
+                    this.props.deployment ? this.addUnitsToHex(index, hex) :
                     this.handleClick(hex);
                     this.setState({ hex: hex });
                   }}
@@ -300,10 +338,7 @@ class Board extends React.Component {
                   r={hex.coordinates[1]}
                   s={hex.coordinates[2]}>
                   <Text>
-                    {/*<img src="https://png.icons8.com/metro/50/000000/sword.png"/>*/}
                     {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
-                    {/*<img src="https://png.icons8.com/windows/50/000000/archer.png"/>*/}
-                    {/*<img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>*/}
                   </Text>
                 </Hexagon>
               }): <div></div>}
@@ -327,6 +362,7 @@ class Board extends React.Component {
               })
               this.handleMoveClick(this.state.hex);
             }}/>
+
           <Modal open={this.state.modalOpen} size={'small'}
             style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
             <Modal.Header>Move Troops</Modal.Header>
@@ -346,20 +382,28 @@ class Board extends React.Component {
               <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
             </Modal.Actions>
           </Modal>
-          <Transition animation={'jiggle'} duration={'2500'} visible={this.state.combatModalOpen}>
-            <Modal open={this.state.combatModalOpen} size={'small'} style={{ textAlign: 'center' }}>
-              <Modal.Header>{this.state.combatMessage}</Modal.Header>
-                <Modal.Content>
-                    <Segment>
-                      <Image style={{maxWidth: '400px', margin: 'auto'}} src={this.state.combatIcon}/>
-                    </Segment>
-                </Modal.Content>
-              <Modal.Actions>
-                <Button type='submit' size={'tiny'} onClick={this.skipCombatAnmiation.bind(this)}>Skip</Button>
-              </Modal.Actions>
-            </Modal>
-          </Transition>
         </div>
+          </Grid.Column>
+          <Grid.Column width={2}>
+            {this.props.currentPlayer === this.props.userPlayer ?
+            <UnitBank />
+            : <div></div>
+            }
+          </Grid.Column>
+        </Grid>
+        <Transition animation={'jiggle'} duration={'2500'} visible={this.state.combatModalOpen}>
+          <Modal open={this.state.combatModalOpen} size={'small'} style={{ textAlign: 'center' }}>
+            <Modal.Header>{this.state.combatMessage}</Modal.Header>
+              <Modal.Content>
+                  <Segment>
+                    <Image style={{maxWidth: '400px', margin: 'auto'}} src={this.state.combatIcon}/>
+                  </Segment>
+              </Modal.Content>
+            <Modal.Actions>
+              <Button type='submit' size={'tiny'} onClick={this.skipCombatAnmiation.bind(this)}>Skip</Button>
+            </Modal.Actions>
+          </Modal>
+        </Transition>
       </div>
     );
   }
@@ -377,12 +421,13 @@ const mapStateToProps = (state) => {
     playerAssigned: state.state.playerAssigned,
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
-    playerTwoResources: state.state.playerTwoResources
+    playerTwoResources: state.state.playerTwoResources,
+    deployment: state.state.deployment
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, setPlayerOne, setPlayerTwo }, dispatch);

@@ -249,6 +249,198 @@ const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlay
   }
 }
 
+/////////////////////// Gets bank totals for the specified player from game ///////////////////////
+const getPlayerBank = async (room, gameIndex, currentPlayer) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+
+  if (player === '1') {
+    console.log('\ngetting player 1 bank');
+    return await knex('games')
+      .select('p1_swordsmen_bank', 'p1_archers_bank', 'p1_knights_bank')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      // .then(bank => console.log('player 1 bank yo: ', bank))
+      // should return something like this:
+      // [{ p1_swordsmen_bank: 10, p1_archers_bank: 10, p1_knights_bank: 10 }]
+
+  } else if (player === '2') {
+    console.log('\ngetting player 2 bank');
+    return await knex('games')
+      .select('p2_swordsmen_bank', 'p2_archers_bank', 'p2_knights_bank')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      // .then(bank => console.log('player 2 bank yo: ', bank))
+      // should return something like this:
+      // [{ p2_swordsmen_bank: 10, p2_archers_bank: 10, p2_knights_bank: 10 }]
+  }
+}
+
+/////////////////////// Gets total units on the board for the specified player from game ///////////////////////
+const getPlayerTotalUnits = async (room, gameIndex, currentPlayer) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+
+  if (player === '1') {
+    console.log('\ngetting player 1 total units\n');
+    return await knex('games')
+      .select('p1_total_units')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .then(totalUnits => console.log('\nplayer 1 results yo: ', totalUnits))
+      // should return something like this:
+      // [{ p1_total_units: 10 }]
+
+  } else if (player === '2') {
+    console.log('\ngetting player 2 total units\n');
+    return await knex('games')
+      .select('p2_total_units')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .then(totalUnits => console.log('\nplayer 2 results yo: ', totalUnits))
+      // should return something like this:
+      // [{ p2_total_units: 10 }]
+  }
+}
+
+/////////////////////// Increases the player bank in game upon purchase ///////////////////////
+const increasePlayerBank = async (room, gameIndex, currentPlayer, type, quantity) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+
+  if (player === '1') {
+    if (type === 'swordsmen') {
+      await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .increment('p1_swordsmen_bank', quantity)
+    }
+    if (type === 'archers') {
+      await knex('games')
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .increment('p1_archers_bank', quantity)
+    }
+    if (type === 'knights') {
+      await knex('games')
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .increment('p1_knights_bank', quantity)
+    }
+  } else if (player === '2') {
+    if (type === 'swordsmen') {
+      await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .increment('p2_swordsmen_bank', quantity)
+    }
+    if (type === 'archers') {
+      await knex('games')
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .increment('p2_archers_bank', quantity)
+    }
+    if (type === 'knights') {
+      await knex('games')
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .increment('p1_knights_bank', quantity)
+    }
+  }
+}
+
+////////////////// Deploy units from player bank to hex & decrease bank in game //////////////////
+const deployUnits = async (room, hexIndex, gameIndex, type, quantity, currentPlayer) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let gameId = await getGameId(room, gameIndex); // get game id
+
+  if (player === '1') { // if player 1 is deploying units
+    if (type === 'swordsmen') { // if player 1 is deploying SWORDSMEN
+      await knex('hex')
+        .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
+        .increment('swordsmen', quantity) // increase SWORDSMEN on hex by quantity
+        .then(results => {
+          decreasePlayerBank(room, gameIndex, 'player1', 'swordsmen', quantity); // reduce player 1 SWORDSMEN bank by the quantity
+        })
+    }
+    
+    if (type === 'archers') { // if player 1 is deploying ARCHERS
+      await knex('hex')
+        .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
+        .increment('archers', quantity) // increase ARCHERS on hex by quantity
+        .then(results => {
+          decreasePlayerBank(room, gameIndex, 'player1', 'archers', quantity); // reduce player 1 ARCHERS bank by the quantity
+        })
+    }
+
+    if (type === 'knights') { // if player 1 is deploying KNIGHTS
+      await knex('hex')
+        .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
+        .increment('knights', quantity) // increase KNIGHTS on hex by quantity
+        .then(results => {
+          decreasePlayerBank(room, gameIndex, 'player1', 'knights', quantity); // reduce player 1 KNIGHTS bank by the quantity
+        })
+    }
+  } else if (player === '2') { // if player 2 is deploying units
+    if (type === 'swordsmen') { // if player 2 is deploying SWORDSMEN
+      await knex('hex')
+        .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
+        .increment('swordsmen', quantity) // increase SWORDSMEN on hex by quantity
+        .then(results => {
+          decreasePlayerBank(room, gameIndex, 'player2', 'swordsmen', quantity); // reduce player 2 SWORDSMEN bank by the quantity
+        })
+    }
+    
+    if (type === 'archers') { // if player 2 is deploying ARCHERS
+      await knex('hex')
+        .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
+        .increment('archers', quantity) // increase ARCHERS on hex by quantity
+        .then(results => {
+          decreasePlayerBank(room, gameIndex, 'player2', 'archers', quantity); // reduce player 2 ARCHERS bank by the quantity
+        })
+    }
+
+    if (type === 'knights') { // if player 2 is deploying KNIGHTS
+      await knex('hex')
+        .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
+        .increment('knights', quantity) // increase KNIGHTS on hex by quantity
+        .then(results => {
+          decreasePlayerBank(room, gameIndex, 'player2', 'knights', quantity); // reduce player 2 KNIGHTS bank by the quantity
+        })
+    }
+  }
+}
+
+/////////////////////// Decreases the player bank upon deploying units ///////////////////////
+const decreasePlayerBank = async (room, gameIndex, currentPlayer, type, quantity) => {
+  let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
+  let roomNum = await room.split('*').join('');
+
+  if (player === '1') { // if decreasing bank for player 1
+    if (type === 'swordsmen') { // if type is swordsmen for player 1
+      await knex('games')
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .decrement('p1_swordsmen_bank', quantity)
+    }
+    if (type === 'archers') { // if type is archers for player 1
+      await knex('games')
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .decrement('p1_archers_bank', quantity)
+    }
+    if (type === 'knights') { // if type is knights for player 1
+      await knex('games')
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .decrement('p1_knights_bank', quantity)
+    }
+  } else if (player === '2') { // if decreasing bank for player 2
+    if (type === 'swordsmen') { // if type is swordsmen for player 2
+      await knex('games')
+      .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+      .decrement('p2_swordsmen_bank', quantity)
+    }
+    if (type === 'archers') { // if type is archers for player 2
+      await knex('games')
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .decrement('p2_archers_bank', quantity)
+    }
+    if (type === 'knights') { // if type is knights for player 2
+      await knex('games')
+        .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
+        .decrement('p1_knights_bank', quantity)
+    }
+  }
+}
+
 /////////////////////// Switches player/owner of hex during combat /////////////////////
 const switchHexOwner = async (hexIndex, updatedOwner) => {
   let ownerId = null;
@@ -329,9 +521,9 @@ const buySwordsmen = async (room, gameIndex, currentPlayer) => {
   }
 
   // then find hex that the current player is on
-  await knex('hex')
-    .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
-    .increment('swordsmen', 10) // increases the units on the player's hex + 10
+  // await knex('hex')
+  //   .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
+  //   .increment('swordsmen', 10) // increases the units on the player's hex + 10
 };
 
 const buyArchers = async (room, gameIndex, currentPlayer) => {
@@ -361,9 +553,9 @@ const buyArchers = async (room, gameIndex, currentPlayer) => {
   }
 
   // then find hex that the current player is on
-  await knex('hex')
-    .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
-    .increment('archers', 10) // increases the units on the player's hex + 10
+  // await knex('hex')
+  //   .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
+  //   .increment('archers', 10) // increases the units on the player's hex + 10
 };
 
 const buyKnights = async (room, gameIndex, currentPlayer) => {
@@ -401,9 +593,9 @@ const buyKnights = async (room, gameIndex, currentPlayer) => {
   }
 
   // then find hex that the current player is on
-  await knex('hex')
-    .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
-    .increment('knights', 10) // increases the units on the player's hex + 10
+  // await knex('hex')
+  //   .where(knex.raw(`${player} = player AND ${gameId[0].game_id} = game_id`))
+  //   .increment('knights', 10) // increases the units on the player's hex + 10
 };
 
 /////////////////////// Gets hex based off hex index ///////////////////////
@@ -503,5 +695,10 @@ module.exports = {
   buyArchers,
   buyKnights,
   updateHexUnits,
-  switchHexOwner
+  switchHexOwner,
+  getPlayerTotalUnits,
+  increasePlayerBank,
+  deployUnits,
+  decreasePlayerBank,
+  getPlayerBank
 };

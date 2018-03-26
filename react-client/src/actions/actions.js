@@ -166,3 +166,49 @@ export const setPlayerTwo = (playerTwo) => (
     payload: playerTwo
   }
 )
+export const resetBoard = () => (
+  {
+    type: 'RESET-BOARD'
+  }
+)
+
+export const toggleUnitShop = (toggle) => (
+  {
+    type: 'TOGGLE-UNIT-SHOP',
+    payload: toggle
+  }
+)
+
+export const updateBank = (playerOneUnitBank, playerTwoUnitBank) => (
+  {
+    type: 'UPDATE-BANK',
+    payload: {
+      playerOneUnitBank: playerOneUnitBank,
+      playerTwoUnitBank: playerTwoUnitBank
+    }
+  }
+)
+
+export const deployUnits = (player, unit, quantity, playerOneUnitBank, playerTwoUnitBank) => (
+  {
+    type: 'DEPLOY-UNITS',
+    payload: {
+      player: player,
+      unit: unit,
+      quantity: quantity,
+      playerOneUnitBank: playerOneUnitBank,
+      playerTwoUnitBank: playerTwoUnitBank
+    }
+  }
+)
+
+export const addUnitsToHex = (hex, hexIndex, player) => (
+  {
+    type: 'ADD-UNITS-TO-HEX',
+    payload: {
+      hex: hex,
+      hexIndex: hexIndex,
+      player: player
+    }
+  }
+)
