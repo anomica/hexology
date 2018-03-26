@@ -4,7 +4,7 @@ import { bindActionCreators } from 'redux';
 import { Segment, Image, Feed, Label, Button } from 'semantic-ui-react';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
-import { newRoom } from '../../src/actions/actions.js';
+import { newRoom, deleteRoom } from '../../src/actions/actions.js';
 
 const RoomsList = props => {
 
@@ -23,6 +23,9 @@ const RoomsList = props => {
     if (socket) {
       socket.on('newRoom', (room) => {
         props.newRoom(room);
+      })
+      socket.on('deleteRoom', (room) => {
+        props.deleteRoom(room);
       })
     }
   }
@@ -65,7 +68,7 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ newRoom }, dispatch);
+  return bindActionCreators({ newRoom, deleteRoom }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(RoomsList));

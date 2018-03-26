@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition, 
+import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
 import { setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
@@ -15,6 +15,7 @@ import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
 import UnitBank from './UnitBank.jsx';
+import ChatWindow from './ChatWindow.jsx';
 
 class Board extends React.Component {
   constructor(props) {
@@ -24,8 +25,9 @@ class Board extends React.Component {
       modalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://pixabay.com/get/eb37b90e2bf7053ed1584d05fb0938c9bd22ffd41cb3104994f9c970a0/sword-2281334_1280.png',
+      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
       confirmOpen: false,
+      disconnectModalOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
       tempKnights: 0
@@ -100,6 +102,10 @@ class Board extends React.Component {
       this.props.socket.on('knights', () => {
         this.props.knights(this.props.currentPlayer);
       });
+      socket.on('troopsDeployed', data => {
+        console.log('data:', data);
+        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+      })
       socket.on('combatWin', () => {
         setTimeout(() => this.setState({
           combatMessage: 'You are victorious!',
@@ -137,9 +143,9 @@ class Board extends React.Component {
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
-      socket.on('troopsDeployed', data => {
-        console.log('data:', data);
-        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+      socket.on('disconnect', () => {
+        this.setState({ disconnectModalOpen: true });
+        setTimeout(() => this.props.history.push('/'), 4000);
       })
     })();
   }
@@ -147,7 +153,7 @@ class Board extends React.Component {
   resetCombatModal() {
     this.setState({
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://pixabay.com/get/eb37b90e2bf7053ed1584d05fb0938c9bd22ffd41cb3104994f9c970a0/sword-2281334_1280.png',
+      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
     })
   }
 
@@ -347,10 +353,7 @@ class Board extends React.Component {
                   r={hex.coordinates[1]}
                   s={hex.coordinates[2]}>
                   <Text>
-                    <img src="https://png.icons8.com/metro/50/000000/sword.png"/>
                     {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
-                    <img src="https://png.icons8.com/windows/50/000000/archer.png"/>
-                    <img src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png"/>
                   </Text>
                 </Hexagon>
               }): <div></div>}
@@ -374,7 +377,7 @@ class Board extends React.Component {
               })
               this.handleMoveClick(this.state.hex);
             }}/>
-          
+
           <Modal open={this.state.modalOpen} size={'small'}
             style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
             <Modal.Header>Move Troops</Modal.Header>
@@ -394,9 +397,10 @@ class Board extends React.Component {
               <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
             </Modal.Actions>
           </Modal>
-        </div> 
+        </div>
           </Grid.Column>
           <Grid.Column width={2}>
+            <ChatWindow/>
             {this.props.currentPlayer === this.props.userPlayer ?
             <UnitBank />
             : <div></div>
@@ -414,6 +418,14 @@ class Board extends React.Component {
             <Modal.Actions>
               <Button type='submit' size={'tiny'} onClick={this.skipCombatAnmiation.bind(this)}>Skip</Button>
             </Modal.Actions>
+          </Modal>
+        </Transition>
+        <Transition animation={'fade up'} duration={'3500'} visible={this.state.disconnectModalOpen}>
+          <Modal open={this.state.disconnectModalOpen} size={'small'} style={{ textAlign: 'center' }}>
+            <Modal.Header>Your opponent has left the room.</Modal.Header>
+            <Modal.Content>
+              You are being rerouted to the lobby.
+            </Modal.Content>
           </Modal>
         </Transition>
       </div>

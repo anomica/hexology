@@ -25,6 +25,15 @@ const reducers = (state = defaultState, action) => {
         ...state,
         room: action.payload
       }
+    case 'DELETE-ROOM':
+      let newRooms = Object.create(state.rooms);
+      delete newRooms[action.payload]
+      return {
+        ...state,
+        rooms: {
+          ...newRooms
+        }
+      }
     case 'MENU-TOGGLE':
       return {
         ...state,
@@ -33,7 +42,39 @@ const reducers = (state = defaultState, action) => {
     case 'EXIT-GAME':
       return {
         ...state,
-        room: null
+        room: null,
+        socket: null,
+      }
+    case 'RESET-BOARD':
+      return {
+        ...state,
+        playerOne: undefined,
+        playerTwo: undefined,
+        playerOneTotalUnits: 10,
+        playerTwoTotalUnits: 10,
+        playerOneResources: {},
+        playerTwoResources: {},
+        playerOneUnitBank: {
+            swordsmen: 0,
+            knight: 0,
+            archer: 0
+        },
+        playerTwoUnitBank: {
+            swordsmen: 0,
+            knight: 0,
+            archer: 0
+        },
+        playerAssigned: false,
+        userPlayer: undefined,
+        currentPlayer: 'player1',
+        gameIndex: null,
+        selectedHex: {},
+        boardState: null,
+        winner: null,
+        neighbors: [],
+        menuVisible: true,
+        showUnitShop: false,
+        deployment: null
       }
     case 'SELECT-HEX': // select hex on user click
       return {

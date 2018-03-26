@@ -63,15 +63,15 @@ g.metal > g > polygon {
   fill: gray;
 }
 
-g.swordsmen > g > polygon {
+g.swordsmen > g > polygon, g.swordsmen > g > text {
   cursor: url(https://png.icons8.com/metro/50/000000/sword.png), auto;
 }
 
-g.archer > g > polygon {
+g.archer > g > polygon, g.archer > g > text {
   cursor: url(https://png.icons8.com/windows/50/000000/archer.png), auto;
 }
 
-g.knight > g > polygon {
+g.knight > g > polygon, g.knight > g > text {
   cursor: url(https://png.icons8.com/ios/50/000000/knight-shield-filled.png), auto;
 }
 
@@ -89,6 +89,12 @@ g.knight > g > polygon {
 .topBar {
   display: block;
   width: 80%;
+}
+
+.chatIcon {
+  display: inline;
+  float: right;
+  cursor: pointer;
 }
 
 @media only screen and (min-width: 1800px) {

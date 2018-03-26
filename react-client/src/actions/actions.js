@@ -28,6 +28,13 @@ export const newRoom = (room) => (
   }
 )
 
+export const deleteRoom = (room) => (
+  {
+    type: 'DELETE-ROOM',
+    payload: room
+  }
+)
+
 export const menuToggle = () => (
   {
     type: 'MENU-TOGGLE'
@@ -150,6 +157,12 @@ export const setGameIndex = (gameIndex) => (
   {
     type: 'SET-GAME-INDEX',
     payload: gameIndex
+  }
+)
+
+export const resetBoard = () => (
+  {
+    type: 'RESET-BOARD'
   }
 )
 
