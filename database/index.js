@@ -225,13 +225,10 @@ const updateHexOwner = async (hexIndex, player) => { // NOTE: Player comes in as
 }
 
 /////////////////////// Updates the units on the hex upon combat ///////////////////////
-const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlayer) => {
-  // console.log('\n~~~~~~~~~~~~~~~~~~~~~ UPDATING HEX UNITS DURING COMBAT IN DB ~~~~~~~~~~~~~~~~~~~~~\n');
-  
-  let playerId;
+const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlayer) => {  
+  let playerId = null;
 
-  if (currentPlayer) { // if current player exists from server req
-    // console.log('player exists')
+  if (currentPlayer !== null) { // if current player exists from server req
     playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with user id eventually
     await knex('hex')
       .where(knex.raw(`'${hexIndex}' = hex_index AND ${Number(playerId)} = player`))
@@ -240,10 +237,7 @@ const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlay
         archers: archers,
         knights: knights
       })
-
   } else { // if player from server needs to be removed
-    // console.log('\n~~~~~~~~~ player is NULL ~~~~~~~~~\n')
-    playerId = null;
     await knex('hex')
       .where(knex.raw(`'${hexIndex}' = hex_index`))
       .update({
@@ -253,8 +247,6 @@ const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlay
         knights: knights
       })
   }
-
-  // console.log('\n~~~~~~~~~~~~~~~~~~~~~~~ SUCCESS UPDATING HEX UNITS IN DB YASSS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
 }
 
 /////////////////////// Switches player/owner of hex during combat /////////////////////
@@ -264,8 +256,6 @@ const switchHexOwner = async (hexIndex, updatedOwner) => {
   if (updatedOwner) { // if there is an owner to be updated
     ownerId = await updatedOwner[updatedOwner.length - 1]; // update with the owner id
   }
-
-  // console.log('\n~~~~~~~~~~ switching the owner of the hex ~~~~~~~~~~~~ \n');
 
   await knex('hex')
     .where(knex.raw(`'${hexIndex}' = hex_index`))
