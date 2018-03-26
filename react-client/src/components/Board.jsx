@@ -387,9 +387,9 @@ class Board extends React.Component {
             </Modal.Actions>
           </Modal>
         </div>
-          <ChatWindow/>
           </Grid.Column>
           <Grid.Column width={2}>
+            <ChatWindow/>
             {this.props.currentPlayer === this.props.userPlayer ?
             <UnitBank />
             : <div></div>

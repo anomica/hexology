@@ -199,7 +199,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let message = request.message;
     let room = request.room;
     emailHandler.sendEmail(username, email, room, message);
-  })
+  });
 
   socket.on('newGame', request => {
     let newRoom = `*${roomNum}`;
@@ -209,7 +209,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
     gameType === 'public' && socket.broadcast.emit('newRoom', { roomName: newRoom, room: io.sockets.adapter.rooms[newRoom] });
     roomNum++; // increment room count to assign new ro
-  })
+  });
 
   socket.on('joinGame', async (data) => {
     await socket.join(data.room);
@@ -245,24 +245,36 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
-  })
+  });
 
   socket.on('move', data => { // move listener
     moveUnits(data, socket); // pass move data and socket to function to assess move
-  })
+  });
 
   socket.on('buy', data => {
-    console.log('buy:', data);
     buyUnits(data.type, data.player, data.gameIndex, data.socketId, data.room);
-  })
+  });
 
 
   socket.on('deployUnits', data => {
     verifyBank(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
-  })
+  });
 
   socket.on('addUnits', data => {
     deployUnitsOnHex(data.hexIndex, data.gameIndex, data.unit, data.quantity, data.room)
+  });
+
+  socket.on('initMessages', async (data) => {
+    let messageHistory;
+    io.to(data.room).emit('getHistory');
+    socket.on('sendHistory', data => {
+      console.log(data);
+      io.to(room).emit('messageHistory', { messageHistory: data.messageHistory });
+    })
+  })
+
+  socket.on('sendMessage', (request) => {
+    io.to(room).emit('newMessage', request);
   });
 
   socket.on('leaveRoom', data => {
@@ -270,12 +282,12 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     socket.broadcast.emit('deleteRoom', data.room);
     room && io.to(room).emit('disconnect');
     delete io.sockets.adapter.rooms[room];
-  })
+  });
 
   socket.on('disconnect', () => {
     room && io.to(room).emit('disconnect');
     console.log('user disconnected');
-  })
+  });
 })
 
 const moveUnits = async (data, socket) => {
