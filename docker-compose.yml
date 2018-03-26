@@ -1,12 +1,17 @@
 version: '3'
 services:
-    backend:
+    web:
         image: node-api
         ports:
-            - "8000:8000"
-    frontend:
-        image: react-nginx
-        ports:
             - "8080:8080"
-        depends_on:
-            - backend
+        restart_policy:
+          condition: on-failure
+        deploy:
+          replicas: 5
+    db: 
+        image: mysql
+        restart: always
+        environment:
+        MYSQL_ROOT_PASSWORD: example
+        ports:
+            - "3306":"3306"

@@ -170,6 +170,14 @@ const reducers = (state = defaultState, action) => {
         deployment: null,
         [playerUnits]: state[playerUnits] += 10
       }
+    case 'TOGGLE-LOGIN-SIGNUP':
+      let type;
+      action.payload === 'signup' ? type = 'showSignup' 
+      : type = 'showLoginlogin';
+      return {
+        ...state,
+        [type]: !state[type]
+      }
       
     default: return state;
   }

@@ -1,10 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
+import { toggleLoginSignup } from '../../src/actions/actions.js';
+import { bindActionCreators } from 'redux';
+import { toggleLoginSignup } from '../../src/actions/actions.js';
 
-const Login = props => {
+class Login extends React.Component {
   return (
-    <Modal defaultOpen={true} closeIcon>
+    <Modal open={props.showLogin} closeIcon>
       <Modal.Header>Login</Modal.Header>
       <Modal.Content>
         <Modal.Description>
@@ -28,8 +31,12 @@ const Login = props => {
 
 const mapStateToProps = (state) => {
   return {
-
+    showLogin: state.state.showLogin
   }
 }
 
-export default connect(mapStateToProps, null)(Login);
+const mapDispatchToProps = (dispatch) => {
+  return bindActionCreators({ toggleLoginSignup }, dispatch);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Login);

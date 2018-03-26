@@ -193,3 +193,10 @@ export const addUnitsToHex = (hex, hexIndex, player) => (
     }
   }
 )
+
+export const toggleLoginSignup = (type) => (
+  {
+    type: 'TOGGLE-LOGIN-SIGNUP',
+    payload: type
+  }
+)

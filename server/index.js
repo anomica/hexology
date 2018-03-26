@@ -255,8 +255,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('deployUnits', data => {
     console.log('data:', data);
-    verifyBank(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
-  })
+    verifyBankSubtractUnits(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
+  })  
 
   socket.on('addUnits', data => {
     console.log('data from addUnits:', data);
@@ -465,7 +465,7 @@ const moveUnits = async (data, socket) => {
   }
 };
 
-const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // verify purchase & update player bank
+const verifyBankSubtractUnits = async(player, unit, quantity, bank, gameIndex, room) => { // verify purchase & update player bank
   if (player === 'player1' && games[gameIndex].playerOneUnitBank[unit] === bank) {
     games[gameIndex].playerOneUnitBank[unit] = games[gameIndex].playerOneUnitBank[unit] - quantity;
     io.to(room).emit('deployUnits', {
@@ -575,9 +575,6 @@ const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarge
 
 const deployUnitsOnHex = async (hexIndex, gameIndex, unit, quantity, room) => { // updates a single hex with deployed troops from bank
   games[gameIndex].board[hexIndex][unit] = games[gameIndex].board[hexIndex][unit] + quantity; // need to update DB here
-  let bank;
-  games[gameIndex].board[hexIndex].player === 'player1' ? bank = games[gameIndex].playerOneUnitBank
-  : bank = games[gameIndex].playerTwoUnitBank;
   io.to(room).emit('troopsDeployed', {
     hex: games[gameIndex].board[hexIndex],
     hexIndex: hexIndex
@@ -1168,7 +1165,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
     if (resources.gold >= 10 && resources.metal >= 10) {
       resources.gold -= 10;
       resources.metal -= 10;
-      bank.swordsmen += 10;
+      bank.swordsmen += 10; 
       game[unitCount] += 10;
       io.to(room).emit('swordsmen', {
         playerOneUnitBank: game.playerOneUnitBank,
