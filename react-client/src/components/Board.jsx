@@ -15,6 +15,7 @@ import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
 import UnitBank from './UnitBank.jsx';
+import ChatWindow from './ChatWindow.jsx';
 
 class Board extends React.Component {
   constructor(props) {
@@ -26,6 +27,7 @@ class Board extends React.Component {
       combatMessage: 'May the strongest prevail!',
       combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
       confirmOpen: false,
+      disconnectModalOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
       tempKnights: 0
@@ -90,6 +92,10 @@ class Board extends React.Component {
       this.props.socket.on('knights', () => {
         this.props.knights(this.props.currentPlayer);
       });
+      socket.on('troopsDeployed', data => {
+        console.log('data:', data);
+        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+      })
       socket.on('combatWin', () => {
         setTimeout(() => this.setState({
           combatMessage: 'You are victorious!',
@@ -127,9 +133,9 @@ class Board extends React.Component {
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
-      socket.on('troopsDeployed', data => {
-        console.log('data:', data);
-        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+      socket.on('disconnect', () => {
+        this.setState({ disconnectModalOpen: true });
+        setTimeout(() => this.props.history.push('/'), 4000);
       })
     })();
   }
@@ -383,6 +389,7 @@ class Board extends React.Component {
         </div>
           </Grid.Column>
           <Grid.Column width={2}>
+            <ChatWindow/>
             {this.props.currentPlayer === this.props.userPlayer ?
             <UnitBank />
             : <div></div>
@@ -400,6 +407,14 @@ class Board extends React.Component {
             <Modal.Actions>
               <Button type='submit' size={'tiny'} onClick={this.skipCombatAnmiation.bind(this)}>Skip</Button>
             </Modal.Actions>
+          </Modal>
+        </Transition>
+        <Transition animation={'fade up'} duration={'3500'} visible={this.state.disconnectModalOpen}>
+          <Modal open={this.state.disconnectModalOpen} size={'small'} style={{ textAlign: 'center' }}>
+            <Modal.Header>Your opponent has left the room.</Modal.Header>
+            <Modal.Content>
+              You are being rerouted to the lobby.
+            </Modal.Content>
           </Modal>
         </Transition>
       </div>

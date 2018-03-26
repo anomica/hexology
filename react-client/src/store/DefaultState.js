@@ -1,4 +1,5 @@
 const DefaultState = {
+  username: 'Anonymous',
   playerOne: undefined,
   playerTwo: undefined,
   playerOneTotalUnits: 10,

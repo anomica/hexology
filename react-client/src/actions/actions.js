@@ -28,6 +28,13 @@ export const newRoom = (room) => (
   }
 )
 
+export const deleteRoom = (room) => (
+  {
+    type: 'DELETE-ROOM',
+    payload: room
+  }
+)
+
 export const menuToggle = () => (
   {
     type: 'MENU-TOGGLE'
