@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
 import { withRouter } from 'react-router';
 import { bindActionCreators } from 'redux';
-import { toggleLoginSignup } from '../../src/actions/actions.js';
+import { toggleLoginSignup, login } from '../../src/actions/actions.js';
 
 
 class Signup extends React.Component {
@@ -24,7 +24,9 @@ class Signup extends React.Component {
       password: this.state.password
     })
     .then(data => {
-      console.log('data from signup:', data);
+      console.log('data.username from signup:', data.data[0].username);
+      this.props.login(data.data[0].username);
+      let context = this;
       this.handleClose();
     })
     .catch(err => {
@@ -82,12 +84,13 @@ class Signup extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-    showSignup: state.state.showSignup
+    showSignup: state.state.showSignup,
+    loggedInUser: state.state.loggedInUser
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ toggleLoginSignup }, dispatch);
+  return bindActionCreators({ toggleLoginSignup, login }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Signup);

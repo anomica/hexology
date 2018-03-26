@@ -19,8 +19,11 @@ module.exports = function (passport) {
   });
 
   // LOCAL LOGIN STRATEGY
-  passport.use('local-login', new LocalStrategy( 
-    async (username, password, cb) => {
+  passport.use('local-login', new LocalStrategy({
+    passReqToCallback: true
+  },
+    async (req, username, password, cb) => {
+      console.log('req.body, username, password:', req.body, username, password);
       const userInfo = await db.checkUserCreds(username);
       console.log('userInfo:', userInfo);
       if (userInfo.length) {

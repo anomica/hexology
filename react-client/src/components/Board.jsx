@@ -55,6 +55,8 @@ class Board extends React.Component {
         this.props.highlightNeighbors([]); // and neighbors
         this.props.updateUnitCounts(10, 10);
         this.props.switchPlayer('player1');
+        
+        console.log('this.state.loggedInUser:', this.props.loggedInUser);
         !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
       });
       socket.on('move', (move) => { // when socket receives result of move request,
@@ -240,7 +242,7 @@ class Board extends React.Component {
     }
   }
 
-  addUnitsToHex(hexIndex) {
+  addUnitsToHex(hexIndex, hex) {
     console.log('this.props.deployment:', this.props.deployment);
     console.log('hexIndex', hexIndex);
     this.props.socket.emit('addUnits', {
@@ -249,7 +251,8 @@ class Board extends React.Component {
       player: this.props.userPlayer,
       quantity: this.props.deployment.quantity,
       gameIndex: this.props.gameIndex,
-      room: this.props.room
+      room: this.props.room,
+      hexId: hex.index
     })
   }
 
@@ -328,7 +331,7 @@ class Board extends React.Component {
                   key={uuidv4()}
                   className={targetClass}
                   onClick={() => {
-                    this.props.deployment ? this.addUnitsToHex(index) :
+                    this.props.deployment ? this.addUnitsToHex(index, hex) :
                     this.handleClick(hex);
                     this.setState({ hex: hex });
                   }}
@@ -423,7 +426,8 @@ const mapStateToProps = (state) => {
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
-    deployment: state.state.deployment
+    deployment: state.state.deployment,
+    loggedInUser: state.state.loggedInUser
   }
 }
 

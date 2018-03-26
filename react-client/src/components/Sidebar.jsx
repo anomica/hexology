@@ -181,7 +181,8 @@ const mapStateToProps = (state) => {
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
-    showLogin: state.state.showLogin
+    showLogin: state.state.showLogin,
+    loggedInUser: state.state.loggedInUser
   }
 }
 

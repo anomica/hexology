@@ -200,3 +200,17 @@ export const toggleLoginSignup = (type) => (
     payload: type
   }
 )
+
+export const login = (username) => (
+  {
+    type: 'LOGIN',
+    payload: username
+  }
+)
+
+export const setPlayer = (player) => (
+  {
+    type: 'SET-PLAYER',
+    payload: player
+  }
+)

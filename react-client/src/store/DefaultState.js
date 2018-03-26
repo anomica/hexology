@@ -27,7 +27,8 @@ const DefaultState = {
   showUnitShop: false,
   deployment: null,
   showLogin: false,
-  showSignup: false
+  showSignup: false,
+  loggedInUser: null
 }
 
 export default DefaultState;

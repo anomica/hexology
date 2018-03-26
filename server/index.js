@@ -55,6 +55,7 @@ app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
 });
 
 app.post('/login', passport.authenticate('local-login'), (req, res) => {
+  console.log('in login in server');
   res.status(201).json(req.user);
 });
 

@@ -179,8 +179,20 @@ const reducers = (state = defaultState, action) => {
         ...state,
         [type]: !state[type]
       }
-      
+    case 'LOGIN':
+      console.log('user:', action.payload);
+      return {
+        ...state,
+        loggedInUser: action.payload
+      }
+    case 'SET-PLAYER': 
+
+      return {
+        ...state,
+        
+      }
     default: return state;
+
   }
 }
 

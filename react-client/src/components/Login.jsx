@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import axios from 'axios';
 import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
-import { toggleLoginSignup } from '../../src/actions/actions.js';
+import { toggleLoginSignup, login } from '../../src/actions/actions.js';
 
 class Login extends React.Component {
   constructor(props) {
@@ -18,13 +18,20 @@ class Login extends React.Component {
     this.props.toggleLoginSignup('login');
   }
 
+  handleChange(e, name) {
+    this.setState({
+      [name]: e.target.value
+    })
+  }
+
   handleSubmit() {
     axios.post('/login', {
       username: this.state.username,
       password: this.state.password
     })
       .then(data => {
-        console.log('data from signup:', data);
+        console.log('data from login', data);
+        // this.props.login(data.data[0].username);
         this.handleClose();
       })
       .catch(err => {
@@ -43,9 +50,13 @@ class Login extends React.Component {
             <Form.Input
               label='Username'
               type='text'
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => this.handleChange(e, 'username')}
             />
-            <Form.Input label='Password' type='password' />
+            <Form.Input 
+              label='Password' 
+              type='password' 
+              onChange={(e) => this.handleChange(e, 'password')}
+            />
             <Button
               onClick={this.handleSubmit.bind(this)}
               type='submit'
@@ -65,7 +76,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ toggleLoginSignup }, dispatch);
+  return bindActionCreators({ toggleLoginSignup, login }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Login);
