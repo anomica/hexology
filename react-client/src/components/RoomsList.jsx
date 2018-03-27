@@ -4,7 +4,7 @@ import { bindActionCreators } from 'redux';
 import { Segment, Image, Feed, Label, Button } from 'semantic-ui-react';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
-import { newRoom, deleteRoom } from '../../src/actions/actions.js';
+import { updateRoom, newRoom, deleteRoom } from '../../src/actions/actions.js';
 
 const RoomsList = props => {
 
@@ -27,8 +27,9 @@ const RoomsList = props => {
       socket.on('deleteRoom', (room) => {
         props.deleteRoom(room);
       })
-      socket.on('updateRoom', (data) => {
-        props.rooms[data.room] ? props.rooms[data.room].player2 = data.player2 : null;
+      socket.on('updateRoom', (room) => {
+        console.log('data from updateRoom:', room);
+        props.updateRoom(room);
       })
     }
   }
@@ -41,10 +42,9 @@ const RoomsList = props => {
         <h1>Welcome to Hexology</h1>
         <h3>Currently Open Rooms: </h3>
         {Object.keys(props.rooms).map((roomName, id) => {
-          console.log('roomName:', roomName);
           let room = props.rooms[roomName];
-          console.log('room.room', room.room);
-          // console.log('room in render:', room);
+          console.log('room in render:', room)
+          console.log('room.room in render:', room.room);
           return (
             <Feed key={id}>
               <Feed.Content>
@@ -52,9 +52,9 @@ const RoomsList = props => {
                 <Feed.Meta>Player1: {' ' + room.player1}</Feed.Meta>
                 <Feed.Meta>Player2: {room.player2 ? ' ' + room.player2 : ' not yet assigned'}</Feed.Meta>
               </Feed.Content>
-              {room.room.length === 1 ?
+              {room.room.length === 1?
                 <Button onClick={() => joinGame(roomName)} color="green">Join Game</Button> :
-                <Button color="red" disabled>Game Full</Button>
+                <Button color="red" onClick={() => joinGame(roomName)}>Game Full - Watch Game</Button>
               }
             </Feed>
           )
@@ -75,7 +75,7 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ newRoom, deleteRoom }, dispatch);
+  return bindActionCreators({ newRoom, deleteRoom, updateRoom }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(RoomsList));

@@ -30,6 +30,16 @@ export const newRoom = (room) => (
   }
 )
 
+export const updateRoom = (room) => (
+  {
+    type: 'UPDATE-ROOM',
+    payload: {
+      roomName: room.roomName,
+      player2: room.player2
+    }
+  }
+)
+
 export const deleteRoom = (room) => (
   {
     type: 'DELETE-ROOM',

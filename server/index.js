@@ -221,7 +221,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let gameIndex = uuidv4();
     room = data.room;
     
-    io.broadcast.emit('updateRoom', {
+    socket.broadcast.emit('updateRoom', {
       room: data.room,
       player2: data.username
     })

@@ -18,6 +18,18 @@ const reducers = (state = defaultState, action) => {
           }
         }
       }
+    case 'UPDATE-ROOM':
+    console.log('action.payload:', action.payload);
+      return {
+        ...state,
+        rooms: {
+          ...state.rooms,
+          [action.payload.roomName]: {
+            ...state.rooms[action.payload.roomName],
+            player2: action.payload.player2
+          }
+        }
+      }
     case 'SET-SOCKET':
       return {
         ...state,
