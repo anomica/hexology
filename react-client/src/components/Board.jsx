@@ -43,7 +43,8 @@ class Board extends React.Component {
           this.props.setSocket(socket);
         }
         socket.emit('joinGame', {
-          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]
+          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
+          username: this.props.loggedInUser
         });
         !this.props.playerAssigned && this.props.setUserPlayer('player2');
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);

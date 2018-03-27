@@ -207,7 +207,11 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let gameType = request.gameType;
     socket.join(newRoom); // create a new room
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
-    gameType === 'public' && socket.broadcast.emit('newRoom', { roomName: newRoom, room: io.sockets.adapter.rooms[newRoom] });
+    gameType === 'public' && socket.broadcast.emit('newRoom', { 
+      roomName: newRoom, 
+      room: io.sockets.adapter.rooms[newRoom],
+      player1: request.username
+     });
     roomNum++; // increment room count to assign new ro
   });
 
@@ -216,7 +220,11 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
     room = data.room;
-
+    
+    io.broadcast.emit('updateRoom', {
+      room: data.room,
+      player2: data.username
+    })
     //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
@@ -239,7 +247,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       gameIndex: gameIndex,
       room: room
     }
-
+    
     /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
     // await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
     /////////////////////////////////////////////////////////////////////////////////////////////

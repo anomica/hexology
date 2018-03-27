@@ -27,6 +27,9 @@ const RoomsList = props => {
       socket.on('deleteRoom', (room) => {
         props.deleteRoom(room);
       })
+      socket.on('updateRoom', (data) => {
+        props.rooms[data.room] ? props.rooms[data.room].player2 = data.player2 : null;
+      })
     }
   }
 
