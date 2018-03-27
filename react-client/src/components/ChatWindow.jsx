@@ -39,9 +39,11 @@ class ChatWindow extends React.Component {
   }
 
   submitMessage() {
+    let username;
+    this.props.loggedInUser ? username = this.props.loggedInUser : username = 'anonymous';
     this.props.socket.emit('sendMessage', {
       message: this.state.message,
-      username: this.props.username,
+      username: username,
       socketId: this.props.socket.id
     });
     this.setState({ message: '' })
@@ -121,7 +123,7 @@ const mapStateToProps = state => {
   return {
     socket: state.state.socket,
     room: state.state.room,
-    username: state.state.username
+    loggedInUser: state.state.loggedInUser
   }
 }
 
