@@ -99,6 +99,7 @@ class Board extends React.Component {
         this.props.archers(this.props.currentPlayer);
       });
       this.props.socket.on('knights', () => {
+        console.log('socket on knights: ', this.props)
         this.props.knights(this.props.currentPlayer);
       });
       socket.on('troopsDeployed', data => {
@@ -332,10 +333,10 @@ class Board extends React.Component {
                 }
                 if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
                   targetClass += ' swordsmen';
-                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archer') {
-                  targetClass += ' archer';
-                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knight') {
-                  targetClass += ' knight';
+                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archers') {
+                  targetClass += ' archers';
+                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knights') {
+                  targetClass += ' knights';
                 }
                 return <Hexagon
                   key={uuidv4()}
@@ -450,7 +451,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, setPlayerOne, setPlayerTwo }, dispatch);
