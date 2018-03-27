@@ -96,7 +96,7 @@ class ChatWindow extends React.Component {
                   })}
                 </Segment>
                 <TextArea
-                  style={{height: '40px', overflowY: 'scroll', border: '1px solid grey'}}
+                  style={{height: '45px', overflowY: 'scroll', border: '1px solid grey'}}
                   placeholder={'Say hi!'}
                   value={this.state.message}
                   onChange={this.handleChange.bind(this)}

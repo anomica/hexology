@@ -268,7 +268,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let messageHistory;
     io.to(data.room).emit('getHistory');
     socket.on('sendHistory', data => {
-      console.log(data);
       io.to(room).emit('messageHistory', { messageHistory: data.messageHistory });
     })
   })

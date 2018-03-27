@@ -15,7 +15,7 @@ class UnitBank extends React.Component {
     }
   }
 
-  
+
   componentDidMount() {
     this.props.socket.on('deployUnits', data => {
       this.props.deployUnits(data.player, data.unit, data.quantity, data.playerOneUnitBank, data.playerTwoUnitBank);
@@ -41,8 +41,8 @@ class UnitBank extends React.Component {
     : playerBank = this.props.playerTwoUnitBank;
     if (this.state.quantity > 0 && this.state.unitBeingDeployed && this.state.quantity <= playerBank[this.state.unitBeingDeployed.toLowerCase()]) {
       this.props.socket.emit('deployUnits', {
-        player: this.props.userPlayer, 
-        unit: this.state.unitBeingDeployed.toLowerCase(), 
+        player: this.props.userPlayer,
+        unit: this.state.unitBeingDeployed.toLowerCase(),
         quantity: this.state.quantity,
         bank: playerBank[this.state.unitBeingDeployed.toLowerCase()],
         gameIndex: this.props.gameIndex,
@@ -71,8 +71,8 @@ class UnitBank extends React.Component {
               <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
                 Deploy Swordsmen
               </Label>
-              <Card.Description> 
-                Swordsmen: 
+              <Card.Description>
+                Swordsmen:
                 {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.swordsmen
               : ' ' + this.props.playerTwoUnitBank.swordsmen}
               </Card.Description>
@@ -83,7 +83,7 @@ class UnitBank extends React.Component {
                 Deploy Archers
               </Label>
               <Card.Description>
-                Archers: 
+                Archers:
                 {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.archer
                 : ' ' + this.props.playerTwoUnitBank.archer}
               </Card.Description>
@@ -94,7 +94,7 @@ class UnitBank extends React.Component {
                  Deploy Knights
               </Label>
             <Card.Description>
-              Knights: 
+              Knights:
               {this.props.userPlayer === 'player 1' ? ' ' + this.props.playerOneUnitBank.knight
               : ' ' + this.props.playerTwoUnitBank.knight}
             </Card.Description>

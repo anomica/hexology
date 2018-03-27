@@ -20,7 +20,8 @@ class SidebarLeft extends React.Component {
       newGame: false,
       newGameModalOpen: false,
       gameType: 'public',
-      rules: false
+      rules: false,
+      disabled: window.location.href.indexOf('game') === -1 ? false : true
     }
 
     this.toggleMenu = this.toggleMenu.bind(this);
@@ -79,7 +80,8 @@ class SidebarLeft extends React.Component {
 
             <Menu.Item
               name='game'
-              onClick={() => this.setState({ newGameModalOpen: true })}
+              onClick={() => this.setState({ newGameModalOpen: !this.state.newGameModalOpen })}
+              disabled={this.state.disabled}
             >
               <Icon name='gamepad' />
               Start New Game
@@ -167,6 +169,7 @@ class SidebarLeft extends React.Component {
 const mapStateToProps = (state) => {
   return {
     socket: state.state.socket,
+    boardState: state.state.boardState,
     menuVisible: state.state.menuVisible,
     currentPlayer: state.state.currentPlayer,
     userPlayer: state.state.userPlayer,

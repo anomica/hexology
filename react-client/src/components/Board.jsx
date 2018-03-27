@@ -247,8 +247,6 @@ class Board extends React.Component {
   }
 
   addUnitsToHex(hexIndex) {
-    console.log('this.props.deployment:', this.props.deployment);
-    console.log('hexIndex', hexIndex);
     this.props.socket.emit('addUnits', {
       hexIndex: hexIndex,
       unit: this.props.deployment.unit,
@@ -296,105 +294,109 @@ class Board extends React.Component {
         <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
 
         <Grid>
-          <Grid.Column width={2}>
-            <SidebarLeft />
-          </Grid.Column>
-          <Grid.Column width={16}>
-            <TopBar />
-          </Grid.Column>
-          <Grid.Column width={14}>
-        <div className="Board">
-          <HexGrid height={800} viewBox="-50 -50 150 150">
-            <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
-              {this.props.boardState ? this.props.boardState.map((hex, index) => {
-                let targetClass = '';
-                if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
-                  targetClass += 'opponent';
-                } else if (this.props.selectedHex.index === hex.index) {
-                  targetClass += 'selected';
-                } else if (hex.player === this.props.userPlayer) {
-                  targetClass += 'friendly';
-                } else if (this.props.neighbors.indexOf(hex.index) > -1) {
-                  targetClass += 'neighbor';
-                } else if (hex.hasGold) {
-                  targetClass += 'gold';
-                } else if (hex.hasWood) {
-                  targetClass += 'wood';
-                } else if (hex.hasMetal) {
-                  targetClass += 'metal';
-                }
-                if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
-                  targetClass += ' swordsmen';
-                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archer') {
-                  targetClass += ' archer';
-                } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knight') {
-                  targetClass += ' knight';
-                }
-                return <Hexagon
-                  key={uuidv4()}
-                  className={targetClass}
-                  onClick={() => {
-                    this.props.deployment ? this.addUnitsToHex(index) :
-                    this.handleClick(hex);
-                    this.setState({ hex: hex });
+          <Grid.Row>
+            <Grid.Column width={2}>
+              <SidebarLeft />
+            </Grid.Column>
+            <Grid.Column width={16}>
+              <TopBar />
+            </Grid.Column>
+          </Grid.Row>
+          <Grid.Row>
+            <Grid.Column width={this.props.menuVisible ? 14 : 15}>
+              <div className="Board">
+                <HexGrid height={800} viewBox="-50 -50 150 150">
+                  <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
+                    {this.props.boardState ? this.props.boardState.map((hex, index) => {
+                      let targetClass = '';
+                      if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
+                        targetClass += 'opponent';
+                      } else if (this.props.selectedHex.index === hex.index) {
+                        targetClass += 'selected';
+                      } else if (hex.player === this.props.userPlayer) {
+                        targetClass += 'friendly';
+                      } else if (this.props.neighbors.indexOf(hex.index) > -1) {
+                        targetClass += 'neighbor';
+                      } else if (hex.hasGold) {
+                        targetClass += 'gold';
+                      } else if (hex.hasWood) {
+                        targetClass += 'wood';
+                      } else if (hex.hasMetal) {
+                        targetClass += 'metal';
+                      }
+                      if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
+                        targetClass += ' swordsmen';
+                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archer') {
+                        targetClass += ' archer';
+                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knight') {
+                        targetClass += ' knight';
+                      }
+                      return <Hexagon
+                        key={uuidv4()}
+                        className={targetClass}
+                        onClick={() => {
+                          this.props.deployment ? this.addUnitsToHex(index) :
+                          this.handleClick(hex);
+                          this.setState({ hex: hex });
+                        }}
+                        q={hex.coordinates[0]}
+                        r={hex.coordinates[1]}
+                        s={hex.coordinates[2]}>
+                        <Text>
+                          {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
+                        </Text>
+                      </Hexagon>
+                    }): <div></div>}
+                  </Layout>
+                </HexGrid>
+                <Confirm
+                  open={this.state.confirmOpen}
+                  size={'tiny'}
+                  content={'Move all your troops to this hex?'}
+                  cancelButton={'No, only some'}
+                  onCancel={() => {
+                    this.setState({ modalOpen: true })
+                    this.setState({ confirmOpen: false })
                   }}
-                  q={hex.coordinates[0]}
-                  r={hex.coordinates[1]}
-                  s={hex.coordinates[2]}>
-                  <Text>
-                    {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
-                  </Text>
-                </Hexagon>
-              }): <div></div>}
-            </Layout>
-          </HexGrid>
-          <Confirm
-            open={this.state.confirmOpen}
-            size={'tiny'}
-            content={'Move all your troops to this hex?'}
-            cancelButton={'No, only some'}
-            onCancel={() => {
-              this.setState({ modalOpen: true })
-              this.setState({ confirmOpen: false })
-            }}
-            confirmButton={'Yes'}
-            onConfirm={async () => {
-              await this.setState({
-                tempSwordsmen: this.props.selectedHex.swordsmen,
-                tempArchers: this.props.selectedHex.archers,
-                tempKnights: this.props.selectedHex.knights
-              })
-              this.handleMoveClick(this.state.hex);
-            }}/>
+                  confirmButton={'Yes'}
+                  onConfirm={async () => {
+                    await this.setState({
+                      tempSwordsmen: this.props.selectedHex.swordsmen,
+                      tempArchers: this.props.selectedHex.archers,
+                      tempKnights: this.props.selectedHex.knights
+                    })
+                    this.handleMoveClick(this.state.hex);
+                  }}/>
 
-          <Modal open={this.state.modalOpen} size={'small'}
-            style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
-            <Modal.Header>Move Troops</Modal.Header>
-            <Modal.Content>
-              <Modal.Description>
-                <Form size={'small'} key={'small'}>
-                  <Form.Group widths='equal'>
-                    <Form.Field onChange={(e) => {this.setState({ tempSwordsmen: Number(e.target.value) })}} label='Swordsmen' control='input' placeholder='number' />
-                    <Form.Field onChange={(e) => {this.setState({ tempArchers: Number(e.target.value) })}} label='Archers' control='input' placeholder='number' />
-                    <Form.Field onChange={(e) => {this.setState({ tempKnights: Number(e.target.value) })}} label='Knights' control='input' placeholder='number' />
-                  </Form.Group>
-                  <Divider hidden />
-                </Form>
-              </Modal.Description>
-            </Modal.Content>
-            <Modal.Actions>
-              <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
-            </Modal.Actions>
-          </Modal>
-        </div>
-          </Grid.Column>
-          <Grid.Column width={2}>
-            <ChatWindow/>
-            {this.props.currentPlayer === this.props.userPlayer ?
-            <UnitBank />
-            : <div></div>
-            }
-          </Grid.Column>
+                  <Modal open={this.state.modalOpen} size={'small'}
+                    style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
+                    <Modal.Header>Move Troops</Modal.Header>
+                    <Modal.Content>
+                      <Modal.Description>
+                        <Form size={'small'} key={'small'}>
+                          <Form.Group widths='equal'>
+                            <Form.Field onChange={(e) => {this.setState({ tempSwordsmen: Number(e.target.value) })}} label='Swordsmen' control='input' placeholder='number' />
+                            <Form.Field onChange={(e) => {this.setState({ tempArchers: Number(e.target.value) })}} label='Archers' control='input' placeholder='number' />
+                            <Form.Field onChange={(e) => {this.setState({ tempKnights: Number(e.target.value) })}} label='Knights' control='input' placeholder='number' />
+                          </Form.Group>
+                          <Divider hidden />
+                        </Form>
+                      </Modal.Description>
+                    </Modal.Content>
+                    <Modal.Actions>
+                      <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
+                    </Modal.Actions>
+                  </Modal>
+                </div>
+              </Grid.Column>
+              <Grid.Column width={2}>
+                <ChatWindow/>
+                {this.props.currentPlayer === this.props.userPlayer ?
+                  <UnitBank />
+                  : <div></div>
+              }
+            </Grid.Column>
+          </Grid.Row>
         </Grid>
         <Transition animation={'jiggle'} duration={'2500'} visible={this.state.combatModalOpen}>
           <Modal open={this.state.combatModalOpen} size={'small'} style={{ textAlign: 'center' }}>
@@ -435,7 +437,8 @@ const mapStateToProps = (state) => {
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
-    deployment: state.state.deployment
+    deployment: state.state.deployment,
+    menuVisible: state.state.menuVisible
   }
 }
 
