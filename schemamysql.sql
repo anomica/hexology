@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
   user_id INT NOT NULL AUTO_INCREMENT,
   username VARCHAR(60) NOT NULL,
-  email VARCHAR(60) NOT NULL,
+  email VARCHAR(250) NOT NULL,
   password VARCHAR(250) NOT NULL,
   wins INT DEFAULT 0,
   losses INT DEFAULT 0,
@@ -80,5 +80,8 @@ CREATE TABLE hex (
   FOREIGN KEY (game_id) REFERENCES games (game_id),
   FOREIGN KEY (player) REFERENCES users (user_id)
 ); 
+
+INSERT INTO users (username, email, password)
+VALUES ('anonymous', '$2a$10$MHRAAxfcRiwToSSUOUD3wupECrfeq2SwWXouBqrh8SGV7AR/KK28G@anonymous.com', '$2a$10$MHRAAxfcRiwToSSUOUD3wupECrfeq2SwWXouBqrh8SGV7AR/KK28G');
 
 -- mysql -u root < schemamysql.sql

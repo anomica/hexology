@@ -34,6 +34,25 @@ const checkUserCreds = (username) => {
     .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
 }
 
+/////////////////////// Get user id from user table /////////////////
+const getUserId = async (username) => { // anonymous user will return user id of 1
+  return await knex.select()
+    .from('users')
+    .where(knex.raw(`LOWER(username) = LOWER('${username}')`))
+}
+
+/////////////////////// Get either player1 or player2 username ///////////////////////
+const getPlayerUsername = async (currentPlayer, gameIndex, room) => {
+  console.log(`\ngetPlayerUsername function: currentPlayer (${currentPlayer}), gameIndex (${gameIndex}), room (${room})\n`)
+
+  let game = await getGame(room, gameIndex); // get current game from games table
+  let playerId = game[0][currentPlayer]; // get the player id from the game object
+
+  return await knex.select('username')
+    .from('users')
+    .where(knex.raw(`${playerId} = user_id`))
+}
+
 /////////////////////// Fetches user by id ///////////////////////
 const findUserById = (id) => {
   return knex('users')
@@ -303,6 +322,8 @@ const getPlayerTotalUnits = async (room, gameIndex, currentPlayer) => {
 
 /////////////////////// Increases the player bank in game upon purchase ///////////////////////
 const increasePlayerBank = async (room, gameIndex, currentPlayer, type, quantity) => {
+  console.log(`increasePlayerBank function in database: room (${room}), gameIndex (${gameIndex}), currentPlayer (${currentPlayer}), type (${type}), quantity (${quantity})`);
+
   let player = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
   let roomNum = await room.split('*').join('');
 
@@ -336,7 +357,7 @@ const increasePlayerBank = async (room, gameIndex, currentPlayer, type, quantity
     if (type === 'knights') {
       await knex('games')
         .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
-        .increment('p1_knights_bank', quantity)
+        .increment('p2_knights_bank', quantity)
     }
   }
 }
@@ -730,9 +751,31 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
   // console.log('===================================== HEXES MARKED AS COMPLETED')
 }
 
+const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
+  console.log('\nsetting game players in the db...\n');
+
+  console.log(`\nsetGamePlayers in db: username (${username}), currentPlayer (${currentPlayer}), gameIndex (${gameIndex}), room (${room})\n`)
+
+  let roomNum = room.split('*').join('');
+  let playerId = await currentPlayer[currentPlayer.length - 1]; // will be '1' or '2' as a string
+  let userId = await getUserId(username); // returns an object
+  
+  if (playerId === '1') { // if updating for player 1
+    await knex('games')
+      .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+      .update('player1', userId[0].user_id)
+
+  } else if (playerId === '2') { // else if updating for player two
+    await knex('games')
+      .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+      .update('player2', userId[0].user_id)
+  }
+}
+
 module.exports = {
   addUser,
   checkUserCreds,
+  getUserId,
   findUserById,
   createGame,
   createHex,
@@ -758,5 +801,7 @@ module.exports = {
   deployUnits,
   decreasePlayerBank,
   getPlayerBank,
-  updatePlayerTotalUnits
+  updatePlayerTotalUnits,
+  setGamePlayers,
+  getPlayerUsername
 };

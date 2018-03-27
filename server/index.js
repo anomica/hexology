@@ -248,6 +248,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('setLoggedInUser', data => {
+    console.log('\nsetLoggedInUser: ', data, '\n')
     assignLoggedInUser(data.username, data.player, data.gameIndex, data.room)
   });
 
@@ -293,14 +294,42 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 })
 
-const assignLoggedInUser = (username, player, gameIndex, room) => { // need to save to DB 
+// If using game object on server
+// const assignLoggedInUser = (username, player, gameIndex, room) => { // need to save to DB 
+//   console.log(`\nassignLoggedInUser: username (${username}), player (${player}), gameIndex (${gameIndex}), room (${room})'n`)
+//   let user;
+//   username === null ? user = 'anonymous' : user = username;
+//   games[gameIndex][player] = user;
+
+//   console.log('games[gameIndex].player1: ', games[gameIndex].player1)
+//   console.log('games[gameIndex].player2: ', games[gameIndex].player2)
+
+//   io.to(room).emit('setLoggedInUser', { // need to pull from DB here
+//     player1: games[gameIndex].player1,
+//     player2: games[gameIndex].player2
+//   })
+// }
+
+// // If using database
+const assignLoggedInUser = async (username, player, gameIndex, room) => { // need to save to DB 
+  console.log(`\nassignLoggedInUser: username (${username}), player (${player}), gameIndex (${gameIndex}), room (${room})'n`);
+
   let user;
   username === null ? user = 'anonymous' : user = username;
-  games[gameIndex][player] = user;
-  io.to(room).emit('setLoggedInUser', { // need to pull from DB here
-    player1: games[gameIndex].player1,
-    player2: games[gameIndex].player2
+
+  await db.setGamePlayers(user, player, gameIndex, room); // set the game player in the game in the db
+
+  let p1Username = await db.getPlayerUsername('player1', gameIndex, room); // get player1 username
+  let p2Username = await db.getPlayerUsername('player2', gameIndex, room); // get player2 username
+
+  await io.to(room).emit('setLoggedInUser', { // need to pull from DB here
+    player1: p1Username[0].username,
+    player2: p2Username[0].username
   })
+
+  console.log('\nCURRENT PLAYERS IN THE GAME:\n')
+  console.log('\np1Username: ', p1Username[0].username);
+  console.log('p2Username: ', p2Username[0].username, '\n');
 }
 
 const moveUnits = async (data, socket) => {
