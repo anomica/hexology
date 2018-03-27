@@ -24,7 +24,6 @@ class Signup extends React.Component {
       password: this.state.password
     })
     .then(data => {
-      console.log('data.username from signup:', data.data[0].username);
       this.props.login(data.data[0].username);
       let context = this;
       this.handleClose();

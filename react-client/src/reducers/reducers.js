@@ -225,7 +225,6 @@ const reducers = (state = defaultState, action) => {
         loggedInUser: action.payload
       }
     case 'SET-LOGGED-IN-PLAYER': 
-      console.log('action.payload:', action.payload);
       return {
         ...state,
         playerOne: action.payload.player1,

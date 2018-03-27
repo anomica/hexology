@@ -57,7 +57,6 @@ class Board extends React.Component {
         this.props.highlightNeighbors([]); // and neighbors
         this.props.updateUnitCounts(10, 10);
         this.props.switchPlayer('player1');
-        console.log('this.state.loggedInUser:', this.props.loggedInUser);
         !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
         socket.emit('setLoggedInUser', {
           username: this.props.loggedInUser,
@@ -103,7 +102,6 @@ class Board extends React.Component {
         this.props.knights(this.props.currentPlayer);
       });
       socket.on('troopsDeployed', data => {
-        console.log('data:', data);
         this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
       })
       socket.on('combatWin', () => {
@@ -257,8 +255,6 @@ class Board extends React.Component {
   }
 
   addUnitsToHex(hexIndex, hex) {
-    console.log('this.props.deployment:', this.props.deployment);
-    console.log('hexIndex', hexIndex);
     this.props.socket.emit('addUnits', {
       hexIndex: hexIndex,
       unit: this.props.deployment.unit,

@@ -7,12 +7,10 @@ let bodyParser = require('body-parser');
 
 module.exports = function (passport) {
   passport.serializeUser(function (user, done) { // creating sessions
-    console.log('serializingUser');
     done(null, user);
   });
 
-  passport.deserializeUser(async (user, done) => { // what actually gets passed in here as user?
-    console.log('user from passport.deserializedUser:', user);
+  passport.deserializeUser(async (user, done) => { 
     // const userProfile = await db.findUserById(user);
     // console.log('deserializedUser:', userProfile);
     done(null, user);

@@ -55,7 +55,6 @@ app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
 });
 
 app.post('/login', passport.authenticate('local-login'), (req, res) => {
-  console.log('in login in server');
   res.status(201).json(req.user);
 });
 
@@ -249,7 +248,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('setLoggedInUser', data => {
-    console.log('data:', data);
     assignLoggedInUser(data.username, data.player, data.gameIndex, data.room)
   });
 
@@ -263,7 +261,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
 
   socket.on('deployUnits', data => {
-    console.log('data:', data);
     verifyBankSubtractUnits(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
   })  
 

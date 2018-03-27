@@ -30,7 +30,6 @@ class Login extends React.Component {
       password: this.state.password
     })
       .then(data => {
-        console.log('data from login', data);
         this.props.login(data.data.username);
         this.handleClose();
       })
