@@ -37,17 +37,25 @@ class Board extends React.Component {
   componentDidMount() {
     (async () => {
       let socket = this.props.socket;
-      if (!this.props.location.state || this.props.location.state.extra === 'join') {
+      if (this.props.location.state.type) {
+        socket.emit('watchGame', {
+          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
+          username: this.props.loggedInUser,
+          gameIndex: this.props.location.state.gameIndex
+        })
+      } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
           socket = await socketIOClient('http://127.0.0.1:3000');
           this.props.setSocket(socket);
         }
         socket.emit('joinGame', {
           room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
-          username: this.props.loggedInUser
+          username: this.props.loggedInUser,
+          spectator: true
         });
         !this.props.playerAssigned && this.props.setUserPlayer('player2');
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
+        
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
@@ -83,6 +91,10 @@ class Board extends React.Component {
         }
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
       });
+      socket.on('watchGame', data => {
+        console.log('data:', data);
+        this.props.setSpectator(this.props.loggedInUser);
+      })
       socket.on('setLoggedInUser', data => {
         this.props.setLoggedInPlayer(data.player1, data.player2);
       })

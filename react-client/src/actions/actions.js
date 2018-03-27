@@ -23,9 +23,7 @@ export const newRoom = (room) => (
   {
     type: 'NEW-ROOM',
     payload: {
-      roomName: room.roomName,
-      room: room.room,
-      player1: room.player1
+      [room.roomName]: room.room
     }
   }
 )
@@ -34,8 +32,7 @@ export const updateRoom = (room) => (
   {
     type: 'UPDATE-ROOM',
     payload: {
-      roomName: room.roomName,
-      player2: room.player2
+      [room.roomName]: room.room
     }
   }
 )
@@ -63,6 +60,13 @@ export const setUserPlayer = (player) => (
   {
     type: 'SET-USER-PLAYER',
     payload: player
+  }
+)
+
+export const setSpectator = (spectator) => (
+  {
+    type: 'SET-SPECTATOR',
+    payload: spectator
   }
 )
 

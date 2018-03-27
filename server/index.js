@@ -142,6 +142,16 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
 };
 
 app.get('/rooms', (req, res) => {
+  rooms = io.sockets.adapter.rooms
+  for (room in rooms) {
+    if (rooms[room].length === 2) {
+      for (game in games) {
+        if (games[game].room === room) {
+          rooms[room].gameIndex = games[game].index;
+        }
+      }
+    }
+  }
   res.status(200).json(io.sockets.adapter.rooms);
 });
 
@@ -220,10 +230,9 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
     room = data.room;
-    
+    room.player2 = data.username
     socket.broadcast.emit('updateRoom', {
       room: data.room,
-      player2: data.username
     })
     //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
@@ -240,6 +249,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       },
       playerOneTotalUnits: 10,
       playerTwoTotalUnits: 10,
+      room: data.room,
+      index: gameIndex
     };
 
     const newGameBoard = {
@@ -254,6 +265,16 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
     await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
   });
+
+  socket.on('watchGame', data => {
+    console.log('data.room:', data.room);
+    socket.join(data.room);
+    const gameBoard = {
+      board: games[data.gameIndex]
+    }
+    socket.to(socket.id).emit('watchGame',);
+    console.log('io.sockets.adapter.rooms[data.room]', io.sockets.adapter.rooms[data.room]);
+  })
 
   socket.on('setLoggedInUser', data => {
     assignLoggedInUser(data.username, data.player, data.gameIndex, data.room)

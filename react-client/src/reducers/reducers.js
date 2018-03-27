@@ -12,10 +12,7 @@ const reducers = (state = defaultState, action) => {
         ...state,
         rooms: {
           ...state.rooms,
-          [action.payload.roomName]: {
-            room: action.payload.room,
-            player1: action.payload.player1
-          }
+          ...action.payload
         }
       }
     case 'UPDATE-ROOM':
@@ -24,10 +21,7 @@ const reducers = (state = defaultState, action) => {
         ...state,
         rooms: {
           ...state.rooms,
-          [action.payload.roomName]: {
-            ...state.rooms[action.payload.roomName],
-            player2: action.payload.player2
-          }
+          ...action.payload
         }
       }
     case 'SET-SOCKET':
@@ -101,6 +95,12 @@ const reducers = (state = defaultState, action) => {
         ...state,
         userPlayer: action.payload,
         playerAssigned: true
+      }
+    case 'SET-SPECTATOR': 
+      console.log('action.payload:', action.payload);
+      return {
+        ...state,
+        spectators: state.spectators.push(action.payload)
       }
     case 'DRAW-BOARD':
       return {
