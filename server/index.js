@@ -316,6 +316,8 @@ const moveUnits = async (data, socket) => {
       if (collision === 'friendly') { // if collision and collision is friendly,
         let result = await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room); // update hexes without combat occuring
 
+        console.log('\nresult on friendly collision: ', result, '\n');
+
         let move = {
           updatedOrigin: result.updatedOrigin,
           originIndex: originIndex,
@@ -571,24 +573,42 @@ const moveUnits = async (data, socket) => {
   }
 };
 
-const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // verify purchase & update player bank
+const verifyBank = async (player, unit, quantity, bank, gameIndex, room) => { // verify purchase & update player bank
   
+  console.log('\n---------------------------------------------------------')
+  console.log('\nINSIDE VERIFYING BANK FUNCTION\n')
+  console.log(`\nplayer (${player}), unit (${unit}), quantity (${quantity}), bank (${bank}), gameIndex (${gameIndex}), room (${room})\n`)
+
   //////////////////////////////////////////// IF USING DATABASE ////////////////////////////////////////////
   let p1TotalBank = await db.getPlayerBank(room, gameIndex, 'player1'); 
   let p1TotalSwordsmen = p1TotalBank[0].p1_swordsmen_bank; // units in bank
   let p1TotalArchers = p1TotalBank[0].p1_archers_bank;
   let p1TotalKnights = p1TotalBank[0].p1_knights_bank;
+
+  console.log('\np1TotalBank: ', p1TotalBank)
+  console.log('p1TotalSwordsmen: ', p1TotalSwordsmen)
+  console.log('p1TotalArchers: ', p1TotalArchers)
+  console.log('p1TotalKnights: ', p1TotalKnights)
   
   let p2TotalBank = await db.getPlayerBank(room, gameIndex, 'player2');
   let p2TotalSwordsmen = p2TotalBank[0].p2_swordsmen_bank; // units in bank
   let p2TotalArchers = p2TotalBank[0].p2_archers_bank;
   let p2TotalKnights = p2TotalBank[0].p2_knights_bank;
 
+  console.log('\np2TotalBank: ', p2TotalBank)
+  console.log('p2TotalSwordsmen: ', p2TotalSwordsmen)
+  console.log('p2TotalArchers: ', p2TotalArchers)
+  console.log('p2TotalKnights: ', p2TotalKnights)
+
   if (player === 'player1') {
     if (unit === 'swordsmen' && p1TotalSwordsmen === bank) {
+      console.log('\nverified player 1 has enough units to buy swordsmen')
+
+      await db.decreasePlayerBank(room, gameIndex, 'player1', 'swordsmen', quantity); // decrease the player's bank in the db by units being moved
+
       io.to(room).emit('deployUnits', {
         playerOneUnitBank: {
-          swordsmen: p1TotalSwordsmen,
+          swordsmen: p1TotalSwordsmen - quantity,
           archer: p1TotalArchers,
           knight: p1TotalKnights,
         },
@@ -602,11 +622,15 @@ const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // 
         quantity: quantity
       });
     }
-    if (unit === 'archers' && p1TotalArchers === bank) {
+    if (unit === 'archer' && p1TotalArchers === bank) {
+      console.log('\nverified player 1 has enough units to buy archers')
+
+      await db.decreasePlayerBank(room, gameIndex, 'player1', 'archers', quantity); // decrease the player's bank in the db by units being moved
+
       io.to(room).emit('deployUnits', {
         playerOneUnitBank: {
           swordsmen: p1TotalSwordsmen,
-          archer: p1TotalArchers,
+          archer: p1TotalArchers - quantity,
           knight: p1TotalKnights,
         },
         playerTwoUnitBank: {
@@ -619,12 +643,16 @@ const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // 
         quantity: quantity
       });
     }
-    if (unit === 'knights' && p1TotalKnights === bank) {
+    if (unit === 'knight' && p1TotalKnights === bank) {
+      console.log('\nverified player 1 has enough units to buy knights')
+
+      await db.decreasePlayerBank(room, gameIndex, 'player1', 'knights', quantity); // decrease the player's bank in the db by units being moved
+
       io.to(room).emit('deployUnits', {
         playerOneUnitBank: {
           swordsmen: p1TotalSwordsmen,
           archer: p1TotalArchers,
-          knight: p1TotalKnights,
+          knight: p1TotalKnights - quantity,
         },
         playerTwoUnitBank: {
           swordsmen: p2TotalSwordsmen,
@@ -639,6 +667,10 @@ const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // 
 
   } else if (player === 'player2') {
     if (unit === 'swordsmen' && p2TotalSwordsmen === bank) {
+      console.log('\nverified player 2 has enough units to buy swordsmen')
+
+      await db.decreasePlayerBank(room, gameIndex, 'player2', 'swordsmen', quantity); // decrease the player's bank in the db by units being moved
+
       io.to(room).emit('deployUnits', {
         playerOneUnitBank: {
           swordsmen: p1TotalSwordsmen,
@@ -646,7 +678,7 @@ const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // 
           knight: p1TotalKnights,
         },
         playerTwoUnitBank: {
-          swordsmen: p2TotalSwordsmen,
+          swordsmen: p2TotalSwordsmen - quantity,
           archer: p2TotalArchers,
           knight: p2TotalKnights,
         },
@@ -655,7 +687,11 @@ const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // 
         quantity: quantity
       });
     }
-    if (unit === 'archers' && p2TotalArchers === bank) {
+    if (unit === 'archer' && p2TotalArchers === bank) {
+      console.log('\nverified player 2 has enough units to buy archers')
+
+      await db.decreasePlayerBank(room, gameIndex, 'player2', 'archers', quantity); // decrease the player's bank in the db by units being moved
+
       io.to(room).emit('deployUnits', {
         playerOneUnitBank: {
           swordsmen: p1TotalSwordsmen,
@@ -664,7 +700,7 @@ const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // 
         },
         playerTwoUnitBank: {
           swordsmen: p2TotalSwordsmen,
-          archer: p2TotalArchers,
+          archer: p2TotalArchers - quantity,
           knight: p2TotalKnights,
         },
         unit: unit,
@@ -672,7 +708,11 @@ const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // 
         quantity: quantity
       });
     }
-    if (unit === 'knights' && p2TotalKnights === bank) {
+    if (unit === 'knight' && p2TotalKnights === bank) {
+      console.log('\nverified player 2 has enough units to buy knights')
+
+      await db.decreasePlayerBank(room, gameIndex, 'player2', 'knights', quantity); // decrease the player's bank in the db by units being moved
+
       io.to(room).emit('deployUnits', {
         playerOneUnitBank: {
           swordsmen: p1TotalSwordsmen,
@@ -682,7 +722,7 @@ const verifyBank = async(player, unit, quantity, bank, gameIndex, room) => { // 
         playerTwoUnitBank: {
           swordsmen: p2TotalSwordsmen,
           archer: p2TotalArchers,
-          knight: p2TotalKnights,
+          knight: p2TotalKnights - quantity,
         },
         unit: unit,
         player: player,

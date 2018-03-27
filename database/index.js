@@ -402,54 +402,54 @@ const deployUnits = async (room, hexIndex, gameIndex, type, quantity, currentPla
       await knex('hex')
         .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
         .increment('swordsmen', quantity) // increase SWORDSMEN on hex by quantity
-        .then(results => {
-          decreasePlayerBank(room, gameIndex, 'player1', 'swordsmen', quantity); // reduce player 1 SWORDSMEN bank by the quantity
-        })
+        // .then(results => {
+        //   decreasePlayerBank(room, gameIndex, 'player1', 'swordsmen', quantity); // reduce player 1 SWORDSMEN bank by the quantity
+        // })
     }
     
     if (type === 'archers') { // if player 1 is deploying ARCHERS
       await knex('hex')
         .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
         .increment('archers', quantity) // increase ARCHERS on hex by quantity
-        .then(results => {
-          decreasePlayerBank(room, gameIndex, 'player1', 'archers', quantity); // reduce player 1 ARCHERS bank by the quantity
-        })
+        // .then(results => {
+        //   decreasePlayerBank(room, gameIndex, 'player1', 'archers', quantity); // reduce player 1 ARCHERS bank by the quantity
+        // })
     }
 
     if (type === 'knights') { // if player 1 is deploying KNIGHTS
       await knex('hex')
         .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
         .increment('knights', quantity) // increase KNIGHTS on hex by quantity
-        .then(results => {
-          decreasePlayerBank(room, gameIndex, 'player1', 'knights', quantity); // reduce player 1 KNIGHTS bank by the quantity
-        })
+        // .then(results => {
+        //   decreasePlayerBank(room, gameIndex, 'player1', 'knights', quantity); // reduce player 1 KNIGHTS bank by the quantity
+        // })
     }
   } else if (player === '2') { // if player 2 is deploying units
     if (type === 'swordsmen') { // if player 2 is deploying SWORDSMEN
       await knex('hex')
         .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
         .increment('swordsmen', quantity) // increase SWORDSMEN on hex by quantity
-        .then(results => {
-          decreasePlayerBank(room, gameIndex, 'player2', 'swordsmen', quantity); // reduce player 2 SWORDSMEN bank by the quantity
-        })
+        // .then(results => {
+        //   decreasePlayerBank(room, gameIndex, 'player2', 'swordsmen', quantity); // reduce player 2 SWORDSMEN bank by the quantity
+        // })
     }
     
     if (type === 'archers') { // if player 2 is deploying ARCHERS
       await knex('hex')
         .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
         .increment('archers', quantity) // increase ARCHERS on hex by quantity
-        .then(results => {
-          decreasePlayerBank(room, gameIndex, 'player2', 'archers', quantity); // reduce player 2 ARCHERS bank by the quantity
-        })
+        // .then(results => {
+        //   decreasePlayerBank(room, gameIndex, 'player2', 'archers', quantity); // reduce player 2 ARCHERS bank by the quantity
+        // })
     }
 
     if (type === 'knights') { // if player 2 is deploying KNIGHTS
       await knex('hex')
         .where(knex.raw(`'${gameId[0].game_id}' = game_id AND '${hexIndex}' = hex_index`))
         .increment('knights', quantity) // increase KNIGHTS on hex by quantity
-        .then(results => {
-          decreasePlayerBank(room, gameIndex, 'player2', 'knights', quantity); // reduce player 2 KNIGHTS bank by the quantity
-        })
+        // .then(results => {
+        //   decreasePlayerBank(room, gameIndex, 'player2', 'knights', quantity); // reduce player 2 KNIGHTS bank by the quantity
+        // })
     }
   }
 }
