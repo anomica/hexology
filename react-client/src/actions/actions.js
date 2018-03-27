@@ -160,19 +160,6 @@ export const setGameIndex = (gameIndex) => (
   }
 )
 
-export const setPlayerOne = (playerOne) => (
-  {
-    type: 'SET-PLAYER-ONE',
-    payload: playerOne
-  }
-)
-
-export const setPlayerTwo = (playerTwo) => (
-  {
-    type: 'SET-PLAYER-TWO',
-    payload: playerTwo
-  }
-)
 export const resetBoard = () => (
   {
     type: 'RESET-BOARD'
