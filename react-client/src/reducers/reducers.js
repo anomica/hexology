@@ -12,7 +12,10 @@ const reducers = (state = defaultState, action) => {
         ...state,
         rooms: {
           ...state.rooms,
-          ...action.payload
+          [action.payload.roomName]: {
+            room: action.payload.room,
+            player1: action.payload.player1
+          }
         }
       }
     case 'SET-SOCKET':

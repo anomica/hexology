@@ -41,14 +41,18 @@ const RoomsList = props => {
         <h1>Welcome to Hexology</h1>
         <h3>Currently Open Rooms: </h3>
         {Object.keys(props.rooms).map((roomName, id) => {
+          console.log('roomName:', roomName);
           let room = props.rooms[roomName];
+          console.log('room.room', room.room);
+          // console.log('room in render:', room);
           return (
             <Feed key={id}>
               <Feed.Content>
                 <Feed.Label>New Game</Feed.Label>
-                <Feed.Meta>Players: {room.length}/2</Feed.Meta>
+                <Feed.Meta>Player1: {' ' + room.player1}</Feed.Meta>
+                <Feed.Meta>Player2: {room.player2 ? ' ' + room.player2 : ' not yet assigned'}</Feed.Meta>
               </Feed.Content>
-              {room.length === 1 ?
+              {room.room.length === 1 ?
                 <Button onClick={() => joinGame(roomName)} color="green">Join Game</Button> :
                 <Button color="red" disabled>Game Full</Button>
               }

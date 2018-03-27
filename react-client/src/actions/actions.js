@@ -23,7 +23,9 @@ export const newRoom = (room) => (
   {
     type: 'NEW-ROOM',
     payload: {
-      [room.roomName]: room.room
+      roomName: room.roomName,
+      room: room.room,
+      player1: room.player1
     }
   }
 )
