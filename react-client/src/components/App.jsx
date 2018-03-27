@@ -24,8 +24,6 @@ class App extends React.Component {
         <Switch>
           <Route exact path='/' component={ Main } />
           <Route path='/game*' component={ Board } />
-          <Route path='/login' component={ Login } />
-          <Route path='/signup' component={ Signup } />
         </Switch>
       </Router>
     )

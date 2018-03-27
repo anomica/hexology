@@ -35,7 +35,10 @@ class Main extends React.Component {
 
     axios.get('/persistUser')
       .then(data => {
-        // console.log('data from session:', data);
+        console.log('data from session:', data);
+        if (data.data) {
+
+        }
       })
       .catch(err => {
         console.log('err from persistUser:', err);
@@ -71,7 +74,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setRooms, menuToggle, setSocket }, dispatch)
+  return bindActionCreators({ setRooms, menuToggle, setSocket, }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);

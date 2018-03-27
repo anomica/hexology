@@ -211,8 +211,27 @@ const reducers = (state = defaultState, action) => {
         deployment: null,
         [playerUnits]: state[playerUnits] += 10
       }
-
+    case 'TOGGLE-LOGIN-SIGNUP':
+      let type;
+      action.payload === 'signup' ? type = 'showSignup' 
+      : type = 'showLogin';
+      return {
+        ...state,
+        [type]: !state[type]
+      }
+    case 'LOGIN':
+      return {
+        ...state,
+        loggedInUser: action.payload
+      }
+    case 'SET-LOGGED-IN-PLAYER': 
+      return {
+        ...state,
+        playerOne: action.payload.player1,
+        playerTwo: action.payload.player2
+      }
     default: return state;
+
   }
 }
 
