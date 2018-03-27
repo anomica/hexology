@@ -447,7 +447,7 @@ const mapStateToProps = (state) => {
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
     deployment: state.state.deployment,
-    menuVisible: state.state.menuVisible
+    menuVisible: state.state.menuVisible,
     loggedInUser: state.state.loggedInUser,
     playerOne: state.state.playerOne,
     playerTwo: state.state.playerTwo

@@ -87,10 +87,10 @@ class ChatWindow extends React.Component {
                 <Segment style={{height: '160px', overflowY: 'scroll', border: '1px solid grey'}}>
                   {this.state.messageHistory && this.state.messageHistory.map(message => {
                     return (
-                      <p key={uuidv4()}><strong
+                      <p key={uuidv4()}
                         style={{color: message.socketId === this.props.socket.id ? 'blue': 'red'}}
                       >
-                        {message.username}:</strong>  {message.message}
+                        <strong>{message.username}:</strong>  {message.message}
                       </p>
                     )
                   })}

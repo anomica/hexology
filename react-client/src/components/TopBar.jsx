@@ -34,7 +34,7 @@ class TopBar extends React.Component {
   sendEmail() {
     this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' })
     this.props.socket.emit('sendEmail', {
-      username: 'test', // change this to reflect logged in user
+      username: this.props.loggedInUser,
       email: this.state.email,
       message: this.state.message,
       room: this.props.room
@@ -146,7 +146,8 @@ const mapStateToProps = state => {
     currentPlayer: state.state.currentPlayer,
     menuVisible: state.state.menuVisible,
     playerOneResources: state.state.playerOneResources,
-    playerTwoResources: state.state.playerTwoResources
+    playerTwoResources: state.state.playerTwoResources,
+    loggedInUser: state.state.loggedInUser
   }
 }
 

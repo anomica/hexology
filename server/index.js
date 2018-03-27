@@ -262,7 +262,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('deployUnits', data => {
     verifyBankSubtractUnits(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
-  })  
+  })
 
   socket.on('addUnits', data => {
     deployUnitsOnHex(data.hexIndex, data.gameIndex, data.unit, data.quantity, data.room)
@@ -293,7 +293,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 })
 
-const assignLoggedInUser = (username, player, gameIndex, room) => { // need to save to DB 
+const assignLoggedInUser = (username, player, gameIndex, room) => { // need to save to DB
   let user;
   username === null ? user = 'anonymous' : user = username;
   games[gameIndex][player] = user;
@@ -1194,7 +1194,7 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
     if (resources.gold >= 10 && resources.metal >= 10) {
       resources.gold -= 10;
       resources.metal -= 10;
-      bank.swordsmen += 10; 
+      bank.swordsmen += 10;
       game[unitCount] += 10;
       io.to(room).emit('swordsmen', {
         playerOneUnitBank: game.playerOneUnitBank,
