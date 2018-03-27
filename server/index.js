@@ -106,8 +106,9 @@ const isResourceHex = () => { // decides if hex gets resource
 const gameInit = (numRows, numCols) => { // creates an array of hexes with properties (the board)
   let i = 0;
   const hexes = coordinateGenerator(numRows, numCols);
+  let meridianHexes = [];
 
-  return hexes.map((coordinates, index) => {
+  let board = hexes.map((coordinates, index) => {
     let hex = {};
     hex.coordinates = coordinates;
     hex.index = uuidv4();
@@ -126,9 +127,6 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
     }
     if (isResourceHex() && index !== 0 && index !== hexes.length - 1) { // for resource hexes that are not starting hexes for either player,
       let resourceType = Math.floor(Math.random() * 3) + 1; // roll a d3
-      hex.hasGold = false;
-      hex.hasWood = false;
-      hex.hasMetal = false;
       if (resourceType === 1) { // assign resource type according to dice roll
         hex.hasGold = true;
       } else if (resourceType === 2) {
@@ -139,7 +137,94 @@ const gameInit = (numRows, numCols) => { // creates an array of hexes with prope
     }
     return hex;
   });
+
+  let meridianHasGold, meridianHasMetal, meridianHasWood = false;
+  let meridianWithoutResources = [];
+
+  for (let i = ((numRows + numCols) / 3); i <= (hexes.length / 2) + 1; i+=(numCols - 1)) {
+    meridianHexes.push(i);
+    checkMeridian(i);
+  }
+  for (let i = hexes.length - numCols; i >= (hexes.length / 2) - 1; i-=(numCols - 1)) {
+    meridianHexes.push(i);
+    checkMeridian(i);
+  }
+
+  function checkMeridian(i) {
+    let hex = board[i];
+    if (hex.hasGold) {
+      meridianHasGold = true;
+    } else if (hex.hasWood) {
+      meridianHasWood = true;
+    } else if (hex.hasMetal) {
+      meridianHasMetal = true;
+    } else {
+      meridianWithoutResources.push(i);
+    }
+  };
+
+  if (meridianWithoutResources.length && !meridianHasGold) {
+    let index = Math.floor(Math.random() * meridianWithoutResources.length);
+    board[meridianWithoutResources[index]].hasGold = true;
+    meridianWithoutResources.splice(index, 1);
+  }
+  if (meridianWithoutResources.length && !meridianHasWood) {
+    let index = Math.floor(Math.random() * meridianWithoutResources.length);
+    board[meridianWithoutResources[index]].hasWood = true;
+    meridianWithoutResources.splice(index, 1);
+  }
+  if (meridianWithoutResources.length && !meridianHasMetal) {
+    let index = Math.floor(Math.random() * meridianWithoutResources.length);
+    board[meridianWithoutResources[index]].hasMetal = true;
+    meridianWithoutResources.splice(index, 1);
+  }
+
+  board = distributeResources(board, meridianHexes);
+
+  return board;
 };
+
+const distributeResources = (board, meridianHexes) => {
+  let playerOneHalf = [], playerTwoHalf = [];
+  let playerOneHexesWithoutResources = [], playerTwoHexesWithoutResources = [];
+  for (let i = 1; i < board.length / 2 - 1; i++) {
+    if (meridianHexes.indexOf(i) === -1) {
+      if (board[i].hasGold) playerOneHalf.push('Gold');
+      if (board[i].hasWood) playerOneHalf.push('Wood');
+      if (board[i].hasMetal) playerOneHalf.push('Metal');
+      if (!board[i].hasGold && !board[i].hasWood && !board.hasMetal) {
+        playerOneHexesWithoutResources.push(i);
+      };
+    }
+  }
+  for (let i = board.length - 2; i > board.length / 2; i--) {
+    if (meridianHexes.indexOf(i) === -1) {
+      if (board[i].hasGold) playerTwoHalf.push('Gold');
+      if (board[i].hasWood) playerTwoHalf.push('Wood');
+      if (board[i].hasMetal) playerTwoHalf.push('Metal');
+      else if (!board[i].hasGold && !board[i].hasWood && !board.hasMetal) {
+        playerTwoHexesWithoutResources.push(i);
+      };
+    }
+  }
+
+  playerOneHalf.forEach(resource => {
+    if (playerTwoHalf.indexOf(resource) === -1) {
+      let index = Math.floor(Math.random() * playerTwoHexesWithoutResources.length);
+      board[playerTwoHexesWithoutResources[index]][`has${resource}`] = true;
+      playerTwoHexesWithoutResources.splice(index, 1);
+    }
+  })
+  playerTwoHalf.forEach(resource => {
+    if (playerOneHalf.indexOf(resource) === -1) {
+      let index = Math.floor(Math.random() * playerOneHexesWithoutResources.length);
+      board[playerOneHexesWithoutResources[index]][`has${resource}`] = true;
+      playerOneHexesWithoutResources.splice(index, 1);
+    }
+  })
+
+  return board;
+}
 
 app.get('/rooms', (req, res) => {
   res.status(200).json(io.sockets.adapter.rooms);

@@ -6,7 +6,7 @@ import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Descrip
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
 import { setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
-         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex } from '../../src/actions/actions.js';
+         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -143,7 +143,10 @@ class Board extends React.Component {
       });
       socket.on('disconnect', () => {
         this.setState({ disconnectModalOpen: true });
-        setTimeout(() => this.props.history.push('/'), 4000);
+        setTimeout(() => {
+          this.props.history.push('/');
+          this.props.resetBoard();
+        }, 2500);
       })
     })();
   }
@@ -458,7 +461,7 @@ const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
-    setGameIndex }, dispatch);
+    setGameIndex, resetBoard }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);

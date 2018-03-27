@@ -200,7 +200,9 @@ class SidebarLeft extends React.Component {
           </Modal>
           <Modal
             open={this.state.logoutModal}
-            size={'tiny'}>
+            size={'tiny'}
+            style={{textAlign: 'center'}}
+          >
             <Modal.Header>Logout Successful!</Modal.Header>
             <Modal.Content>
               <Modal.Description>
