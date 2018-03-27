@@ -203,7 +203,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
   // console.log('metal updated in db')
 }
 
-const updateHexOwner = async (hexIndex, player) => { // NOTE: Player comes in as string
+const updateHexOwner = async (hexIndex, player) => { // update hex owner (on a move only) NOTE: Player comes in as string
   let hex = await getHex(hexIndex);
 
   // check if the original hex user was on has units on it
@@ -225,7 +225,9 @@ const updateHexOwner = async (hexIndex, player) => { // NOTE: Player comes in as
 }
 
 /////////////////////// Updates the units on the hex upon combat ///////////////////////
-const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlayer) => {  
+const updateHexUnits = async (hexIndex, swordsmen, archers, knights, currentPlayer) => {
+  console.log('\n...INSIDE UPDATE HEX UNITS FUNCTION IN DB...\n')
+  console.log(`\nhexIndex ${hexIndex}, swordsmen ${swordsmen}, archers ${archers}, knights ${knights}, currentPlayer ${currentPlayer}\n`);
   let playerId = null;
 
   if (currentPlayer !== null) { // if current player exists from server req
@@ -509,16 +511,22 @@ const decreasePlayerBank = async (room, gameIndex, currentPlayer, type, quantity
 const switchHexOwner = async (hexIndex, updatedOwner) => {
   let ownerId = null;
 
-  if (updatedOwner) { // if there is an owner to be updated
+  if (updatedOwner !== null) { // if there is an owner to be updated
     ownerId = await updatedOwner[updatedOwner.length - 1]; // update with the owner id
+    await knex('hex')
+      .where(knex.raw(`'${hexIndex}' = hex_index`))
+      .update({
+        player: ownerId,
+        hex_owner: ownerId
+      })
+  } else { // else if updating to no owner
+    await knex('hex')
+      .where(knex.raw(`'${hexIndex}' = hex_index`))
+      .update({
+        player: null,
+        hex_owner: null
+      })
   }
-
-  await knex('hex')
-    .where(knex.raw(`'${hexIndex}' = hex_index`))
-    .update({
-      player: ownerId,
-      hex_owner: ownerId
-    })
 }
 
 /////////////////////// Removes resource from the hex ///////////////////////
