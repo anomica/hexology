@@ -25,6 +25,15 @@ const reducers = (state = defaultState, action) => {
         ...state,
         room: action.payload
       }
+    case 'DELETE-ROOM':
+      let newRooms = Object.create(state.rooms);
+      delete newRooms[action.payload]
+      return {
+        ...state,
+        rooms: {
+          ...newRooms
+        }
+      }
     case 'MENU-TOGGLE':
       return {
         ...state,
@@ -33,7 +42,8 @@ const reducers = (state = defaultState, action) => {
     case 'EXIT-GAME':
       return {
         ...state,
-        room: null
+        room: null,
+        socket: null,
       }
     case 'RESET-BOARD':
       return {
@@ -201,20 +211,27 @@ const reducers = (state = defaultState, action) => {
         deployment: null,
         [playerUnits]: state[playerUnits] += 10
       }
-    case 'SET-PLAYER-ONE':
+    case 'TOGGLE-LOGIN-SIGNUP':
+      let type;
+      action.payload === 'signup' ? type = 'showSignup' 
+      : type = 'showLogin';
       return {
         ...state,
-        playerOne: action.payload.playerOne
+        [type]: !state[type]
       }
-    case 'SET-PLAYER-TWO':
+    case 'LOGIN':
       return {
         ...state,
-        playerOne: action.payload.playerTwo
+        loggedInUser: action.payload
       }
-    
-
+    case 'SET-LOGGED-IN-PLAYER': 
+      return {
+        ...state,
+        playerOne: action.payload.player1,
+        playerTwo: action.payload.player2
+      }
     default: return state;
-    
+
   }
 }
 

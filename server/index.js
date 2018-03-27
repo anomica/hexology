@@ -191,27 +191,31 @@ setInterval(findOpenRooms, 1000);
 io.on('connection', async (socket) => { // initialize socket on user connection
   console.log('User connected');
 
+  let room; // track room that client is in, when they enter a room, to help with disconnect
+
   socket.on('sendEmail', request => {
     let username = request.username;
     let email = request.email;
     let message = request.message;
     let room = request.room;
     emailHandler.sendEmail(username, email, room, message);
-  })
+  });
 
   socket.on('newGame', request => {
     let newRoom = `*${roomNum}`;
+    room = newRoom;
     let gameType = request.gameType;
     socket.join(newRoom); // create a new room
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
     gameType === 'public' && socket.broadcast.emit('newRoom', { roomName: newRoom, room: io.sockets.adapter.rooms[newRoom] });
     roomNum++; // increment room count to assign new ro
-  })
+  });
 
   socket.on('joinGame', async (data) => {
     await socket.join(data.room);
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
+    room = data.room;
 
     //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
@@ -241,35 +245,63 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
-  })
+  });
+
+  socket.on('setLoggedInUser', data => {
+    assignLoggedInUser(data.username, data.player, data.gameIndex, data.room)
+  });
 
   socket.on('move', data => { // move listener
     moveUnits(data, socket); // pass move data and socket to function to assess move
-  })
+  });
 
   socket.on('buy', data => {
-    console.log('buy data:', data);
     buyUnits(data.type, data.player, data.gameIndex, data.socketId, data.room);
-  })
+  });
 
   socket.on('deployUnits', data => {
-    console.log('data from deploy units:', data);
-    verifyBank(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
-  })
+    verifyBankSubtractUnits(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
+  })  
 
   socket.on('addUnits', data => {
-    console.log('data from addUnits:', data);
-    deployUnitsOnHex(data.hexIndex, data.gameIndex, data.unit, data.quantity, data.room, data.player, data.hexLongIndex)
+    deployUnitsOnHex(data.hexIndex, data.gameIndex, data.unit, data.quantity, data.room, data.hexLongIndex);
+  });
+
+  socket.on('initMessages', async (data) => {
+    let messageHistory;
+    io.to(data.room).emit('getHistory');
+    socket.on('sendHistory', data => {
+      console.log(data);
+      io.to(room).emit('messageHistory', { messageHistory: data.messageHistory });
+    })
+  })
+
+  socket.on('sendMessage', (request) => {
+    io.to(room).emit('newMessage', request);
   });
 
   socket.on('leaveRoom', data => {
     socket.leave(data.room);
-  })
+    socket.broadcast.emit('deleteRoom', data.room);
+    room && io.to(room).emit('disconnect');
+    delete io.sockets.adapter.rooms[room];
+  });
 
   socket.on('disconnect', () => {
+    room && io.to(room).emit('disconnect');
     console.log('user disconnected');
-  })
+  });
 })
+
+const assignLoggedInUser = (username, player, gameIndex, room) => { // need to save to DB 
+  let user;
+  username === null ? user = 'anonymous' : user = username;
+  games[gameIndex][player] = user;
+  io.to(room).emit('setLoggedInUser', { // need to pull from DB here
+    player1: games[gameIndex].player1,
+    player2: games[gameIndex].player2
+  })
+}
 
 const moveUnits = async (data, socket) => {
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
@@ -573,13 +605,47 @@ const moveUnits = async (data, socket) => {
   }
 };
 
-const verifyBank = async (player, unit, quantity, bank, gameIndex, room) => { // verify purchase & update player bank
+///////////////////////////////////////////// verifyBankSubtractUnits FUNCTION IF USING GAME OBJECT ON SERVER:
+// const verifyBankSubtractUnits = async(player, unit, quantity, bank, gameIndex, room) => { // verify purchase & update player bank
+  //   if (player === 'player1' && games[gameIndex].playerOneUnitBank[unit] === bank) {
+  //     games[gameIndex].playerOneUnitBank[unit] = games[gameIndex].playerOneUnitBank[unit] - quantity;
+  //     io.to(room).emit('deployUnits', {
+  //       playerOneUnitBank: games[gameIndex].playerOneUnitBank,
+  //       playerTwoUnitBank: games[gameIndex].playerTwoUnitBank,
+  //       unit: unit,
+  //       player: player,
+  //       quantity: quantity
+  //     });
+  //   } else if (player === 'player2') {
+  //     if (unit === 'swordsmen' && p2TotalSwordsmen === bank) {
+  //       console.log('\nverified player 2 has enough units to buy swordsmen')
+  
+  //       await db.decreasePlayerBank(room, gameIndex, 'player2', 'swordsmen', quantity); // decrease the player's bank in the db by units being moved
+  
+  //       io.to(room).emit('deployUnits', {
+  //         playerOneUnitBank: {
+  //           swordsmen: p1TotalSwordsmen,
+  //           archer: p1TotalArchers,
+  //           knight: p1TotalKnights,
+  //         },
+  //         playerTwoUnitBank: {
+  //           swordsmen: p2TotalSwordsmen - quantity,
+  //           archer: p2TotalArchers,
+  //           knight: p2TotalKnights,
+  //         },
+  //         unit: unit,
+  //         player: player,
+  //         quantity: quantity
+  //       });
+  //     }
+
+// verifyBankSubtractUnits FUNCTION IF USING DATABASE:
+const verifyBankSubtractUnits = async (player, unit, quantity, bank, gameIndex, room) => { // verify purchase & update player bank
   
   console.log('\n---------------------------------------------------------')
   console.log('\nINSIDE VERIFYING BANK FUNCTION\n')
   console.log(`\nplayer (${player}), unit (${unit}), quantity (${quantity}), bank (${bank}), gameIndex (${gameIndex}), room (${room})\n`)
 
-  //////////////////////////////////////////// IF USING DATABASE ////////////////////////////////////////////
   let p1TotalBank = await db.getPlayerBank(room, gameIndex, 'player1'); 
   let p1TotalSwordsmen = p1TotalBank[0].p1_swordsmen_bank; // units in bank
   let p1TotalArchers = p1TotalBank[0].p1_archers_bank;
@@ -665,28 +731,6 @@ const verifyBank = async (player, unit, quantity, bank, gameIndex, room) => { //
       });
     }
 
-  } else if (player === 'player2') {
-    if (unit === 'swordsmen' && p2TotalSwordsmen === bank) {
-      console.log('\nverified player 2 has enough units to buy swordsmen')
-
-      await db.decreasePlayerBank(room, gameIndex, 'player2', 'swordsmen', quantity); // decrease the player's bank in the db by units being moved
-
-      io.to(room).emit('deployUnits', {
-        playerOneUnitBank: {
-          swordsmen: p1TotalSwordsmen,
-          archer: p1TotalArchers,
-          knight: p1TotalKnights,
-        },
-        playerTwoUnitBank: {
-          swordsmen: p2TotalSwordsmen - quantity,
-          archer: p2TotalArchers,
-          knight: p2TotalKnights,
-        },
-        unit: unit,
-        player: player,
-        quantity: quantity
-      });
-    }
     if (unit === 'archer' && p2TotalArchers === bank) {
       console.log('\nverified player 2 has enough units to buy archers')
 
@@ -733,31 +777,6 @@ const verifyBank = async (player, unit, quantity, bank, gameIndex, room) => { //
   } else {
     io.to(room).emit('cheating detected');
   }
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  ///////////////////////////////////// IF USING GAME OBJECT ON SERVER /////////////////////////////////////
-  // if (player === 'player1' && games[gameIndex].playerOneUnitBank[unit] === bank) {
-  //   games[gameIndex].playerOneUnitBank[unit] = games[gameIndex].playerOneUnitBank[unit] - quantity;
-  //   io.to(room).emit('deployUnits', {
-  //     playerOneUnitBank: games[gameIndex].playerOneUnitBank,
-  //     playerTwoUnitBank: games[gameIndex].playerTwoUnitBank,
-  //     unit: unit,
-  //     player: player,
-  //     quantity: quantity
-  //   });
-  // } else if (player === 'player2') {
-  //   games[gameIndex].playerTwoUnitBank[unit] = games[gameIndex].playerTwoUnitBank[unit] - quantity;
-  //   io.to(room).emit('deployUnits', {
-  //     playerOneUnitBank: games[gameIndex].playerOneUnitBank,
-  //     playerTwoUnitBank: games[gameIndex].playerTwoUnitBank,
-  //     unit: unit,
-  //     player: player,
-  //     quantity: quantity
-  //   });
-  // } else {
-  //   io.to(room).emit('cheating detected');
-  // }
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb) => { // to check move legality,
@@ -852,6 +871,17 @@ const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarge
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////// IF USING GAME OBJECT ON SERVER ///////////////////////////////
+// const deployUnitsOnHex = async (hexIndex, gameIndex, unit, quantity, room) => { // updates a single hex with deployed troops from bank
+//   games[gameIndex].board[hexIndex][unit] = games[gameIndex].board[hexIndex][unit] + quantity; // need to update DB here
+//   io.to(room).emit('troopsDeployed', {
+//     hex: games[gameIndex].board[hexIndex],
+//     hexIndex: hexIndex
+//   });
+// }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////// IF USING DATABASE ///////////////////////////////////////////
 const deployUnitsOnHex = async (hexArrayIndex, gameIndex, unit, quantity, room, currentPlayer, hexLongIndex) => { // updates a single hex with deployed troops from bank
 
   console.log('\ninside deploy units on hex function\n')
@@ -877,19 +907,8 @@ const deployUnitsOnHex = async (hexArrayIndex, gameIndex, unit, quantity, room, 
     hexIndex: hexArrayIndex
   });
   console.log('\nTROOPS DEPLOYED YAY\n')
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /////////////////////////////////////////// IF USING GAME OBJECT ON SERVER ///////////////////////////////
-  // games[gameIndex].board[hexArrayIndex][unit] = games[gameIndex].board[hexArrayIndex][unit] + quantity; // need to update DB here
-  // // let bank;
-  // // games[gameIndex].board[hexArrayIndex].player === 'player1' ? bank = games[gameIndex].playerOneUnitBank
-  // // : bank = games[gameIndex].playerTwoUnitBank;
-  // io.to(room).emit('troopsDeployed', {
-  //   hex: games[gameIndex].board[hexArrayIndex],
-  //   hexIndex: hexArrayIndex
-  // });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedOrigin, updatedTarget, currentPlayer) => { // if combat,
 
@@ -1072,137 +1091,6 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
 
   let attackerArmySize = attackerArchers + attackerSwordsmen + attackerKnights;
   let defenderArmySize = defenderSwordsmen + defenderArchers + defenderKnights;
-  
-  // let attackerArmySize;
-  // let defenderArmySize;
-  // let remainingAttackerSwordsmen;
-  // let remainingAttackerArchers;
-  // let remainingAttackerKnights;
-  // let remainingDefenderSwordsmen;
-  // let remainingDefenderArchers;
-  // let remainingDefenderKnights;
-
-  // if (defender[0].player === 1) { // if the defender is player 1
-  //   console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nDEFENDER = PLAYER 1\nATTACKER = PLAYER 2\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n');
-    
-  //   let defenderHex = await db.getHex(defender[0].hex_index); // get the original defender hex
-
-  //   remainingDefenderSwordsmen = defenderHex[0].swordsmen - defenderSwordsmen; // calc remaining units on the attacker hex
-  //   remainingDefenderArchers = defenderHex[0].archers - defenderArchers;
-  //   remainingDefenderKnights = defenderHex[0].knights - defenderKnights;
-    
-  //   defenderArmySize = remainingDefenderSwordsmen + remainingDefenderArchers + remainingDefenderKnights;
-
-  //   if (defenderArmySize > 0) { // if defender has remaining units on the original hex
-  //     console.log('\ndefender army is > 0: ', defenderArmySize, '\n');
-  //     await db.updateHexUnits(defender[0].hex_index, remainingDefenderSwordsmen, remainingDefenderArchers, remainingDefenderKnights, 'player1'); // find the hex that player 1 is on in the db & update the units on the hex with the DEFENDER units / TODO: update with user id
-  //   } else { // if no units remaining on the hex, reset the player/hex owner in the db
-  //     console.log('\ndefender army is = 0: ', defenderArmySize, '\n');
-  //     await db.updateHexUnits(defender[0].hex_index, 0, 0, 0, null);
-  //   }
-
-  //   ///////////////// UPDATES ORIGINAL ATTACKER HEX WITH THE REMAINING UNITS LEFT OVER MOVING SOME UNITS /////////////
-  //   let attackerHex = await db.getHex(originIndex); // get the original attacker hex from the db
-  //   remainingAttackerSwordsmen = attackerHex[0].swordsmen - defenderSwordsmen; // calc remaining units on the attacker hex
-  //   remainingAttackerArchers = attackerHex[0].archers - defenderArchers;
-  //   remainingAttackerKnights = attackerHex[0].knights - defenderKnights;
-
-  //   attackerArmySize = await remainingAttackerSwordsmen + remainingAttackerArchers + remainingAttackerKnights;
-
-  //   await db.updateHexUnits(attackerHex[0].hex_index, remainingAttackerSwordsmen, remainingAttackerArchers, remainingAttackerKnights, 'player2'); // find hex attacker is on in db & update hex units / TODO: update with user id
-
-  //   // if (attackerArmySize <= 0) { // if there are no remaining units on the original attacker hex for attacker
-  //   //   await db.updateHexUnits(attackerHex[0].hex_index, remainingAttackerSwordsmen, remainingAttackerArchers, remainingAttackerKnights, null); // find hex attacker is on in db & reset units/player
-  //   // } else { // else if attacker has remaining units 
-  //   //   await db.updateHexUnits(attackerHex[0].hex_index, remainingAttackerSwordsmen, remainingAttackerArchers, remainingAttackerKnights, 'player2'); // find hex attacker is on in db & update hex units / TODO: update with user id
-  //   // }
-
-  //   console.log('  PLAYER 1: REMAINING DEFENDER army size:', defenderArmySize, '\n  PLAYER 1 DEFENDER hex in db:\n', defenderHex);
-  //   console.log('\n  PLAYER 2: REMAINING ATTACKER army size: ', attackerArmySize, '\n  PLAYER 2 ATTACKER hex in db:\n', attackerHex);
-
-  // } else if (defender[0].player === 2) { // else if the defender is player 2
-  //   console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nDEFENDER = PLAYER 2\nATTACKER = PLAYER 1\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n');
-
-  //   await db.updateHexUnits(defender[0].hex_index, defenderSwordsmen, defenderArchers, defenderKnights, 'player2'); // find the hex that player 2 is on in the db & update the units on the hex with the DEFENDER units / TODO: update with user id
-
-  //   let defenderHex = await db.getHex(defender[0].hex_index); // // get the updated defender hex / returns an object
-  //   remainingDefenderSwordsmen = defenderHex[0].swordsmen - defenderSwordsmen;
-  //   remainingDefenderArchers  = defenderHex[0].archers - defenderArchers;
-  //   remainingDefenderKnights  = defenderHex[0].knights - defenderKnights;
-    
-  //   // defenderArmySize = await defenderHex[0].swordsmen + defenderHex[0].archers + defenderHex[0].knights; // total units for player
-
-  //   /*
-  //     when defender is player 2 if attacker is moving all units (7) to defender hex (2)
-  //     attacker hex is already updating
-  //     need to update defender hex to 0 if attacker hex > defender hex
-  //     update player and hex owner to null
-  //   */
-
-  //   ///////////////// UPDATES ORIGINAL ATTACKER HEX WITH THE REMAINING UNITS LEFT OVER MOVING SOME UNITS /////////////
-  //   let attackerHex = await db.getHex(originIndex); // get the original attacker hex from the db
-
-  //   // calc remaining units on the attacker hex if there were any units left behind by the attacker
-  //   remainingAttackerSwordsmen = attackerHex[0].swordsmen - attackerSwordsmen;
-  //   remainingAttackerArchers = attackerHex[0].archers - attackerArchers;
-  //   remainingAttackerKnights = attackerHex[0].knights - attackerKnights;
-
-  //   // if all attacker units were moved
-  //   if (attackerSwordsmen === attackerHex[0].swordsmen && attackerSwordsmen !== 0) {
-  //     remainingAttackerSwordsmen = attackerHex[0].swordsmen - defenderSwordsmen; // update remaining units on the attacker hex
-
-  //     if (attackerSwordsmen > defenderSwordsmen) {
-  //       remainingDefenderSwordsmen = 0;
-  //     }
-
-  //     console.log('\nALL ATTACKER SWORDSMEN MOVED: ', attackerSwordsmen, '\nREMAINING UNITS: ', remainingAttackerSwordsmen);
-  //   } else {
-  //     console.log('\n.... THERE ARE SOME ATTACKER SWORDSMEN LEFT BEHIND\n')
-  //   }
-
-  //   if (attackerArchers === attackerHex[0].archers && attackerArchers !== 0) {
-  //     remainingAttackerArchers = attackerHex[0].archers - defenderArchers;
-
-  //     if (attackerArchers > defenderArchers) {
-  //       remainingDefenderArchers = 0;
-  //     }
-
-  //     console.log('\nALL ATTACKER ARCHERS MOVED: ', attackerArchers, '\nREMAINING UNITS: ', remainingAttackerArchers);
-  //   } else {
-  //     console.log('\n.... THERE ARE SOME ATTACKER ARCHERS LEFT BEHIND\n')
-  //   }
-
-  //   if (attackerKnights === attackerHex[0].knights && attackerKnights!== 0) {
-  //     remainingAttackerKnights = attackerHex[0].knights - defenderKnights;
-
-  //     if (attackerKnights > defenderKnights) {
-  //       remainingDefenderKnights = 0;
-  //     }
-
-  //     console.log('\nALL ATTACKER KNIGHTS MOVED: ', attackerKnights, '\nREMAINING UNITS: ', remainingAttackerKnights);
-  //   } else {
-  //     console.log('\n.... THERE ARE SOME ATTACKER KNIGHTS LEFT BEHIND\n')
-  //   }
-
-  //   defenderArmySize = await remainingDefenderSwordsmen + remainingDefenderArchers + remainingDefenderKnights; // total units for player
-
-  //   console.log(`\nDEFENDER (PLAYER 2) army size: remainingDefenderSwordsmen (${remainingDefenderSwordsmen}) + remainingDefenderArchers (${remainingDefenderArchers})+ remainingDefenderKnights (${remainingDefenderKnights})\n`)
-
-  //   attackerArmySize = await remainingAttackerSwordsmen + remainingAttackerArchers + remainingAttackerKnights;
-
-  //   console.log(`\nATTACKER (PLAYER 1) army size: remainingAttackerSwordsmen (${remainingAttackerSwordsmen}) + remainingAttackerArchers (${remainingAttackerArchers})+ remainingAttackerKnights (${remainingAttackerKnights})\n`)
-
-  //   // await db.updateHexUnits(attackerHex[0].hex_index, remainingAttackerSwordsmen, remainingAttackerArchers, remainingAttackerKnights, 'player1'); // find the hex that player 1 is on in the db & update the units on the hex / TODO: update with user id
-    
-  //   await db.updateHexUnits(defenderHex[0].hex_index, remainingAttackerSwordsmen, remainingAttackerArchers, remainingAttackerKnights, 'player2'); // find the hex that DEFENDER (player 2) is on in the db & update the units on the hex / TODO: update with user id
-
-  //   console.log('\nPLAYER 2 (DEFENDER): REMAINING DEFENDER ARMY SIZE: ', defenderArmySize, '\nPLAYER 2: DEFENDER HEX IN DB:\n', defenderHex);
-
-  //   await db.updateHexUnits(attackerHex[0].index, remainingAttackerSwordsmen, remainingAttackerArchers, remainingAttackerKnights, 'player1'); // find the hex that ATTACKER (player 1) is on in the db & update the units on the hex / TODO: update with user id
-
-  //   console.log('\nPLAYER 1 (ATTACKER): REMAINING ATTACKER ARMY SIZE: ', attackerArmySize, '\nPLAYER 1: ATTACKER HEX IN DB:\n', attackerHex);
-    
-  // }
 
   if (defenderArmySize === attackerArmySize) { // if the defender army = attacker army on combat
 
@@ -1378,7 +1266,6 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
   }
 
   ////////////////////////////////////// IF USING GAME OBJECT ON SERVER ////////////////////////////////////////
-  ////////////////////////////////////// SHOULDN'T BE NEEDED AFTER DB WORKS ////////////////////////////////////
   // if (currentPlayer === 'player1') {
   //   games[gameIndex].playerOneTotalUnits -= originalAttackerArmySize - attackerArmySize;
   //   games[gameIndex].playerTwoTotalUnits -= originalDefenderArmySize - defenderArmySize;
@@ -1427,15 +1314,9 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
       //////// IF USING DATABASE ///////
       ...origTarget[0],
       //////////////////////////////////
-
-      // swordsmen: remainingAttackerSwordsmen,
-      // archers: remainingAttackerArchers,
-      // knights: remainingAttackerKnights,
-
       swordsmen: attackerSwordsmen,
       archers: attackerArchers,
       knights: attackerKnights,
-
       player: attackerPlayer,
       hex_owner: attackerPlayer
     }
@@ -1541,10 +1422,9 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
       /////////////////// IF USING GAME OBJ ON SERVER ///////////////
       // ...updatedOrigin,
       // swordsmen: updatedOrigin.swordsmen + attackerSwordsmen, // if there are units left behind, make sure they stay
-      // archers: updatedOrigin.archers + attackerArchers,
-      // knights: updatedOrigin.knights + attackerKnights,
-      // player: null,
-      // hex_owner: null
+      // archers: updatedOrigin.knights + attackerKnights,
+      // knights: updatedOrigin.archers + attackerArchers,
+      // player: attackerSwordsmen || attackerArchers || attackerKnights ? attackerPlayer : null
       //////////////////////////////////////////////////////////////
 
       ////////////////////// IF USING DATABASE /////////////////////
@@ -2012,6 +1892,88 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
     }
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /////////////////////////////// IF USING GAME OBJ ON SERVER /////////////////////////////////////
+  // let game = games[gameIndex], resources, bank, unitCount;
+  // if (!game.playerOneUnitBank) {
+  //   game.playerOneUnitBank = {
+  //     archer: 0,
+  //     knight: 0,
+  //     swordsmen: 0
+  //   }
+  // }
+  // if (!game.playerTwoUnitBank) {
+  //   game.playerTwoUnitBank = {
+  //     archer: 0,
+  //     knight: 0,
+  //     swordsmen: 0
+  //   }
+  // }
+  // if (player === 'player1') {
+  //   resources = game.playerOneResources;
+  //   bank = game.playerOneUnitBank;
+  //   unitCount = 'playerOneTotalUnits';
+  // } else {
+  //   resources = game.playerTwoResources;
+  //   bank = game.playerTwoUnitBank;
+  //   unitCount = 'playerOneTotalUnits';
+  // }
+  // if (type === 'swordsmen') {
+  //   if (resources.gold >= 10 && resources.metal >= 10) {
+  //     resources.gold -= 10;
+  //     resources.metal -= 10;
+  //     bank.swordsmen += 10; 
+  //     game[unitCount] += 10;
+  //     io.to(room).emit('swordsmen', {
+  //       playerOneUnitBank: game.playerOneUnitBank,
+  //       playerTwoUnitBank: game.playerTwoUnitBank
+  //     });
+  //     io.to(room).emit('updateResources', {
+  //       playerOneResources: game.playerOneResources,
+  //       playerTwoResources: game.playerTwoResources
+  //     });
+  //   } else {
+  //     io.to(socketId).emit('notEnoughResources');
+  //   }
+  // } else if (type === 'archers') {
+  //   if (resources.gold >= 10 && resources.wood >= 20) {
+  //     resources.gold -= 10;
+  //     resources.wood -= 20;
+  //     bank.archers += 10;
+  //     game[unitCount] += 10;
+  //     io.to(room).emit('archers', {
+  //       playerOneUnitBank: game.playerOneUnitBank,
+  //       playerTwoUnitBank: game.playerTwoUnitBank
+  //     });
+
+  //     io.to(room).emit('updateResources', {
+  //       playerOneResources: game.playerOneResources,
+  //       playerTwoResources: game.playerTwoResources
+  //     });
+  //   } else {
+  //     io.to(socketId).emit('not enough resources');
+  //   }
+  // } else if (type === 'knights') {
+  //   if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
+  //     resources.gold -= 20;
+  //     resources.wood -= 20;
+  //     resources.metal -= 20;
+
+  //     game[unitCount] += 10;
+  //     bank.knights += 10;
+  //     io.to(room).emit('knights', {
+  //       playerOneUnitBank: game.playerOneUnitBank,
+  //       playerTwoUnitBank: game.playerTwoUnitBank
+  //     });
+  //     io.to(room).emit('updateResources', {
+  //       playerOneResources: game.playerOneResources,
+  //       playerTwoResources: game.playerTwoResources
+  //     });
+  //   } else {
+  //     io.to(room).emit('not enough resources');
+  //   }
+  // }
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 app.get('/*', (req, res) => {

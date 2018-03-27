@@ -25,7 +25,10 @@ const DefaultState = {
   neighbors: [],
   menuVisible: true,
   showUnitShop: false,
-  deployment: null
+  deployment: null,
+  showLogin: false,
+  showSignup: false,
+  loggedInUser: 'anonymous'
 }
 
 export default DefaultState;

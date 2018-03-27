@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
-import { addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -15,6 +15,7 @@ import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
 import UnitBank from './UnitBank.jsx';
+import ChatWindow from './ChatWindow.jsx';
 
 class Board extends React.Component {
   constructor(props) {
@@ -26,6 +27,7 @@ class Board extends React.Component {
       combatMessage: 'May the strongest prevail!',
       combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
       confirmOpen: false,
+      disconnectModalOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
       tempKnights: 0
@@ -56,6 +58,12 @@ class Board extends React.Component {
         this.props.updateUnitCounts(10, 10);
         this.props.switchPlayer('player1');
         !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+        socket.emit('setLoggedInUser', {
+          username: this.props.loggedInUser,
+          player: this.props.userPlayer,
+          gameIndex: data.gameIndex,
+          room: data.room
+        })
       });
       socket.on('move', (move) => { // when socket receives result of move request,
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
@@ -74,6 +82,9 @@ class Board extends React.Component {
         }
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
       });
+      socket.on('setLoggedInUser', data => {
+        this.props.setLoggedInPlayer(data.player1, data.player2);
+      })
       socket.on('combat', () => {
         this.setState({ combatModalOpen: true });
         setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
@@ -90,6 +101,9 @@ class Board extends React.Component {
       this.props.socket.on('knights', () => {
         this.props.knights(this.props.currentPlayer);
       });
+      socket.on('troopsDeployed', data => {
+        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+      })
       socket.on('combatWin', () => {
         setTimeout(() => this.setState({
           combatMessage: 'You are victorious!',
@@ -127,9 +141,9 @@ class Board extends React.Component {
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
-      socket.on('troopsDeployed', data => {
-        console.log('troops deployed data:', data);
-        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+      socket.on('disconnect', () => {
+        this.setState({ disconnectModalOpen: true });
+        setTimeout(() => this.props.history.push('/'), 4000);
       })
     })();
   }
@@ -241,9 +255,6 @@ class Board extends React.Component {
   }
 
   addUnitsToHex(hexIndex, hex) {
-    console.log('this.props.deployment:', this.props.deployment);
-    console.log('hexIndex', hexIndex);
-    console.log('this.props', this.props)
     this.props.socket.emit('addUnits', {
       hexIndex: hexIndex,
       unit: this.props.deployment.unit,
@@ -385,6 +396,7 @@ class Board extends React.Component {
         </div>
           </Grid.Column>
           <Grid.Column width={2}>
+            <ChatWindow/>
             {this.props.currentPlayer === this.props.userPlayer ?
             <UnitBank />
             : <div></div>
@@ -402,6 +414,14 @@ class Board extends React.Component {
             <Modal.Actions>
               <Button type='submit' size={'tiny'} onClick={this.skipCombatAnmiation.bind(this)}>Skip</Button>
             </Modal.Actions>
+          </Modal>
+        </Transition>
+        <Transition animation={'fade up'} duration={'3500'} visible={this.state.disconnectModalOpen}>
+          <Modal open={this.state.disconnectModalOpen} size={'small'} style={{ textAlign: 'center' }}>
+            <Modal.Header>Your opponent has left the room.</Modal.Header>
+            <Modal.Content>
+              You are being rerouted to the lobby.
+            </Modal.Content>
           </Modal>
         </Transition>
       </div>
@@ -422,12 +442,15 @@ const mapStateToProps = (state) => {
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
-    deployment: state.state.deployment
+    deployment: state.state.deployment,
+    loggedInUser: state.state.loggedInUser,
+    playerOne: state.state.playerOne,
+    playerTwo: state.state.playerTwo
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, setPlayerOne, setPlayerTwo }, dispatch);

@@ -6,10 +6,11 @@ import { withRouter } from 'react-router';
 import Board from './Board.jsx';
 import Rules from './Rules.jsx';
 import Login from './Login.jsx';
+import Signup from './Signup.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
-import { exitGame, setRoom } from '../../src/actions/actions.js';
+import { toggleLoginSignup, exitGame, setRoom } from '../../src/actions/actions.js';
 
 class SidebarLeft extends React.Component {
   constructor(props) {
@@ -47,6 +48,12 @@ class SidebarLeft extends React.Component {
         }
       })
     })
+  }
+
+  showLoginOrSignupModal(type) {
+    console.log('fired, type', type);
+    this.props.toggleLoginSignup(type);
+    setTimeout(() => {console.log('this.state.showLogin', this.state.showLogin)})
   }
 
   handleChange(e, { name, value }) {
@@ -94,17 +101,19 @@ class SidebarLeft extends React.Component {
             </Menu.Item>
 
             <Menu.Item
-              as={Link} to='/login'
               name='login'
+              onClick={() => {this.showLoginOrSignupModal('login')}}
             >
+              <Login />
               <Icon name='user' />
               Login
             </Menu.Item>
 
             <Menu.Item
-              as={Link} to='/signup'
               name='signup'
-            >
+              onClick={() => {this.showLoginOrSignupModal('signup')}}
+            > 
+              <Signup />
               <Icon name='user' />
               Signup
             </Menu.Item>
@@ -171,12 +180,14 @@ const mapStateToProps = (state) => {
     currentPlayer: state.state.currentPlayer,
     userPlayer: state.state.userPlayer,
     playerOneResources: state.state.playerOneResources,
-    playerTwoResources: state.state.playerTwoResources
+    playerTwoResources: state.state.playerTwoResources,
+    showLogin: state.state.showLogin,
+    loggedInUser: state.state.loggedInUser
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ exitGame, setRoom }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));

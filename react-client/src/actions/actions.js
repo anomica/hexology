@@ -28,6 +28,13 @@ export const newRoom = (room) => (
   }
 )
 
+export const deleteRoom = (room) => (
+  {
+    type: 'DELETE-ROOM',
+    payload: room
+  }
+)
+
 export const menuToggle = () => (
   {
     type: 'MENU-TOGGLE'
@@ -209,6 +216,30 @@ export const addUnitsToHex = (hex, hexIndex, player) => (
       hex: hex,
       hexIndex: hexIndex,
       player: player
+    }
+  }
+)
+
+export const toggleLoginSignup = (type) => (
+  {
+    type: 'TOGGLE-LOGIN-SIGNUP',
+    payload: type
+  }
+)
+
+export const login = (username) => (
+  {
+    type: 'LOGIN',
+    payload: username
+  }
+)
+
+export const setLoggedInPlayer = (user1, user2) => (
+  {
+    type: 'SET-LOGGED-IN-PLAYER',
+    payload: {
+      player1: user1,
+      player2: user2
     }
   }
 )

@@ -5,6 +5,9 @@ import { bindActionCreators } from 'redux';
 import { setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
 import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
 import { withRouter } from 'react-router';
+import { bindActionCreators } from 'redux';
+import { toggleLoginSignup, login } from '../../src/actions/actions.js';
+
 
 class Signup extends React.Component {
   constructor(props) {
@@ -23,8 +26,10 @@ class Signup extends React.Component {
       email: this.state.email,
       password: this.state.password
     })
-    .then(async user => {
-      // console.log(user)
+    .then(data => {
+      this.props.login(data.data[0].username);
+      let context = this;
+      this.handleClose();
     })
     .catch(err => {
       alert('Username already exists');
@@ -39,10 +44,14 @@ class Signup extends React.Component {
       // console.log(`this.state[${[name]}]`, this.state[name])
     })
   }
+  
+  handleClose() {
+    this.props.toggleLoginSignup('signup');
+  }
 
   render() {
     return (
-      <Modal defaultOpen={true} closeIcon>
+      <Modal open={this.props.showSignup} closeIcon onClose={this.handleClose.bind(this)}>
         <Modal.Header>Signup</Modal.Header>
         <Modal.Content>
           <Modal.Description>
@@ -77,8 +86,13 @@ class Signup extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-    socket: state.state.socket.id
+    showSignup: state.state.showSignup,
+    loggedInUser: state.state.loggedInUser
   }
 }
 
-export default connect(mapStateToProps, null)(withRouter(Signup));
+const mapDispatchToProps = (dispatch) => {
+  return bindActionCreators({ toggleLoginSignup, login }, dispatch);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Signup);

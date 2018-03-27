@@ -7,22 +7,21 @@ let bodyParser = require('body-parser');
 
 module.exports = function (passport) {
   passport.serializeUser(function (user, done) { // creating sessions
-    console.log('serializingUser');
     done(null, user);
   });
 
-  passport.deserializeUser(async (user, done) => { // what actually gets passed in here as user?
-    // console.log('user from passport.deserializedUser:', user);
+  passport.deserializeUser(async (user, done) => { 
     // const userProfile = await db.findUserById(user);
     // console.log('deserializedUser:', userProfile);
     done(null, user);
   });
 
   // LOCAL LOGIN STRATEGY
-  passport.use('local-login', new LocalStrategy( 
-    async (username, password, cb) => {
+  passport.use('local-login', new LocalStrategy({
+    passReqToCallback: true
+  },
+    async (req, username, password, cb) => {
       const userInfo = await db.checkUserCreds(username);
-      console.log('userInfo:', userInfo);
       if (userInfo.length) {
         let user = userInfo[0];
         bcrypt.compare(password, user.password, (err, res) => {
@@ -45,12 +44,6 @@ module.exports = function (passport) {
     passReqToCallback: true,
   },
     async (req, username, password, cb) => {
-      // console.log('woooooo')
-      // console.log('req', req.body);
-      // console.log('username:', username);
-      // console.log('password:', password);
-      // console.log('cb:', cb);
-
       bcrypt.hash(password, 10, async (err, hash) => {
         if (err) {
           cb(err, null)
