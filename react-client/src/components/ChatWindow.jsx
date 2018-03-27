@@ -39,11 +39,9 @@ class ChatWindow extends React.Component {
   }
 
   submitMessage() {
-    let username;
-    this.props.loggedInUser ? username = this.props.loggedInUser : username = 'anonymous';
     this.props.socket.emit('sendMessage', {
       message: this.state.message,
-      username: username,
+      username: this.props.loggedInUser,
       socketId: this.props.socket.id
     });
     this.setState({ message: '' })

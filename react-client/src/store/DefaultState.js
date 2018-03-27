@@ -1,5 +1,4 @@
 const DefaultState = {
-  username: 'Anonymous',
   playerOne: undefined,
   playerTwo: undefined,
   playerOneTotalUnits: 10,
@@ -29,7 +28,7 @@ const DefaultState = {
   deployment: null,
   showLogin: false,
   showSignup: false,
-  loggedInUser: null
+  loggedInUser: 'anonymous'
 }
 
 export default DefaultState;
