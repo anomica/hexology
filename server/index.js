@@ -1,4 +1,3 @@
-/************************************** SERVER FILE WHEN USING DATABASE ***************************************/
 const express = require('express');
 const bodyParser = require('body-parser');
 const url = require('url');
@@ -305,15 +304,12 @@ const moveUnits = async (data, socket) => {
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget); // assess legality of move
 
   if (legal) { // if legal move,
+    //////////////////////////// IF USING GAME OBJECT ON SERVER ////////////////////////////
+    // let collision = await checkForCollision(originIndex, targetIndex, gameIndex, room); // check for collision
+    ////////////////////////////////////////////////////////////////////////////////////////
 
     //////////////////////////////////// IF USING DATABASE ////////////////////////////////
     let collision = await checkForCollision(updatedOrigin.index, updatedTarget.index, gameIndex, room); // check for collision
-    ////////////////////////////////////////////////////////////////////////////////////////
-
-    // console.log('........................................checking for collision after legal move.............\n', collision)
-
-    //////////////////////////// IF USING GAME OBJECT ON SERVER ////////////////////////////
-    // let collision = await checkForCollision(originIndex, targetIndex, gameIndex, room); // check for collision
     ////////////////////////////////////////////////////////////////////////////////////////
 
     if (collision) {
@@ -352,9 +348,7 @@ const moveUnits = async (data, socket) => {
         if (result === 'tie') { // game tie
           console.log('\n===================================================== IT WAS A TIE =================================\n')
           io.to(room).emit('tieGame');
-
           const board = await gameInit(5, 4);
-
           let gameIndex = uuidv4();
 
           //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
@@ -388,8 +382,8 @@ const moveUnits = async (data, socket) => {
           return;
         }
 
-        if (result.tie === true) {
-          console.log('\n****************************** RESULT.TIE = TRUE ******************************\n');
+        if (result.tie === true) { // individual combat tie but someone still has units
+          console.log('\n****************************** individual combat tie but someone still has units (result.tie === true) ******************************\n');
 
           let updatedOriginPlayer = null;
           let updatedTargetPlayer = null;
@@ -422,25 +416,23 @@ const moveUnits = async (data, socket) => {
             originIndex: originIndex,
             targetIndex: targetIndex
           }
-          io.to(room).emit('move', newMove); // individual combat tie but someone still has units
+          io.to(room).emit('move', newMove);
           return;
         }
 
         if (result.gameOver) {  // // if the game is over & attacker wins, need to change hexes and send back board
-
           console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GAME IS OVER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n')
 
           if (result.gameOver === 'player1' && currentPlayer === 'player1' ||
           result.gameOver === 'player2' && currentPlayer === 'player2') {
 
-            console.log('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\nresult.gameOver -> WINNER :\n', result.gameOver)
-            console.log('\ncurrentPlayer:\n', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
+            console.log('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\nresult.gameOver -> WINNER: ', result.gameOver)
+            console.log('\ncurrentPlayer: ', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
 
             io.to(socketId).emit('winGame'); // the attacker gets a personal win message
             socket.to(room).emit('loseGame'); // while the rest of the room (defender) gets lose message
 
           } else {
-
             io.to(socketId).emit('loseGame');
             socket.to(room).emit('winGame');
           }
@@ -507,6 +499,9 @@ const moveUnits = async (data, socket) => {
             updatedTargetPlayer = 'player' + result.updatedTarget.player;
           }
 
+          let dbP1TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player1');
+          let dbP2TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player2');
+
           let move = {
             updatedOrigin: {
               coordinates: [result.updatedOrigin.coordinate_0, result.updatedOrigin.coordinate_1, result.updatedOrigin.coordinate_2],
@@ -530,20 +525,14 @@ const moveUnits = async (data, socket) => {
             targetIndex: targetIndex,
 
             updatedUnitCounts: {
-              playerOneTotalUnits: games[gameIndex].playerOneTotalUnits, // TODO: UPDATE THIS
-              playerTwoTotalUnits: games[gameIndex].playerTwoTotalUnits, // TODO: UPDATE THIS
+              playerOneTotalUnits: dbP1TotalUnits,
+              playerTwoTotalUnits: dbP2TotalUnits,
             }
           }
 
-          // console.log('\n---------> MOVE WHEN GAME ISNT OVER:\n', move);
+          console.log('\n---------> MOVE WHEN GAME ISNT OVER:\n', move, '\n');
 
           await db.updateDbHexes(masterOrigin, move.updatedTarget, currentPlayer, move.updatedOrigin); // updates the original hex and new hex in the db for the current player
-          
-          let moveUpdateOrigin = await db.getHex(move.updatedOrigin.index);
-          let moveUpdateTarget = await db.getHex(move.updatedTarget.index);
-          
-          // console.log('\nmove updated origin from DB:\n', moveUpdateOrigin);
-          // console.log('\nmove update target from DB:\n', moveUpdateTarget);
           /////////////////////////////////////////////////////////////////////////////////////////////
 
           await io.to(room).emit('move', move);
@@ -569,8 +558,6 @@ const moveUnits = async (data, socket) => {
         targetIndex: targetIndex,
         updatedTarget: updatedTarget
       };
-
-      // console.log('\n_______________________________________________________________\nMOVE for ', currentPlayer, '\n', move, '\n_______________________________________________________________\n')
 
       /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
       await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
@@ -1475,62 +1462,94 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
   } else if (defenderArmySize) {
     console.log('\n~~~~~~~~~~~~~~~~~~~ the DEFENDER has an army left over ~~~~~~~~~~~~~~~~~~~\n')
 
-    let origHex = await db.getHex(updatedOrigin.index); // original origin hex from db (returns an object)
+    console.log('\nORIGINAL UPDATED ORIGIN:\n', updatedOrigin)
 
-    // console.log('\n---------------------- origin hex from db:\n', origHex, '\n----------------------');
+    let origUpdatedOriginPlayer = null;
+    if (updatedOrigin.player) {
+      origUpdatedOriginPlayer = Number(updatedOrigin.player[updatedOrigin.player.length - 1]); //TODO: update with player
+    }
+
+    let origUpdatedOrigin = [{
+      hex_index: updatedOrigin.index,
+      coordinate_0: updatedOrigin.coordinates[0],
+      coordinate_1: updatedOrigin.coordinates[1],
+      coordinate_2: updatedOrigin.coordinates[2],
+      swordsmen: updatedOrigin.swordsmen,
+      archers: updatedOrigin.archers,
+      knights: updatedOrigin.knights,
+      player: origUpdatedOriginPlayer,
+      hex_owner: origUpdatedOriginPlayer
+    }];
+
+    console.log('\nUPDATED ORIGIN OBJECT (DEFENDER) --- I CREATED ---:\n', origUpdatedOrigin);
+
+    let dbUpdatedOrigin = await db.getHex(origUpdatedOrigin[0].hex_index); // original origin hex from db (returns an object)
+    
+    console.log('\nORIGIN HEX -- TO BE UPDATED FROM DB --\n', dbUpdatedOrigin, '\n');
+
+    // calculate remaining units on origin hex to determine if player should remain on/own hex or not
+    let remainingAttackerSwordsmen = origUpdatedOrigin[0].swordsmen + attackerSwordsmen;
+    let remainingAttackerArchers = origUpdatedOrigin[0].archers + attackerArchers;
+    let remainingAttackerKnights = origUpdatedOrigin[0].knights + attackerKnights;
+    let remainingAttackerArmy = remainingAttackerSwordsmen + remainingAttackerArchers + remainingAttackerKnights;
+    let updatedPlayer = null;
+    if (remainingAttackerArmy > 0) {
+      updatedPlayer = attackerPlayer;
+    }
 
     updatedOrigin = { // reinitialize hex they left
       /////////////////// IF USING GAME OBJ ON SERVER ///////////////
       // ...updatedOrigin,
       // swordsmen: updatedOrigin.swordsmen + attackerSwordsmen, // if there are units left behind, make sure they stay
-      // archers: updatedOrigin.knights + attackerKnights,
-      // knights: updatedOrigin.archers + attackerArchers,
+      // archers: updatedOrigin.archers + attackerArchers,
+      // knights: updatedOrigin.knights + attackerKnights,
       // player: null,
       // hex_owner: null
       //////////////////////////////////////////////////////////////
 
       ////////////////////// IF USING DATABASE /////////////////////
-      ...origHex[0],
-      swordsmen: attackerSwordsmen, // if there are units left behind, make sure they stay
-      archers: attackerKnights,
-      knights: attackerArchers,
-      player: null,
-      hex_owner: null
-      // swordsmen: origHex[0].swordsmen + attackerSwordsmen, // if there are units left behind, make sure they stay
-      // archers: origHex[0].knights + attackerKnights,
-      // knights: origHex[0].archers + attackerArchers,
+      ...origUpdatedOrigin[0],
+      swordsmen: remainingAttackerSwordsmen, // if there are units left behind, make sure they stay
+      archers: remainingAttackerArchers,
+      knights: remainingAttackerKnights,
+      player: updatedPlayer,
+      hex_owner: updatedPlayer
       /////////////////////////////////////////////////////////////
     }
 
-    // console.log('\n+++++++++++++++++++++++++++++++++ updated origin from db:\n', updatedOrigin, '\n+++++++++++++++++++++++++++++++++');
+    console.log('\nUPDATED ORIGIN -- OBJECT TO BE SENT TO FRONT END --:\n', updatedOrigin);
 
-    if (origHex[0].player !== updatedOrigin.player) { // if original player on the hex is not null
+    await db.updateHexUnits(origUpdatedOrigin[0].hex_index, updatedOrigin.swordsmen, updatedOrigin.archers, updatedOrigin.knights, 'player' + dbUpdatedOrigin[0].player); // update hex in db with origin's remaining units
 
-      await db.updateHexUnits(updatedOrigin.hex_index, updatedOrigin.swordsmen, updatedOrigin.archers, updatedOrigin.knights, 'player' + origHex[0].player); // update units on hex in the db (for original player/owner of hex)
+    console.log('\n------THESE SHOULD EQUAL:-------\nupdatedOrigin.player (player on hex in object): ', updatedOrigin.player);
+    console.log('dbUpdatedOrigin[0].player (player on hex in db): ', dbUpdatedOrigin[0].player,'\n')
 
-      await db.switchHexOwner(updatedOrigin.hex_index, null); // then update the hex player/owner in the db with null
-    }
+    let checkDb = await db.getHex(origUpdatedOrigin[0].hex_index)
 
-    ////////////////////////////////////// IF USING GAME OBJECT ON SERVER ///////////////////////////////
-    // updatedOrigin.swordsmen + updatedOrigin.archers + updatedOrigin.knights > 0 ? updatedOrigin.player = attackerPlayer : null;
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    console.log('\nUPDATED ORIGIN HEX FROM DB (SHOULD MATCH OBJECT SENT TO FRONT END):\n', checkDb);
 
-    //////////////////////////////////////// IF USING DATABASE //////////////////////////////////////////
-    if (updatedOrigin.swordsmen + updatedOrigin.archers + updatedOrigin.knights > 0) {
-      updatedOrigin.player = attackerPlayer;
-      updatedOrigin.hex_owner = attackerPlayer;
+    console.log('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    console.log('\nTARGET STUFF\n')
+    // Updated target stuff
+    console.log('\nORIGINAL UPDATED TARGET -- OBJECT --:\n', updatedTarget);
 
-      await db.switchHexOwner(updatedOrigin.hex_index, 'player' + attackerPlayer);
+    let origTarget = [{
+      hex_index: updatedTarget.index,
+      coordinate_0: updatedTarget.coordinates[0],
+      coordinate_1: updatedTarget.coordinates[1],
+      coordinate_2: updatedTarget.coordinates[2],
+      player: Number(updatedTarget.player[updatedTarget.player.length - 1]),
+      hex_owner: Number(updatedTarget.player[updatedTarget.player.length - 1]),
+      swordsmen: updatedTarget.swordsmen,
+      archers: updatedTarget.archers,
+      knights: updatedTarget.knights
+    }];
 
-    } else {
-      updatedOrigin.player = null;
-      updatedOrigin.hex_owner = null;
+    console.log('\nUPDATED TARGET OBJECT --I CREATED--:\n', origTarget);
 
-      await db.switchHexOwner(updatedOrigin.hex_index, null);
-    }
-    
-    let origTarget = await db.getHex(updatedTarget.index); // original target hex from db (returns an object)
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    let dbUpdatedTarget = await db.getHex(updatedTarget.index); // original target hex from db (returns an object)
+
+    console.log('\nUPDATED TARGET HEX FROM DB -- TO BE UPDATED--:\n', dbUpdatedTarget);
 
     updatedTarget = { //
       /// IF USING GAME OBJECT ON SERVER ///
@@ -1540,7 +1559,6 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
       ///////// IF USING DATABASE //////////
       ...origTarget[0],
       //////////////////////////////////////
-
       swordsmen: defenderSwordsmen,
       knights: defenderKnights,
       archers: defenderArchers,
@@ -1548,55 +1566,37 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
       hex_owner: defenderPlayer
     }
 
-    if (origTarget[0].player !== updatedTarget.player) { // if original player on the hex is not the defender
-      await db.updateHexUnits(updatedTarget.hex_index, updatedTarget.swordsmen, updatedTarget.archers, updatedTarget.knights, 'player' + origTarget[0].player); // update units on hex in the db (for original player/owner of hex)
+    console.log('\nNEW UPDATED TARGET -- OBJECT (TO BE SENT TO FRONT END) --:\n', updatedTarget);
 
-      await db.switchHexOwner(updatedTarget.hex_index, 'player' + updatedTarget.player); // then update the hex player/owner in the db with the defender player
+    await db.updateHexUnits(updatedTarget.hex_index, updatedTarget.swordsmen, updatedTarget.archers, updatedTarget.knights, 'player' + dbUpdatedTarget[0].player); // update units on hex in the db (for original player/owner of hex)
+
+    if (dbUpdatedTarget[0].player !== defenderPlayer) { // if original player on the hex is not the defender
+      await db.switchHexOwner(updatedTarget.hex_index, 'player' + defenderPlayer); // update the hex player/owner in the db with the defender player
     }
+
+    console.log('check if (dbUpdatedTarget[0].player !== defenderPlayer):')
+    console.log('dbUpdatedTarget[0].player: ', dbUpdatedTarget[0].player, 'defenderPlayer:', defenderPlayer)
+
+    let checkDbTarget = await db.getHex(updatedTarget.hex_index);
+
+    console.log('\nUPDATED TARGET HEX FROM DB (SHOULD MATCH OBJECT SENT TO FRONT END):\n', checkDbTarget);
+
+    console.log('\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
     flag = 'defender';
   }
 
-  /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-  // let masterOrigin = await db.getHex(updatedOrigin.index);
-  // await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin);
-  /////////////////////////////////////////////////////////////////////////////////////////////
+  ///// where i left off ////
 
-  ////////// SHOULD NOT BE NEEDED AFTER DB WORKS //////////
-  // if (games[gameIndex].playerOneTotalUnits < 0) {
-  //   games[gameIndex.playerOneTotalUnits] = 0;
-  // }
-  // if (games[gameIndex].playerTwoTotalUnits < 0) {
-  //   games[gameIndex.playerTwoTotalUnits] = 0;
-  // }
-  ////////////////////////////////////////////////////////
+  let updatedP1TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player1');
+  let updatedP2TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player2');
 
-  let finalP1Units = 0;
-  let finalP2Units = 0;
-
-  let finalBoard = await db.getGameBoard(room, gameIndex); // get the final game board
-
-  console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nCALCUATING EACH PLAYERS HEXES:')
-  finalBoard.forEach( hex => {
-    if (hex.hex_owner === 1) { // if player 1 owns the hex
-      let currentUnits = hex.swordsmen + hex.archers + hex.knights;
-      console.log(`\nPLAYER 1 OWNS THIS HEX (HEX ID: ${hex.hex_id}):\n  SWORDSMEN (${hex.swordsmen}) + ARCHERS (${hex.archers}) + KNIGHTS (${hex.knights})`);
-      finalP1Units += currentUnits;
-
-    } else if (hex.hex_owner === 2) { // if player 2 owns the hex
-      let currentUnits = hex.swordsmen + hex.archers + hex.knights;
-      console.log(`\nPLAYER 1 OWNS THIS HEX (HEX ID: ${hex.hex_id}):\n  SWORDSMEN (${hex.swordsmen}) + ARCHERS (${hex.archers}) + KNIGHTS (${hex.knights})`);
-      finalP2Units += currentUnits;
-    }
-  });
-  console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-
-  console.log('\n-----------------------------------------------\nFINAL P1 UNITS AFTER COMBAT:', finalP1Units);
-  console.log('FINAL P2 UNITS AFTER COMBAT:', finalP2Units, '\n-----------------------------------------------')
-
-  // let finalP1Units = await db.getTotalUnits(gameIndex, room, 'player1');
-  // console.log('\n<<<<<<<<<<<<<<<<<<<<<<<<<<< final p1 units >>>>>>>>>>>>>>>>>>>>>>>>>\n', finalP1Units, '\n');
-  // let finalP2Units = ;
+  if (updatedP1TotalUnits < 0) {
+    await db.updatePlayerTotalUnits(room, gameIndex, 'player1', 0, 'replace'); // zero out any negative units
+  }
+  if (updatedP2TotalUnits < 0) {
+    await db.updatePlayerTotalUnits(room, gameIndex, 'player2', 0, 'replace');
+  }
 
   return {
     /////////////////////////////////// IF USING GAME OBJECT ON SERVER ///////////////////////////////////////////
@@ -1604,9 +1604,8 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //////////////////////////////////// IF USING DATABASE //////////////////////////////////////////////////////
-    gameOver: await checkForWin(finalP1Units, finalP2Units),
+    gameOver: await checkForWin(updatedP1TotalUnits, updatedP2TotalUnits),
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     updatedOrigin: updatedOrigin,
     updatedTarget: updatedTarget,
     flag: flag
@@ -1614,7 +1613,6 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
 };
 
 const checkForWin = async (playerOneUnits, playerTwoUnits) => {
-  //////////////// IF USING GAME OBJECT ON SERVER ////////////////
   if (playerOneUnits <= 0) {
     return 'player2';
   } else if (playerTwoUnits <= 0) {
@@ -1622,43 +1620,6 @@ const checkForWin = async (playerOneUnits, playerTwoUnits) => {
   } else {
     return false;
   }
-  ////////////////////////////////////////////////////////////////
-
-  ////////////////////// IF USING DATABASE //////////////////////
-  // let board = await db.getGameBoard(room, gameIndex);
-  // board.forEach(hex => {
-  //   console.log('--------------------------------------------- looping through the board hexes ------------------------------')
-  //   console.log('hex id: ', hex.hex_id, '\nhex player: ', hex.player);
-// const checkForWin = async (losingPlayer, winningPlayer, gameIndex, room) => {
-  // console.log('--------------------------------------------- CHECKING FOR WIN ------------------------------');
-  // console.log('>>>>>>>>>>>> loser <<<<<<<<<<<<<<<<< ', losingPlayer);
-  // console.log('>>>>>>>>>>>> winner <<<<<<<<<<<<<<<<< ', winningPlayer);
-  // let isGameOver = true;
-
-
-  ////////////////////// IF USING DATABASE //////////////////////
-  // let board = await db.getGameBoard(room, gameIndex);
-  //
-  // board.forEach(hex => {
-  //   // console.log('--------------------------------------------- looping through the board hexes ------------------------------')
-  //   // console.log('hex id: ', hex.hex_id, ' hex player: ', hex.player);
-  //   if (hex.player === losingPlayer) {
-  //     isGameOver = false;
-  //   }
-  // })
-  // ////////////////////////////////////////////////////////////////
-  //
-  // if (isGameOver) {
-  //   // console.log('_______________________GAME OVER_______________________');
-  //
-  //   /////////////// UNCOMMENT WHEN USING DATABASE ///////////////////
-  //   db.gameComplete(gameIndex, room, winningPlayer, losingPlayer); // updates game to completed & user wins/losses
-  //   ////////////////////////////////////////////////////////////////
-  //
-  //   return winningPlayer;
-  // }
-  // // console.log('_______________________GAME AINT OVER_______________________')
-  // return isGameOver;
 }
 
 // TODO: this should not be needed once db works... this is all handled in the updateDbhex func
@@ -2033,4 +1994,3 @@ server.listen(process.env.PORT || 3000, function () {
 });
 
 // Game State starters
-/**************************************************************************************************************/

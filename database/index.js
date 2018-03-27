@@ -342,7 +342,7 @@ const increasePlayerBank = async (room, gameIndex, currentPlayer, type, quantity
 }
 
 //////////////// Updates a player's total units in game //////////////////
-const updatePlayerTotalUnits = async (room, gameIndex, currentPlayer, quantity, action) => { // action will be 'increase' or 'replace' or 'subtract'
+const updatePlayerTotalUnits = async (room, gameIndex, currentPlayer, quantity, action) => { // action will be 'increase' or 'replace' or 'decrease'
   let playerId = await currentPlayer[currentPlayer.length - 1]; // TODO: update with player id
   let roomNum = await room.split('*').join('');
 
