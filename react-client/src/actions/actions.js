@@ -206,3 +206,27 @@ export const addUnitsToHex = (hex, hexIndex, player) => (
     }
   }
 )
+
+export const toggleLoginSignup = (type) => (
+  {
+    type: 'TOGGLE-LOGIN-SIGNUP',
+    payload: type
+  }
+)
+
+export const login = (username) => (
+  {
+    type: 'LOGIN',
+    payload: username
+  }
+)
+
+export const setLoggedInPlayer = (user1, user2) => (
+  {
+    type: 'SET-LOGGED-IN-PLAYER',
+    payload: {
+      player1: user1,
+      player2: user2
+    }
+  }
+)
