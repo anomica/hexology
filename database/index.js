@@ -532,7 +532,8 @@ const decreasePlayerBank = async (room, gameIndex, currentPlayer, type, quantity
 const switchHexOwner = async (hexIndex, updatedOwner) => {
   let ownerId = null;
 
-  if (updatedOwner !== null) { // if there is an owner to be updated
+  if (updatedOwner) { // if there is an owner to be updated
+    console.log('\nupdating hex owner and player to new player in db\n')
     ownerId = await updatedOwner[updatedOwner.length - 1]; // update with the owner id
     await knex('hex')
       .where(knex.raw(`'${hexIndex}' = hex_index`))
@@ -541,11 +542,12 @@ const switchHexOwner = async (hexIndex, updatedOwner) => {
         hex_owner: ownerId
       })
   } else { // else if updating to no owner
+    console.log('\nupdating hex owner and player to null in db\n')
     await knex('hex')
       .where(knex.raw(`'${hexIndex}' = hex_index`))
       .update({
-        player: null,
-        hex_owner: null
+        hex_owner: null,
+        player: null
       })
   }
 }

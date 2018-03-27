@@ -362,7 +362,7 @@ const moveUnits = async (data, socket) => {
   let currentPlayer = await data.currentPlayer; // player whose turn it is
   let socketId = await data.socketId; // socket to send back response if necessary
 
-  let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget); // assess legality of move
+  let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, room, gameIndex); // assess legality of move
 
   if (legal) { // if legal move,
     //////////////////////////// IF USING GAME OBJECT ON SERVER ////////////////////////////
@@ -375,18 +375,18 @@ const moveUnits = async (data, socket) => {
 
     if (collision) {
       if (collision === 'friendly') { // if collision and collision is friendly,
-        let result = await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room); // update hexes without combat occuring
+        console.log('\n.....friendly collision....\n')
 
-        console.log('\nresult on friendly collision: ', result, '\n');
+        await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room); // update hexes without combat occuring
 
         let move = {
-          updatedOrigin: result.updatedOrigin,
+          updatedOrigin: updatedOrigin,
           originIndex: originIndex,
-          updatedTarget: result.updatedTarget,
+          targetIndex: targetIndex,
           updatedTarget: updatedTarget
         }
 
-        console.log('\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\nMOVE ON COLLISION:\n', move, '\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\n')
+        console.log('\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\nMOVE ON FRIENDLY COLLISION:\n', move, '\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\n')
 
         /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
         await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
@@ -836,7 +836,7 @@ const verifyBankSubtractUnits = async (player, unit, quantity, bank, gameIndex, 
   }
 }
 
-const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, cb) => { // to check move legality,
+const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, room, gameIndex) => { // to check move legality,
 
   // console.log('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CHECKING LEGAL MOVE');
   // console.log('masterOrigCs: ', masterOrigCs, ' ----------- origCs: ', origCs);
@@ -848,7 +848,7 @@ const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, 
   if (await masterOrigCs[0] === origCs[0] && masterOrigCs[1] === origCs[1] && masterOrigCs[2] === origCs[2] && // make sure all coordinates match between origin
       masterTarCs[0] === tarCs[0] && masterTarCs[1] === tarCs[1] && masterTarCs[2] === tarCs[2]) { // and target **********NEED TO ADD CHECK TO MAKE SURE RESOURCE COUNTS AND UNIT COUNTS MATCH
 
-    // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES MATCH');
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COORDINATES MATCH');
 
     /////////////////////////// IF USING GAMES OBJECT ON SERVER ///////////////////////////////////
     // if (masterOrigin.archers === updatedOrigin.archers + updatedTarget.archers &&
@@ -872,6 +872,41 @@ const checkLegalMove = async (masterOrigCs, origCs, updatedOrigin, masterTarCs, 
       console.log('\n', 'master origin knights: ', masterOrigin[0].knights, '\nshould equal\nupdated origin knights; ', updatedOrigin.knights, '\nupdated target knights: ', updatedTarget.knights)
 
       console.log('\n', 'master origin swordsmen: ', masterOrigin[0].swordsmen, '\nshould equal\nupdated origin swordsmen; ', updatedOrigin.swordsmen, '\nupdated target swordsmen: ', updatedTarget.swordsmen)
+
+      console.log('\nmasterOrigin:\n', masterOrigin)
+      console.log('\nupdatedOrigin:\n', updatedOrigin)
+      console.log('\nupdatedTarget:\n', updatedTarget)
+
+      let dbTargetHex = await db.getHex(updatedTarget.index);
+      console.log('\nupdatedTargetHex in DB to be updated:\n', dbTargetHex)
+
+      let dbOriginHex = await db.getHex(updatedOrigin.index);
+
+      console.log('\ndbOriginHex:\n', dbOriginHex);
+
+      if ('player' + dbTargetHex[0].hex_owner === updatedTarget.player) { // if owners of both hexes are the same
+        // await db.updatePlayerTotalUnits(room, gameIndex, updatedTarget.player, dbTargetHex[0].swordsmen + dbTargetHex[0].archers + dbTargetHex[0].knights, 'decrease'); // decrease total units for player in game in db by the original amount on hex
+
+        // await db.updatePlayerTotalUnits(room, gameIndex, updatedTarget.player, updatedTarget.swordsmen + updatedTarget.archers + updatedTarget.knights, 'increase'); // increase total units for player in game in db
+
+        await db.updateHexUnits(updatedTarget.index, updatedTarget.swordsmen, updatedTarget.archers, updatedTarget.knights, updatedTarget.player); // update the hex in db with the new units on the hex
+
+        let checkTarget = await db.getHex(updatedTarget.index);
+        console.log('\nnew target hex in the db:\n', checkTarget)
+
+        await db.updateHexUnits(updatedOrigin.index, updatedOrigin.swordsmen, updatedOrigin.archers, updatedOrigin.knights, dbOriginHex[0].player)// remove the units moved from updated origin hex in the db
+
+        let checkOrigin = await db.getHex(updatedOrigin.index);
+
+        if ((checkOrigin[0].swordsmen + checkOrigin[0].archers + checkOrigin[0].knights) === 0) { // if no remaining units left on the hex, update player/hex owner to null on the hex
+          await db.switchHexOwner(checkOrigin.index, null); // TODO: this is not updating the hex_owner to null for some reason!!!!
+        }
+
+        console.log('\nnew updated origin hex in the db:\n', checkOrigin)
+
+        isLegal = true;
+        return true;
+      }
       return false;
     }
   } else {
@@ -904,7 +939,7 @@ const checkForCollision = async (originHexIndex, targetHexIndex, gameIndex, room
   let origin = await db.getHex(originHexIndex); // get original hex from db / NOTE: returns an object
   let target = await db.getHex(targetHexIndex); // get new target hex from db / NOTE: returns an object
 
-  console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nCHECKING FOR COLLISION:\n', 'ORIGIN PLAYER: ', origin[0].hex_owner, ' ------ HEX INDEX: ', originHexIndex, '\nTARGET PLAYER: ', target[0].hex_owner, ' ------ HEX INDEX: ', targetHexIndex, '\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
+  console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nCHECKING FOR COLLISION:\n', 'ORIGIN PLAYER: ', origin[0].hex_owner, ' ------ HEX INDEX: ', originHexIndex, '\n  TARGET PLAYER: ', target[0].hex_owner, ' ------ HEX INDEX: ', targetHexIndex, '\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
   
   if (origin[0].hex_owner && target[0].hex_owner) { // if  original hex & new target hex are owned by players
     let collision = '';
@@ -1381,7 +1416,11 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
 
     console.log('\nupdatedTarget object:\n', updatedTarget, '\n');
 
-    await db.updateHexUnits(origTarget[0].hex_index, updatedTarget.swordsmen, updatedTarget.archers, updatedTarget.knights, 'player' + hexInDb[0].player); // update hex in db with attacker's remaining units
+    if (hexInDb[0].player) { // if hex in db had player/owner
+      await db.updateHexUnits(origTarget[0].hex_index, updatedTarget.swordsmen, updatedTarget.archers, updatedTarget.knights, 'player' + hexInDb[0].player); // update hex in db with attacker's remaining units
+    } else { // if null
+      await db.updateHexUnits(origTarget[0].hex_index, updatedTarget.swordsmen, updatedTarget.archers, updatedTarget.knights, null); // update hex in db with attacker's remaining units
+    }
 
     await db.switchHexOwner(origTarget[0].hex_index, 'player' + updatedTarget.player); // switch the player/hex owner in db to the attacker
 
