@@ -87,16 +87,18 @@ class ChatWindow extends React.Component {
                 <Segment style={{height: '160px', overflowY: 'scroll', border: '1px solid grey'}}>
                   {this.state.messageHistory && this.state.messageHistory.map(message => {
                     return (
-                      <p key={uuidv4()}><strong
-                        style={{color: message.socketId === this.props.socket.id ? 'blue': 'red'}}
-                      >
-                        {message.username}:</strong>  {message.message}
+                      <p key={uuidv4()}>
+                        <strong
+                          style={{color: message.socketId === this.props.socket.id ?
+                          'blue': 'red'}}>{message.username}:
+                        </strong>
+                        {message.message}
                       </p>
                     )
                   })}
                 </Segment>
                 <TextArea
-                  style={{height: '40px', overflowY: 'scroll', border: '1px solid grey'}}
+                  style={{height: '45px', overflowY: 'scroll', border: '1px solid grey'}}
                   placeholder={'Say hi!'}
                   value={this.state.message}
                   onChange={this.handleChange.bind(this)}

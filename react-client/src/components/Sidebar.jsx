@@ -10,7 +10,8 @@ import Signup from './Signup.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
-import { toggleLoginSignup, exitGame, setRoom } from '../../src/actions/actions.js';
+import { toggleLoginSignup, exitGame, setRoom, login } from '../../src/actions/actions.js';
+import axios from 'axios';
 
 class SidebarLeft extends React.Component {
   constructor(props) {
@@ -21,7 +22,9 @@ class SidebarLeft extends React.Component {
       newGame: false,
       newGameModalOpen: false,
       gameType: 'public',
-      rules: false
+      rules: false,
+      logoutModal: false,
+      disabled: window.location.href.indexOf('game') === -1 ? false : true
     }
 
     this.toggleMenu = this.toggleMenu.bind(this);
@@ -51,9 +54,20 @@ class SidebarLeft extends React.Component {
   }
 
   showLoginOrSignupModal(type) {
-    console.log('fired, type', type);
     this.props.toggleLoginSignup(type);
-    setTimeout(() => {console.log('this.state.showLogin', this.state.showLogin)})
+    // setTimeout(() => {console.log('this.state.showLogin', this.state.showLogin)})
+  }
+
+  logout() {
+    axios.post('/logout')
+      .then(data => {
+        this.props.login('anonymous');
+        this.setState({ logoutModal: true });
+        setTimeout(() => this.setState({ logoutModal: false }), 2000);
+      })
+      .catch(err => {
+        console.error(err);
+      });
   }
 
   handleChange(e, { name, value }) {
@@ -76,7 +90,8 @@ class SidebarLeft extends React.Component {
       sidebar: {
         position: 'fixed',
         height: '100%',
-        minWidth: this.props.menuVisible ? '160px' : 0
+        minWidth: this.props.menuVisible ? '160px' : 0,
+        zIndex: 1000
       }
     }
 
@@ -86,7 +101,8 @@ class SidebarLeft extends React.Component {
 
             <Menu.Item
               name='game'
-              onClick={() => this.setState({ newGameModalOpen: true })}
+              onClick={() => this.setState({ newGameModalOpen: !this.state.newGameModalOpen })}
+              disabled={this.state.disabled}
             >
               <Icon name='gamepad' />
               Start New Game
@@ -100,23 +116,40 @@ class SidebarLeft extends React.Component {
               Rules
             </Menu.Item>
 
-            <Menu.Item
-              name='login'
-              onClick={() => {this.showLoginOrSignupModal('login')}}
-            >
-              <Login />
-              <Icon name='user' />
-              Login
-            </Menu.Item>
+            {this.props.loggedInUser === 'anonymous' ?
+              <Menu.Item
+                name='signup'
+                onClick={() => {this.showLoginOrSignupModal('signup')}}
+                >
+                <Signup />
+                <Icon name='user' />
+                Signup
+              </Menu.Item> :
+              <Menu.Item
+                name='welcome'
+              >
+              <Icon name='hand victory'/>
+              Welcome, {this.props.loggedInUser}!
+              </Menu.Item>
+            }
 
-            <Menu.Item
-              name='signup'
-              onClick={() => {this.showLoginOrSignupModal('signup')}}
-            > 
-              <Signup />
-              <Icon name='user' />
-              Signup
-            </Menu.Item>
+            {this.props.loggedInUser === 'anonymous' ?
+              <Menu.Item
+                name='login'
+                onClick={() => {this.showLoginOrSignupModal('login')}}
+                >
+                <Login />
+                <Icon name='user' />
+                Login
+              </Menu.Item> :
+              <Menu.Item
+                name='logout'
+                onClick={() => this.logout()}
+              >
+              <Icon name='remove user' />
+                Logout
+              </Menu.Item>
+            }
 
             <Menu.Item>
               <strong>Hex Legend</strong>
@@ -165,6 +198,18 @@ class SidebarLeft extends React.Component {
               <Button color={'green'} onClick={this.newGame.bind(this)}>Start Game</Button>
             </Modal.Actions>
           </Modal>
+          <Modal
+            open={this.state.logoutModal}
+            size={'tiny'}
+            style={{textAlign: 'center'}}
+          >
+            <Modal.Header>Logout Successful!</Modal.Header>
+            <Modal.Content>
+              <Modal.Description>
+                See you again soon!
+              </Modal.Description>
+            </Modal.Content>
+          </Modal>
 
             {showRules()}
 
@@ -176,6 +221,7 @@ class SidebarLeft extends React.Component {
 const mapStateToProps = (state) => {
   return {
     socket: state.state.socket,
+    boardState: state.state.boardState,
     menuVisible: state.state.menuVisible,
     currentPlayer: state.state.currentPlayer,
     userPlayer: state.state.userPlayer,
@@ -187,7 +233,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup, login }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));
