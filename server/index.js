@@ -273,8 +273,15 @@ const findOpenRooms = () => { // finds an open room, right now just picking the 
 
 setInterval(findOpenRooms, 1000);
 
+app.get('/userwins', async (req, res) => {
+  let leaderboard = await db.getUsernames(); // gets the usernames/wins from users table in db for leaderboard stuff
+  res.json(leaderboard);
+})
+
 io.on('connection', async (socket) => { // initialize socket on user connection
   console.log('User connected');
+
+  loadSelectedGame('c233f141-2f54-4cab-8058-cc219ec2d041', '*0'); //TODO: take out; testing
 
   let room; // track room that client is in, when they enter a room, to help with disconnect
 
@@ -337,7 +344,9 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('setLoggedInUser', data => {
     assignLoggedInUser(data.username, data.player, data.gameIndex, data.room);
-    
+
+    // TODO: get user games now?
+    // getUserGames();
   });
 
   socket.on('move', data => { // move listener
@@ -405,8 +414,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
 // assignLoggedInUser function: If using database
 const assignLoggedInUser = async (username, player, gameIndex, room) => { // need to save to DB 
-  console.log(`\nassignLoggedInUser: username (${username}), player (${player}), gameIndex (${gameIndex}), room (${room})'n`);
-
+  // console.log(`\nassignLoggedInUser: username (${username}), player (${player}), gameIndex (${gameIndex}), room (${room})'n`);
   let user;
   username === null ? user = 'anonymous' : user = username.toLowerCase();
 
@@ -414,15 +422,62 @@ const assignLoggedInUser = async (username, player, gameIndex, room) => { // nee
 
   let p1Username = await db.getPlayerUsername('player1', gameIndex, room); // get player1 username
   let p2Username = await db.getPlayerUsername('player2', gameIndex, room); // get player2 username
-
-  await io.to(room).emit('setLoggedInUser', { // need to pull from DB here
+  
+  await io.to(room).emit('setLoggedInUser', {
     player1: p1Username[0].username,
     player2: p2Username[0].username
   })
 
-  console.log('\nCURRENT PLAYERS IN THE GAME:\n')
-  console.log('\np1Username: ', p1Username[0].username);
-  console.log('p2Username: ', p2Username[0].username, '\n');
+  // console.log('\nCURRENT PLAYERS IN THE GAME:\n')
+  // console.log('\np1Username: ', p1Username[0].username);
+  // console.log('p2Username: ', p2Username[0].username, '\n');
+}
+
+const getUserGames = async (username, currentPlayer, gameIndex, room) => {
+  let user;
+  let userGames;
+
+  if (currentPlayer === 'player1' && username !== 'anonymous') {
+    user = await db.getUserId(username, 'player1'); // get user id
+    userGames = await db.retrieveUserGames(user[0].user_id, currentPlayer, gameIndex, room); // get games for user by querying based on user id
+    // get the board for each game?
+  } else if (currentPlayer === 'player2' && username !== 'anonymous') {
+    user = await db.getUserId(username, 'player2'); // get user id
+    userGames = await db.retrieveUserGames(user[0].user_id, currentPlayer, gameIndex, room); // get games for user by querying based on user id
+    // get the board for each game?
+  }
+
+  console.log('\nuser from db:\n', user)
+  console.log('\nuser games from db:\n', userGames);
+
+  console.log('done getting user games');
+}
+
+const loadSelectedGame = async (gameIndex, room) => {
+  // TODO:
+  // need to get user player correct for each user on front end
+  // need to render the board on page upon laoding the game
+  // room? socket?
+  let gameBoard = await db.getGameBoard(room, gameIndex); // gets hexes from db
+  let game = await db.getGame(room, gameIndex); // in order to get current player from db
+  let currentGame = {
+    currentPlayer: game[0].current_player, // TODO: need to update this in db to get current player
+    userPlayer: 1, // TODO: should be each user (as 'player1' or 'player2') / need to get the user player
+    board: []
+  };
+  gameBoard.map( hex => {
+    let hexPlayer;
+    hexPlayer = hex.player ? ('player' + hex.player) : null;
+    currentGame.board.push({
+      swordsmen: hex.swordsmen,
+      archers: hex.archers,
+      knights: hex.knights,
+      coordinates: [hex.coordinate_0, hex.coordinate_1, hex.coordinate_2],
+      index: hex.hex_index,
+      player: hexPlayer
+    })
+  });
+  // console.log('\nload game completed\n', currentGame);
 }
 
 const moveUnits = async (data, socket) => {

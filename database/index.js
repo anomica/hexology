@@ -766,6 +766,28 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
   }
 }
 
+/////////////////////// Gets the list of users who are not anon and have wins ///////////////////////
+const getUsernames = async () => {
+  return await knex('users')
+    .select('username', 'wins')
+    .whereNot(knex.raw(`username = 'anonymous'`))
+    .andWhere(knex.raw(`wins > 0`))
+    .orderBy('wins', 'desc')
+}
+
+/////////////////////// Gets user's existing games ///////////////////////
+const retrieveUserGames = async (userId, currentPlayer, gameIndex, room) => {
+  if (currentPlayer == 'player2' && userId !== 1 && userId !== 2) {
+    return await knex('games')
+      .select()
+      .where(knex.raw(`'${gameIndex}' = game_index AND ${userId} = player2`))
+  } else if (currentPlayer === 'player1' && userId !== 1 && userId !== 2) {
+    return await knex('games')
+      .select()
+      .where(knex.raw(`'${gameIndex}' = game_index AND ${userId} = player1`))
+  }
+}
+
 module.exports = {
   addUser,
   checkUserCreds,
@@ -799,5 +821,7 @@ module.exports = {
   setGamePlayers,
   getPlayerUsername,
   forceEndGame,
-  getGameIdByRoom
+  getGameIdByRoom,
+  getUsernames,
+  retrieveUserGames
 };

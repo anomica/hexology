@@ -18,6 +18,13 @@ class TopBar extends React.Component {
       inviteSent: false,
       buttonMessage: 'Invite'
     }
+
+    this.saveGame = this.saveGame.bind(this);
+  }
+
+  saveGame() {
+    console.log('inside save game')
+    console.log('this props', this.props)
   }
 
   exitGame() {
@@ -51,8 +58,21 @@ class TopBar extends React.Component {
     return (
       <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%' }} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
-        <Button style={{right: '10px', top: '20px', position: 'absolute'}} onClick={this.exitGame.bind(this)}>Exit Game</Button>
+
+        <div style={{right: '10px', top: '20px', position: 'absolute'}}>
+          {this.props.loggedInUser !== 'anonymous' && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
+            <Button
+              style={{marginRight: '5px'}}
+              onClick={this.saveGame}
+            >Save Game</Button> : null
+          }
+
+          <Button
+            onClick={this.exitGame.bind(this)}
+          >Exit Game</Button>
+        </div>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : 'player two'}!</Header>
+
         {this.props.boardState ? null :
           (this.state.inviteSent ? <Segment>Invite sent to {this.state.email}</Segment> :
             <Segment>Want to play with a friend?
@@ -99,7 +119,10 @@ class TopBar extends React.Component {
               </ul>
             </Segment> :
             <Segment>
-              <strong>Waiting for player two to join...</strong>
+              <div>
+                <Icon loading name='spinner'/>
+                <strong>Waiting for player two to join...</strong>
+              </div>
             </Segment>
           }
         </Segment.Group>
