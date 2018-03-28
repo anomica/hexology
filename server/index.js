@@ -341,7 +341,9 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     const newGameBoard = {
       board: board,
       gameIndex: gameIndex,
-      room: room
+      room: room,
+      playerOneResources: games[gameIndex].playerOneResources,
+      playerTwoResources: games[gameIndex].playerTwoResources
     }
     
     /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
@@ -352,15 +354,11 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('watchGame', data => {
-    console.log('data.room:', data.room);
-    const board = {
-      board: games[data.gameIndex],
-      gameIndex: data.gameIndex,
-      room: data.room,
-      user: data.username
-    }
+    console.log('data:', data);
     socket.join(data.room);
-    io.to(socket.id).emit('gameCreated', board);
+    const game = games[data.gameIndex];
+    game.user = data.username;
+    io.to(socket.id).emit('gameCreated', games[data.gameIndex]);
   })
 
   socket.on('setLoggedInUser', data => {

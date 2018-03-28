@@ -96,21 +96,12 @@ const reducers = (state = defaultState, action) => {
         playerAssigned: true
       }
     case 'DRAW-BOARD':
-      let resourcesOne;
-      let resourcesTwo;
+      console.log('action.payload.board', action.payload.board)
       return {
         ...state,
-        boardState: action.payload,
-        playerOneResources: {
-          gold: 10,
-          wood: 10,
-          metal: 10
-        },
-        playerTwoResources: {
-          gold: 10,
-          wood: 10,
-          metal: 10
-        }
+        boardState: action.payload.board,
+        playerOneResources: action.payload.playerOneResources,
+        playerTwoResources: action.payload.playerTwoResources
       }
     case 'SET-GAME-INDEX':
       return {
