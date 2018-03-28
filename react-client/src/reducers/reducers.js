@@ -146,25 +146,10 @@ const reducers = (state = defaultState, action) => {
         hasMetal: false
       }
       newBoardState.splice(action.payload.hexIndex, 1, reinforcedHex); // replace hex with used up resource hex
-      if (state.currentPlayer === 'player1') { // for player 1,
         return {
           ...state,
           boardState: newBoardState,
-          playerOneResources: {
-            ...playerOne,
-            [resource]: playerOne[resource] += 10 // add ten to whichever resource is necessary
-          }
         }
-      } else if (state.currentPlayer === 'player2') { // same, but for player 2
-        return {
-          ...state,
-          boardState: newBoardState,
-          playerTwoResources: {
-            ...playerTwo,
-            [resource]: playerTwo[resource] += 10
-          }
-        }
-      }
     case 'UPDATE-RESOURCES':
       return {
         ...state,

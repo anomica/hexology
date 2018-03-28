@@ -472,7 +472,9 @@ const moveUnits = async (data, socket) => {
           updatedOrigin: updatedOrigin,
           originIndex: originIndex,
           targetIndex: targetIndex,
-          updatedTarget: updatedTarget
+          updatedTarget: updatedTarget,
+          playerOneResources: games[gameIndex].playerOneResources,
+          playerTwoResources: games[gameIndex].playerTwoResources
         }
 
         // console.log('\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\nMOVE ON FRIENDLY COLLISION:\n', move, '\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\n')
@@ -547,6 +549,8 @@ const moveUnits = async (data, socket) => {
             updatedTargetPlayer = 'player' + result.updatedTarget.player
           }
 
+          await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room);
+
           let newMove = {
             updatedOrigin: {
               coordinates: [result.updatedOrigin.coordinate_0, result.updatedOrigin.coordinate_1, result.updatedOrigin.coordinate_2],
@@ -566,6 +570,8 @@ const moveUnits = async (data, socket) => {
             },
             originIndex: originIndex,
             targetIndex: targetIndex,
+            playerOneResources: games[gameIndex].playerOneResources,
+            playerTwoResources: games[gameIndex].playerTwoResources,
             tie: true
           }
           io.to(room).emit('move', newMove);
@@ -639,7 +645,6 @@ const moveUnits = async (data, socket) => {
           // console.log('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> GAME NOT OVER YET <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n');
 
           //////////////////////////////////// IF USING GAME OBJECT ON SERVER /////////////////////////
-          await updateHexes(originIndex, result.updatedOrigin, targetIndex, result.updatedTarget, gameIndex, currentPlayer, room); // if move is to unoccupied hex, execute move
 
           // let move = {
           //   updatedOrigin: result.updatedOrigin,
@@ -668,6 +673,8 @@ const moveUnits = async (data, socket) => {
           let dbP1TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player1');
           let dbP2TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player2');
 
+          await updateHexes(originIndex, result.updatedOrigin, targetIndex, result.updatedTarget, gameIndex, currentPlayer, room); // if move is to unoccupied hex, execute move
+
           let move = {
             updatedOrigin: {
               coordinates: [result.updatedOrigin.coordinate_0, result.updatedOrigin.coordinate_1, result.updatedOrigin.coordinate_2],
@@ -693,7 +700,9 @@ const moveUnits = async (data, socket) => {
             updatedUnitCounts: {
               playerOneTotalUnits: dbP1TotalUnits[0].p1_total_units,
               playerTwoTotalUnits: dbP2TotalUnits[0].p2_total_units,
-            }
+            },
+            playerOneResources: games[gameIndex].playerOneResources,
+            playerTwoResources: games[gameIndex].playerTwoResources
           }
 
           // console.log('\n---------> MOVE WHEN GAME ISNT OVER:\n', move, '\n');
@@ -722,7 +731,9 @@ const moveUnits = async (data, socket) => {
         originIndex: originIndex,
         updatedOrigin: updatedOrigin,
         targetIndex: targetIndex,
-        updatedTarget: updatedTarget
+        updatedTarget: updatedTarget,
+        playerOneResources: games[gameIndex].playerOneResources,
+        playerTwoResources: games[gameIndex].playerTwoResources
       };
 
       /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
@@ -1671,7 +1682,6 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
 
   ///////////////////////////////////// IF USING DATABASE ///////////////////////////////////////
   // console.log(`\n-----------------------------> BUY UNITS: \ntype (${type}), player (${player}), gameIndex (${gameIndex}), socketId (${socketId}), room (${room})\n`);
-
   let game = await db.getGameBoard(room, gameIndex);
 
   let currentPlayerResources = await db.getResources(room, gameIndex, player); // returns an object
@@ -1716,6 +1726,9 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
             knights: p2Bank[0].p2_knights_bank
           }
         });
+
+        games[gameIndex].playerOneResources.gold -= 10;
+        games[gameIndex].playerOneResources.metal -= 10;
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {
@@ -1773,6 +1786,9 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
             knights: p2Bank[0].p2_knights_bank
           }
         });
+
+        games[gameIndex].playerTwoResources.gold -= 10;
+        games[gameIndex].playerTwoResources.metal -= 10;
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {
@@ -1837,6 +1853,9 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
+        games[gameIndex].playerOneResources.gold -= 10;
+        games[gameIndex].playerOneResources.wood -= 20;
+
         await io.to(room).emit('updateResources', {
           playerOneResources: {
             gold: p1Resources[0].p1_gold,
@@ -1898,6 +1917,9 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
             knights: p2Bank[0].p2_knights_bank
           }
         });
+
+        games[gameIndex].playerTwoResources.gold -= 10;
+        games[gameIndex].playerTwoResources.wood -= 20;
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {
@@ -1965,6 +1987,10 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
+        games[gameIndex].playerOneResources.gold -= 20;
+        games[gameIndex].playerOneResources.wood -= 20;
+        games[gameIndex].playerOneResources.metal -= 20;
+
         await io.to(room).emit('updateResources', {
           playerOneResources: {
             gold: p1Resources[0].p1_gold,
@@ -2020,6 +2046,10 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
             knights: p2Bank[0].p2_knights_bank
           }
         });
+
+        games[gameIndex].playerTwoResources.gold -= 20;
+        games[gameIndex].playerTwoResources.wood -= 20;
+        games[gameIndex].playerTwoResources.metal -= 20;
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {

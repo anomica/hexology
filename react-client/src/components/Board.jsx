@@ -82,6 +82,7 @@ class Board extends React.Component {
         if (move.updatedUnitCounts) {
           this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
         }
+        this.props.updateResources(move.playerOneResources, move.playerTwoResources);
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
       });
       socket.on('setLoggedInUser', data => {
