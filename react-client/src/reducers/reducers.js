@@ -213,7 +213,7 @@ const reducers = (state = defaultState, action) => {
       }
     case 'TOGGLE-LOGIN-SIGNUP':
       let type;
-      action.payload === 'signup' ? type = 'showSignup' 
+      action.payload === 'signup' ? type = 'showSignup'
       : type = 'showLogin';
       return {
         ...state,
@@ -224,11 +224,16 @@ const reducers = (state = defaultState, action) => {
         ...state,
         loggedInUser: action.payload
       }
-    case 'SET-LOGGED-IN-PLAYER': 
+    case 'SET-LOGGED-IN-PLAYER':
       return {
         ...state,
         playerOne: action.payload.player1,
         playerTwo: action.payload.player2
+      }
+    case 'SET-HEXBOT':
+      return {
+        ...state,
+        hexbot: action.payload
       }
     default: return state;
 

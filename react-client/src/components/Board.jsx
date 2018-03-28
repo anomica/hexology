@@ -16,10 +16,12 @@ import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
 import UnitBank from './UnitBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
+import hexbot from '../hexbot/hexbot.js';
 
 class Board extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
       hex: null,
       modalOpen: false,
@@ -284,6 +286,7 @@ class Board extends React.Component {
   }
 
   nextTurn() { // after move completes,
+    this.props.boardState ? hexbot() : null;
     let currentPlayer = this.props.currentPlayer;
     currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1'; // toggle player from player 1 to player 2 or vice versa
     this.props.switchPlayer(currentPlayer);
@@ -453,7 +456,8 @@ const mapStateToProps = (state) => {
     menuVisible: state.state.menuVisible,
     loggedInUser: state.state.loggedInUser,
     playerOne: state.state.playerOne,
-    playerTwo: state.state.playerTwo
+    playerTwo: state.state.playerTwo,
+    hexbot: state.state.hexbot
   }
 }
 
