@@ -326,7 +326,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     }
 
     /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-    await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
+    // let playerOne = // need to get username to get user id from db
+    // let playerTwo = // need to get username to get user id from db
+
+    await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
@@ -525,9 +528,12 @@ const moveUnits = async (data, socket) => {
             gameIndex: gameIndex,
             room: room
           }
-
+          
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
+          // let playerOne = // need to get username to get user id from db
+          // let playerTwo = // need to get username to get user id from db
+
+          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
           /////////////////////////////////////////////////////////////////////////////////////////////
 
           setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000);
@@ -630,7 +636,10 @@ const moveUnits = async (data, socket) => {
           }
 
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
+          // let playerOne = // need to get username to get user id from db
+          // let playerTwo = // need to get username to get user id from db
+
+          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
           /////////////////////////////////////////////////////////////////////////////////////////////
 
           setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000); // send game board to user
