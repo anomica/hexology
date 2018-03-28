@@ -69,8 +69,8 @@ class Board extends React.Component {
         console.log('this.props.playerAssigned', this.props.playerAssigned);
         this.props.user ? null : this.props.updateUnitCounts(10, 10);
         this.props.switchPlayer('player1');
-        !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
-        socket.emit('setLoggedInUser', {
+        !this.props.spectator && !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+        !this.props.spectator && socket.emit('setLoggedInUser', {
           username: this.props.loggedInUser,
           player: this.props.userPlayer,
           gameIndex: data.gameIndex,
@@ -487,7 +487,8 @@ const mapStateToProps = (state) => {
     menuVisible: state.state.menuVisible,
     loggedInUser: state.state.loggedInUser,
     playerOne: state.state.playerOne,
-    playerTwo: state.state.playerTwo
+    playerTwo: state.state.playerTwo,
+    spectator: state.state.spectator
   }
 }
 
