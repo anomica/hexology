@@ -57,7 +57,7 @@ const hexbot = (state = store.getState().state) => {
   if (Object.keys(adjacentEnemies).length !== 0) {
     for (let botHex in adjacentEnemies) {
       adjacentEnemies[botHex].forEach(threat => {
-        evaluateCombat(boardState[botHex], boardState[threat]);
+        // evaluateCombat(boardState[botHex], boardState[threat]);
       })
     }
   }

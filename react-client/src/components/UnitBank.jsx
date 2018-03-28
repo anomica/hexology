@@ -78,25 +78,25 @@ class UnitBank extends React.Component {
               </Card.Description>
             </Card.Content>
             <Card.Content>
-              <Label color='green' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Archer')} >
+              <Label color='green' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Archers')} >
                 <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
                 Deploy Archers
               </Label>
               <Card.Description>
                 Archers:
-                {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.archer
-                : ' ' + this.props.playerTwoUnitBank.archer}
+                {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.archers
+                : ' ' + this.props.playerTwoUnitBank.archers}
               </Card.Description>
             </Card.Content>
             <Card.Content>
-              <Label color='grey' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Knight')} >
+              <Label color='grey' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Knights')} >
                 <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
                  Deploy Knights
               </Label>
             <Card.Description>
               Knights:
-              {this.props.userPlayer === 'player 1' ? ' ' + this.props.playerOneUnitBank.knight
-              : ' ' + this.props.playerTwoUnitBank.knight}
+              {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.knights
+              : ' ' + this.props.playerTwoUnitBank.knights}
             </Card.Description>
             </Card.Content>
           </Card>

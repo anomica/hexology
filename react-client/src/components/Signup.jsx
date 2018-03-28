@@ -1,9 +1,10 @@
 import React from 'react';
 import axios from 'axios';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
 import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
 import { withRouter } from 'react-router';
-import { bindActionCreators } from 'redux';
 import { toggleLoginSignup, login } from '../../src/actions/actions.js';
 
 

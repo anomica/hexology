@@ -27,7 +27,7 @@ class Board extends React.Component {
       modalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
+      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
       confirmOpen: false,
       disconnectModalOpen: false,
       tempSwordsmen: 0,
@@ -156,7 +156,7 @@ class Board extends React.Component {
   resetCombatModal() {
     this.setState({
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
+      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
     })
   }
 
@@ -267,7 +267,7 @@ class Board extends React.Component {
       quantity: this.props.deployment.quantity,
       gameIndex: this.props.gameIndex,
       room: this.props.room,
-      hexId: hex.index
+      hexLongIndex: hex.index
     })
   }
 
@@ -341,16 +341,16 @@ class Board extends React.Component {
                       }
                       if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
                         targetClass += ' swordsmen';
-                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archer') {
+                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archers') {
                         targetClass += ' archer';
-                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knight') {
+                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knights') {
                         targetClass += ' knight';
                       }
                       return <Hexagon
                         key={uuidv4()}
                         className={targetClass}
                         onClick={() => {
-                          this.props.deployment ? this.addUnitsToHex(index) :
+                          this.props.deployment && hex.player === this.props.userPlayer ? this.addUnitsToHex(index, hex) :
                           this.handleClick(hex);
                           this.setState({ hex: hex });
                         }}
@@ -462,7 +462,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, resetBoard }, dispatch);
