@@ -671,7 +671,7 @@ const getGameId = (room, gameIndex) => { // NOTE: This returns an object
     .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
 }
 
-/////////////////////// Fetches games older than 1 day from today's date ///////////////////////
+/////////////////////// Returns an object containing games older than 1 day from today's date /////////////////
 const getOldGames = async () => {
   let today = await moment(new Date()).format('YYYY-MM-DD 23:59:59');
   let yesterday = await moment(new Date()).subtract(1, 'days').format('YYYY-MM-DD 00:00:00');
@@ -683,17 +683,22 @@ const getOldGames = async () => {
 
 /////////////////////// Marks game as completed if > 1 day has passed ///////////////////////
 const deleteGames = async (gameId) => {
-  return await knex('games')
+  console.log('\n...inside deleting games in db...\n')
+  await deleteHex(gameId); // first delete the hexes
+
+  await knex('games') // then delete the game
     .where(knex.raw(`${gameId} = game_id`))
-    .update(`game_completed`, 1)
-    // .del(); // TODO: make this work
+    .del();
+  console.log('\n...completed deleting games in db...\n')
 }
 
-/////////////////////// Marks hexes with remove flag = true if game deleted ///////////////////////
-const deleteHex = (gameId) => {
-  return knex('hex')
-    .where(`game_id`, gameId)
-    .update('remove_hex', 1)
+/////////////////////// Deletes hexes if game has ended ///////////////////////
+const deleteHex = async (gameId) => {
+  console.log('\n...INSIDE DELETE HEX FUNCTION IN DB...\n')
+  await knex('hex')
+    .where(knex.raw(`${gameId} = game_id`))
+    .del()
+  console.log('\n...COMPLETED DELETE HEX FUNCTION IN DB...\n')
 }
 
 /////////////////////// Updates game to completed once done ///////////////////////
@@ -747,21 +752,23 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
   // console.log('===================================== HEXES MARKED AS COMPLETED');
 }
 
-// Force game to end when player leaves the room
+/////////////////////// Force game to end when player leaves the room ///////////////////////
 const forceEndGame = async (room) => {
-  // console.log('\nforce ending the game... room: ', room, '\n')
+  console.log('\nforce ending the game... room: ', room, '\n')
   let roomNum = room.split('*').join('');
   let gameId = await getGameIdByRoom(room); // returns [{game_id: ##}, {game_id: ##}]
   // console.log('\ngameid or something:\n', gameId)
 
-  await knex('games')
-    .where(knex.raw(`${roomNum} = room_id`))
-    .update('game_completed', true)
+  await deleteHex(gameId[0].game_id); // first delete the hexes
 
-    deleteHex(gameId[0].game_id);
+  await knex('games') // then delete the game
+    .where(knex.raw(`${gameId[0].game_id} = game_id`))
+    .del()
+  
+  console.log('\ngame successfully deleted from db\n');
 }
 
-// Gets the game ID by using the room
+/////////////////////// Gets the game ID by using the room ///////////////////////
 const getGameIdByRoom = async (room) => {
   // console.log('\ngetting the game id by room...\n')
   let roomNum = room.split('*').join('');
@@ -773,23 +780,40 @@ const getGameIdByRoom = async (room) => {
 
 /////////////////////// Sets players for the game ///////////////////////
 const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
-  // console.log('\nsetting game players in the db...\n');
-
-  // console.log(`\nsetGamePlayers in db: username (${username}), currentPlayer (${currentPlayer}), gameIndex (${gameIndex}), room (${room})\n`)
+  console.log(`\nsetGamePlayers in db: username (${username}), currentPlayer (${currentPlayer}), gameIndex (${gameIndex}), room (${room})\n`);
 
   let roomNum = room.split('*').join('');
-  let playerId = await currentPlayer[currentPlayer.length - 1]; // will be '1' or '2' as a string
-  let userId = await getUserId(username); // returns an object
-  
-  if (playerId === '1') { // if updating for player 1
-    await knex('games')
-      .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
-      .update('player1', userId[0].user_id)
 
-  } else if (playerId === '2') { // else if updating for player two
-    await knex('games')
-      .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
-      .update('player2', userId[0].user_id)
+  if (username === 'anonymous') {
+    if (currentPlayer === 'player2') {
+      console.log('\nplayer2 is anon\n')
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .update('player2', 2) // player2 id is automatically set to 1 in db if anon
+      console.log('\ncompleted updating for anon player2 (should be 2)\n')
+      return;
+    } else if (currentPlayer === 'player1') {
+      console.log('\nplayer1 is anon\n')
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .update('player1', 1) // player1 id is automatically set to 1 in db if anon
+      console.log('\ncompleted updating user id for anon player1 (should be 1)\n')
+      return;
+    }
+  } else {
+    let userId = await getUserId(username); // returns an object
+    
+    if (currentPlayer === 'player1') { // if updating for player 1
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .update('player1', userId[0].user_id)
+      console.log('\ncompleted updating user id for player1\n')
+    } else if (currentPlayer === 'player2') { // else if updating for player2
+      await knex('games')
+        .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
+        .update('player2', userId[0].user_id)
+      console.log('\ncompleted updating user id for player2\n')
+    }
   }
 }
 

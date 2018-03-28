@@ -364,21 +364,21 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.to(room).emit('newMessage', request);
   });
 
-  socket.on('leaveRoom', data => {
+  socket.on('leaveRoom', async (data) => {
     if (data.room !== undefined) {
-      db.forceEndGame(data.room); // updates game/marks hexes to complete in db
+      await db.forceEndGame(data.room); // updates game/marks hexes to complete in db
     }
-    socket.leave(data.room);
-    socket.broadcast.emit('deleteRoom', data.room);
-    room && io.to(room).emit('disconnect');
+    await socket.leave(data.room);
+    await socket.broadcast.emit('deleteRoom', data.room);
+    await room && io.to(room).emit('disconnect');
     delete io.sockets.adapter.rooms[room];
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     if (room !== undefined) {
-      db.forceEndGame(room); // updates game/marks hexes to complete in db
+      await db.forceEndGame(room); // updates game/marks hexes to complete in db
     }
-    room && io.to(room).emit('disconnect');
+    await room && io.to(room).emit('disconnect');
     console.log('user disconnected');
   });
 })
@@ -401,10 +401,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
 // assignLoggedInUser function: If using database
 const assignLoggedInUser = async (username, player, gameIndex, room) => { // need to save to DB 
-  // console.log(`\nassignLoggedInUser: username (${username}), player (${player}), gameIndex (${gameIndex}), room (${room})'n`);
+  console.log(`\nassignLoggedInUser: username (${username}), player (${player}), gameIndex (${gameIndex}), room (${room})'n`);
 
   let user;
-  username === null ? user = 'anonymous' : user = username;
+  username === null ? user = 'anonymous' : user = username.toLowerCase();
 
   await db.setGamePlayers(user, player, gameIndex, room); // set the game player in the game in the db
 
@@ -416,9 +416,9 @@ const assignLoggedInUser = async (username, player, gameIndex, room) => { // nee
     player2: p2Username[0].username
   })
 
-  // console.log('\nCURRENT PLAYERS IN THE GAME:\n')
-  // console.log('\np1Username: ', p1Username[0].username);
-  // console.log('p2Username: ', p2Username[0].username, '\n');
+  console.log('\nCURRENT PLAYERS IN THE GAME:\n')
+  console.log('\np1Username: ', p1Username[0].username);
+  console.log('p2Username: ', p2Username[0].username, '\n');
 }
 
 const moveUnits = async (data, socket) => {
@@ -1653,16 +1653,19 @@ const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room) => {
   })
 }
 
-// const deleteOldGames = async () => {
-  // let oldGames = await db.getOldGames();
-//   for (let i = 0; i < oldGames.length; i++) {
-//     await db.deleteHex(oldGames[i].game_id); // first mark hexes to delete
-//     await db.deleteGames(oldGames[i].game_id); // then delete the game
-//   }
-// }
+const deleteOldGames = async () => {
+  console.log('\nchecking for old games...\n')
+  let oldGames = await db.getOldGames();
+  console.log('\nold games in the db:\n', oldGames)
+  for (let i = 0; i < oldGames.length; i++) {
+    console.log('old game id: ', oldGames[i].game_id)
+    // await db.deleteHex(oldGames[i].game_id); // first mark hexes to delete
+    await db.deleteGames(oldGames[i].game_id); // then delete the game
+  }
+}
 
-// Check for old games and marks them as completed
-// setInterval(deleteOldGames, 86400000);
+// Check for old games and marks them as completed // 1 day = 86400000
+setInterval(deleteOldGames, 86400000);
 
 const buyUnits = async (type, player, gameIndex, socketId, room) => {
   // ********* need to add stuff in here for updating unitBanks for each player *********
