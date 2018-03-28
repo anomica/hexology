@@ -336,7 +336,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('setLoggedInUser', data => {
-    assignLoggedInUser(data.username, data.player, data.gameIndex, data.room)
+    assignLoggedInUser(data.username, data.player, data.gameIndex, data.room);
+    
   });
 
   socket.on('move', data => { // move listener
