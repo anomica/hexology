@@ -42,13 +42,13 @@ const hexbot = (state = store.getState().state) => {
       boardRelationships[hexIndex].forEach(neighbor => {
         if (boardState[neighbor].player === 'player1') {
           adjacentEnemies.hasOwnProperty(hexIndex) ?
-          adjacentEnemies[hexIndex].push(neighbor) : adjacentEnemies[hexIndex] = [neighbor];
+          adjacentEnemies[hexIndex].threats.push(neighbor) : adjacentEnemies[hexIndex] = { threats: [neighbor] };
         }
         boardRelationships[neighbor].forEach(otherNeighbor => {
           if (boardState[otherNeighbor].player === 'player1' && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
             secondaryEnemies.hasOwnProperty(hexIndex)
-            && secondaryEnemies[hexIndex].indexOf(otherNeighbor) === -1 ?
-            secondaryEnemies[hexIndex].push(otherNeighbor) : secondaryEnemies[hexIndex] = [otherNeighbor];
+            && secondaryEnemies[hexIndex].threats.indexOf(otherNeighbor) === -1 ?
+            secondaryEnemies[hexIndex].threats.push(otherNeighbor) : secondaryEnemies[hexIndex] = { threats: [otherNeighbor] };
           }
         })
       })
@@ -57,13 +57,20 @@ const hexbot = (state = store.getState().state) => {
     }
   });
 
-
-
   if (Object.keys(adjacentEnemies).length !== 0) {
     for (let botHex in adjacentEnemies) {
-      adjacentEnemies[botHex].forEach(threat => {
+      adjacentEnemies[botHex].threats.forEach(threat => {
         let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
-        console.log(outcome);
+        adjacentEnemies[botHex][threat] = outcome;
+      })
+    }
+  }
+
+  if (Object.keys(secondaryEnemies).length !== 0) {
+    for (let botHex in secondaryEnemies) {
+      secondaryEnemies[botHex].threats.forEach(threat => {
+        let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
+        secondaryEnemies[botHex][threat] = outcome;
       })
     }
   }
