@@ -1,9 +1,10 @@
 import React from 'react';
 import axios from 'axios';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
 import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
 import { withRouter } from 'react-router';
-import { bindActionCreators } from 'redux';
 import { toggleLoginSignup, login } from '../../src/actions/actions.js';
 
 
@@ -13,7 +14,9 @@ class Signup extends React.Component {
     this.state = {
       username: '',
       password: '',
-      email: ''
+      email: '',
+      buttonMessage: 'Submit',
+      error: false
     }
   }
 
@@ -24,12 +27,15 @@ class Signup extends React.Component {
       password: this.state.password
     })
     .then(data => {
-      this.props.login(data.data[0].username);
       let context = this;
-      this.handleClose();
+      this.setState({ buttonMessage: `Success! Welcome, ${data.data[0].username}.` })
+      setTimeout(() => {
+        this.handleClose();
+        this.props.login(data.data[0].username);
+      }, 1000);
     })
     .catch(err => {
-      alert('Username already exists');
+      this.setState({ buttonMessage: 'That username/email is taken.', error: true })
       console.log('error from signup:', err);
     })
   }
@@ -41,7 +47,7 @@ class Signup extends React.Component {
       // console.log(`this.state[${[name]}]`, this.state[name])
     })
   }
-  
+
   handleClose() {
     this.props.toggleLoginSignup('signup');
   }
@@ -71,7 +77,13 @@ class Signup extends React.Component {
             <Button
               onClick={this.signup.bind(this)}
               type='submit'
-              >Submit</Button>
+              style={{
+                backgroundColor: this.state.error ? 'red' : 'green',
+                color: 'white',
+                float: 'right',
+                marginBottom: '10px'
+              }}
+              >{this.state.buttonMessage}</Button>
           </Form>
           </Modal.Description>
         </Modal.Content>

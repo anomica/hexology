@@ -26,6 +26,7 @@ class UnitShop extends React.Component {
       this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
     });
     this.props.socket.on('knights', data => {
+      console.log('unit shop socket on knights: data: ', data)
       this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
     });
   }
@@ -57,8 +58,7 @@ class UnitShop extends React.Component {
         room: this.props.room,
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
-        socketId: this.props.socket.id,
-        room: this.props.room
+        socketId: this.props.socket.id
       });
       this.setState({
         swordsmen: !this.state.swordsmen
@@ -80,8 +80,7 @@ class UnitShop extends React.Component {
         room: this.props.room,
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
-        socketId: this.props.socket.id,
-        room: this.props.room
+        socketId: this.props.socket.id
       });
       this.setState({
         archers: !this.state.archers
@@ -97,14 +96,15 @@ class UnitShop extends React.Component {
     resources = this.props.playerOneResources :
     resources = this.props.playerTwoResources;
 
+    console.log('unit shop buy knights: resources: ', resources)
+
     if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
       this.buyUnitsServerRequest({
         type: 'knights',
         room: this.props.room,
         player: this.props.userPlayer,
         gameIndex: this.props.gameIndex,
-        socketId: this.props.socket.id,
-        room: this.props.room
+        socketId: this.props.socket.id
       });
       this.setState({
         knights: !this.state.knights

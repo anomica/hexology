@@ -7,13 +7,13 @@ const DefaultState = {
   playerTwoResources: {},
   playerOneUnitBank: {
       swordsmen: 0,
-      knight: 0,
-      archer: 0
+      knights: 0,
+      archers: 0
   },
   playerTwoUnitBank: {
       swordsmen: 0,
-      knight: 0,
-      archer: 0
+      knights: 0,
+      archers: 0
   },
   playerAssigned: false,
   userPlayer: undefined,

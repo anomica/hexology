@@ -86,24 +86,25 @@ g.knight > g > polygon, g.knight > g > text {
   cursor: pointer;
 }
 
-.topBar {
-  display: block;
-  width: 80%;
-}
-
 .chatIcon {
   display: inline;
   float: right;
   cursor: pointer;
 }
 
-@media only screen and (min-width: 1800px) {
+@media only screen and (min-width: 1300px) {
   .topBar {
-    width: 90%;
+    width: 85% !important;
   }
 }
 
-@media only screen and (max-width: 850px) {
+@media only screen and (min-width: 1550px) {
+  .topBar {
+    width: 90% !important;
+  }
+}
+
+/* @media only screen and (max-width: 850px) {
   .topBar {
     width: 70%;
   }

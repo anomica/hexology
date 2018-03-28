@@ -15,9 +15,10 @@ class UnitBank extends React.Component {
     }
   }
 
-  
+
   componentDidMount() {
     this.props.socket.on('deployUnits', data => {
+      console.log('data on deploy units (unit bank): ', data)
       this.props.deployUnits(data.player, data.unit, data.quantity, data.playerOneUnitBank, data.playerTwoUnitBank);
     })
   }
@@ -41,8 +42,8 @@ class UnitBank extends React.Component {
     : playerBank = this.props.playerTwoUnitBank;
     if (this.state.quantity > 0 && this.state.unitBeingDeployed && this.state.quantity <= playerBank[this.state.unitBeingDeployed.toLowerCase()]) {
       this.props.socket.emit('deployUnits', {
-        player: this.props.userPlayer, 
-        unit: this.state.unitBeingDeployed.toLowerCase(), 
+        player: this.props.userPlayer,
+        unit: this.state.unitBeingDeployed.toLowerCase(),
         quantity: this.state.quantity,
         bank: playerBank[this.state.unitBeingDeployed.toLowerCase()],
         gameIndex: this.props.gameIndex,
@@ -71,32 +72,32 @@ class UnitBank extends React.Component {
               <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
                 Deploy Swordsmen
               </Label>
-              <Card.Description> 
-                Swordsmen: 
+              <Card.Description>
+                Swordsmen:
                 {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.swordsmen
               : ' ' + this.props.playerTwoUnitBank.swordsmen}
               </Card.Description>
             </Card.Content>
             <Card.Content>
-              <Label color='green' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Archer')} >
+              <Label color='green' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Archers')} >
                 <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
                 Deploy Archers
               </Label>
               <Card.Description>
                 Archers: 
-                {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.archer
-                : ' ' + this.props.playerTwoUnitBank.archer}
+                {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.archers
+                : ' ' + this.props.playerTwoUnitBank.archers}
               </Card.Description>
             </Card.Content>
             <Card.Content>
-              <Label color='grey' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Knight')} >
+              <Label color='grey' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Knights')} >
                 <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
                  Deploy Knights
               </Label>
             <Card.Description>
               Knights: 
-              {this.props.userPlayer === 'player 1' ? ' ' + this.props.playerOneUnitBank.knight
-              : ' ' + this.props.playerTwoUnitBank.knight}
+              {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.knights
+              : ' ' + this.props.playerTwoUnitBank.knights}
             </Card.Description>
             </Card.Content>
           </Card>

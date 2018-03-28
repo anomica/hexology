@@ -44,12 +44,6 @@ module.exports = function (passport) {
     passReqToCallback: true,
   },
     async (req, username, password, cb) => {
-      // console.log('woooooo')
-      // console.log('req', req.body);
-      // console.log('username:', username);
-      // console.log('password:', password);
-      // console.log('cb:', cb);
-
       bcrypt.hash(password, 10, async (err, hash) => {
         if (err) {
           cb(err, null)
