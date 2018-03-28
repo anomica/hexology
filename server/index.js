@@ -282,6 +282,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('leaveRoom', data => {
+    db.forceEndGame(data.room); // updates game/marks hexes to complete in db
     socket.leave(data.room);
     socket.broadcast.emit('deleteRoom', data.room);
     room && io.to(room).emit('disconnect');
@@ -289,12 +290,13 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('disconnect', () => {
+    db.forceEndGame(room); // updates game/marks hexes to complete in db
     room && io.to(room).emit('disconnect');
     console.log('user disconnected');
   });
 })
 
-// If using game object on server
+// assignLoggedInUser function: If using game object on server
 // const assignLoggedInUser = (username, player, gameIndex, room) => { // need to save to DB 
 //   console.log(`\nassignLoggedInUser: username (${username}), player (${player}), gameIndex (${gameIndex}), room (${room})'n`)
 //   let user;
@@ -310,7 +312,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 //   })
 // }
 
-// // If using database
+// assignLoggedInUser function: If using database
 const assignLoggedInUser = async (username, player, gameIndex, room) => { // need to save to DB 
   console.log(`\nassignLoggedInUser: username (${username}), player (${player}), gameIndex (${gameIndex}), room (${room})'n`);
 
@@ -489,8 +491,15 @@ const moveUnits = async (data, socket) => {
           if (result.gameOver === 'player1' && currentPlayer === 'player1' ||
           result.gameOver === 'player2' && currentPlayer === 'player2') {
 
-            console.log('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\nresult.gameOver -> WINNER: ', result.gameOver)
-            console.log('\ncurrentPlayer: ', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
+            console.log('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\nresult.gameOver -> WINNER: ', result.gameOver);
+
+            console.log('\ncurrentPlayer: ', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+
+            if (result.gameOver === 'player1') { // if winner is player1
+              await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
+            } else if (result.gameOver === 'player2' && currentPlayer === 'player2') {
+              await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
+            }
 
             io.to(socketId).emit('winGame'); // the attacker gets a personal win message
             socket.to(room).emit('loseGame'); // while the rest of the room (defender) gets lose message
@@ -588,8 +597,8 @@ const moveUnits = async (data, socket) => {
             targetIndex: targetIndex,
 
             updatedUnitCounts: {
-              playerOneTotalUnits: dbP1TotalUnits,
-              playerTwoTotalUnits: dbP2TotalUnits,
+              playerOneTotalUnits: dbP1TotalUnits[0].p1_total_units,
+              playerTwoTotalUnits: dbP2TotalUnits[0].p2_total_units,
             }
           }
 
@@ -939,7 +948,7 @@ const checkForCollision = async (originHexIndex, targetHexIndex, gameIndex, room
   let origin = await db.getHex(originHexIndex); // get original hex from db / NOTE: returns an object
   let target = await db.getHex(targetHexIndex); // get new target hex from db / NOTE: returns an object
 
-  console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nCHECKING FOR COLLISION:\n', 'ORIGIN PLAYER: ', origin[0].hex_owner, ' ------ HEX INDEX: ', originHexIndex, '\n  TARGET PLAYER: ', target[0].hex_owner, ' ------ HEX INDEX: ', targetHexIndex, '\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
+  console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nCHECKING FOR COLLISION:\n', 'ORIGIN PLAYER: ', origin[0].hex_owner, '\nORIGIN HEX:\n', origin, ' ------ HEX INDEX: ', originHexIndex, '\n  TARGET PLAYER: ', target[0].hex_owner, '\nTARGET HEX:\n', target, '------ HEX INDEX: ', targetHexIndex, '\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
   
   if (origin[0].hex_owner && target[0].hex_owner) { // if  original hex & new target hex are owned by players
     let collision = '';
@@ -1603,15 +1612,13 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
     flag = 'defender';
   }
 
-  ///// where i left off ////
-
   let updatedP1TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player1');
   let updatedP2TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player2');
 
-  if (updatedP1TotalUnits < 0) {
+  if (updatedP1TotalUnits[0].p1_total_units < 0) {
     await db.updatePlayerTotalUnits(room, gameIndex, 'player1', 0, 'replace'); // zero out any negative units
   }
-  if (updatedP2TotalUnits < 0) {
+  if (updatedP2TotalUnits[0].p2_total_units < 0) {
     await db.updatePlayerTotalUnits(room, gameIndex, 'player2', 0, 'replace');
   }
 
@@ -1621,11 +1628,12 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //////////////////////////////////// IF USING DATABASE //////////////////////////////////////////////////////
-    gameOver: await checkForWin(updatedP1TotalUnits, updatedP2TotalUnits),
+    gameOver: await checkForWin(updatedP1TotalUnits[0].p1_total_units, updatedP2TotalUnits[0].p2_total_units),
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
     updatedOrigin: updatedOrigin,
     updatedTarget: updatedTarget,
-    flag: flag
+    flag: flag,
+    gameIndex: gameIndex
   }
 };
 

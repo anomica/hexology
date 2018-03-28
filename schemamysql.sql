@@ -82,6 +82,9 @@ CREATE TABLE hex (
 ); 
 
 INSERT INTO users (username, email, password)
-VALUES ('anonymous', '$2a$10$MHRAAxfcRiwToSSUOUD3wupECrfeq2SwWXouBqrh8SGV7AR/KK28G@anonymous.com', '$2a$10$MHRAAxfcRiwToSSUOUD3wupECrfeq2SwWXouBqrh8SGV7AR/KK28G');
+VALUES
+('anonymous', '$2a$10$MHRAAxfcRiwToSSUOUD3wupECrfeq2SwWXouBqrh8SGV7AR/KK28G@anonymous.com', '$2a$10$MHRAAxfcRiwToSSUOUD3wupECrfeq2SwWXouBqrh8SGV7AR/KK28G'),
+
+('anonymous', '$2a$10$MHRAAxfcRiwToSSUOUD3wupECrfeq2SwWXouBqrh8SGV7AR/KK28G@anonymous.com', '$2a$10$MHRAAxfcRiwToSSUOUD3wupECrfeq2SwWXouBqrh8SGV7AR/KK28G');
 
 -- mysql -u root < schemamysql.sql
