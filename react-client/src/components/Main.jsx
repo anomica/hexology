@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { setRooms, menuToggle, setSocket, setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
+import { setRooms, menuToggle, setSocket, login } from '../../src/actions/actions.js';
 import { Button } from 'semantic-ui-react';
 import socketIOClient from "socket.io-client";
 
@@ -35,9 +35,8 @@ class Main extends React.Component {
 
     axios.get('/persistUser')
       .then(data => {
-        console.log('data from session:', data);
         if (data.data) {
-
+          this.props.login(data.data.username);
         }
       })
       .catch(err => {
@@ -75,7 +74,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setRooms, menuToggle, setSocket, }, dispatch)
+  return bindActionCreators({ setRooms, menuToggle, setSocket, login }, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);

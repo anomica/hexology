@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
-import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
+import { Transition, Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
 import { toggleLoginSignup, login } from '../../src/actions/actions.js';
 
@@ -10,7 +10,9 @@ class Login extends React.Component {
     super(props);
     this.state = {
       username: '',
-      password: ''
+      password: '',
+      buttonMessage: 'Submit',
+      error: false
     }
   }
 
@@ -30,11 +32,19 @@ class Login extends React.Component {
       password: this.state.password
     })
       .then(data => {
-        this.props.login(data.data.username);
-        this.handleClose();
+        this.setState({ buttonMessage: 'Success!', error: false });
+
+        setTimeout(() => {
+          this.handleClose();
+          this.props.login(data.data.username);
+        }, 1000);
       })
       .catch(err => {
-        alert('Username already exists');
+        this.setState({
+          buttonMessage: 'Incorrect password',
+          error: true
+        })
+        setTimeout(() => this.setState({ buttonMessage: 'Submit', error: false }), 1000);
         console.log('error from signup:', err);
       })
   }
@@ -51,15 +61,23 @@ class Login extends React.Component {
               type='text'
               onChange={(e) => this.handleChange(e, 'username')}
             />
-            <Form.Input 
-              label='Password' 
-              type='password' 
+            <Form.Input
+              label='Password'
+              type='password'
               onChange={(e) => this.handleChange(e, 'password')}
             />
+          <Transition name={'jiggle'} duration={500} display={this.state.error}>
             <Button
+              style={{
+                backgroundColor: this.state.error ? 'red' : 'green',
+                color: 'white',
+                float: 'right',
+                marginBottom: '10px'
+              }}
               onClick={this.handleSubmit.bind(this)}
               type='submit'
-            >Submit</Button>
+            >{this.state.buttonMessage}</Button>
+          </Transition>
           </Form>
           </Modal.Description>
         </Modal.Content>
