@@ -354,7 +354,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('watchGame', data => {
-    console.log('data:', data);
     socket.join(data.room);
     const game = games[data.gameIndex];
     game.user = data.username;

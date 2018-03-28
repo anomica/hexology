@@ -20,6 +20,10 @@ class TopBar extends React.Component {
     }
   }
 
+  componentDidMount() {
+    console.log('this.props.spectator', this.props.spectator)
+  }
+
   exitGame() {
     console.log('exit game props:', this.props)
     this.props.exitGame();
@@ -148,7 +152,8 @@ const mapStateToProps = state => {
     menuVisible: state.state.menuVisible,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
-    loggedInUser: state.state.loggedInUser
+    loggedInUser: state.state.loggedInUser,
+    spectator: state.state.spectator
   }
 }
 

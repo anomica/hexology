@@ -9,6 +9,7 @@ import { login, updateRoom, newRoom, deleteRoom } from '../../src/actions/action
 const RoomsList = props => {
   
   const joinGame = async (room, type, index) => {
+    type ? props.login('spectator') : null;
     props.history.push({
     pathname: `/game/room?${room}`,
     state: {

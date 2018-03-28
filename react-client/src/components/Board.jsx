@@ -38,7 +38,7 @@ class Board extends React.Component {
     (async () => {
       let socket = this.props.socket;
       if (this.props.location.state.type) {
-        this.props.setSpectator(true);
+        await this.props.setSpectator(true);
         socket.emit('watchGame', {
           room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
           username: this.props.loggedInUser,
