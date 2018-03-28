@@ -26,7 +26,6 @@ class UnitShop extends React.Component {
       this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
     });
     this.props.socket.on('knights', data => {
-      console.log('unit shop socket on knights: data: ', data)
       this.props.updateBank(data.playerOneUnitBank, data.playerTwoUnitBank);
     });
   }
@@ -95,8 +94,6 @@ class UnitShop extends React.Component {
     this.props.userPlayer === 'player1' ?
     resources = this.props.playerOneResources :
     resources = this.props.playerTwoResources;
-
-    console.log('unit shop buy knights: resources: ', resources)
 
     if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
       this.buyUnitsServerRequest({

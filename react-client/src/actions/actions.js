@@ -230,3 +230,10 @@ export const setLoggedInPlayer = (user1, user2) => (
     }
   }
 )
+
+export const setHexbot = value => (
+  {
+    type: 'SET-HEXBOT',
+    payload: value
+  }
+)

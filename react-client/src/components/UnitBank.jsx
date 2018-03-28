@@ -18,7 +18,6 @@ class UnitBank extends React.Component {
 
   componentDidMount() {
     this.props.socket.on('deployUnits', data => {
-      console.log('data on deploy units (unit bank): ', data)
       this.props.deployUnits(data.player, data.unit, data.quantity, data.playerOneUnitBank, data.playerTwoUnitBank);
     })
   }
@@ -84,7 +83,7 @@ class UnitBank extends React.Component {
                 Deploy Archers
               </Label>
               <Card.Description>
-                Archers: 
+                Archers:
                 {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.archers
                 : ' ' + this.props.playerTwoUnitBank.archers}
               </Card.Description>
@@ -95,7 +94,7 @@ class UnitBank extends React.Component {
                  Deploy Knights
               </Label>
             <Card.Description>
-              Knights: 
+              Knights:
               {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.knights
               : ' ' + this.props.playerTwoUnitBank.knights}
             </Card.Description>
