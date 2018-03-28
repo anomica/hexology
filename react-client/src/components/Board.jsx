@@ -64,10 +64,11 @@ class Board extends React.Component {
         this.props.setGameIndex(data.gameIndex); // if so, set game index
         this.props.selectHex({}); // initialize selected hex
         this.props.highlightNeighbors([]); // and neighbors
-        this.props.updateUnitCounts(10, 10);
-        this.props.switchPlayer('player1');
-        !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
-        socket.emit('setLoggedInUser', {
+        data.user ? this.props.updatedUnitCounts(data.board.playerOneTotalUnits, data.board.playerTwoTotalUnits) 
+        : this.props.updateUnitCounts(10, 10);
+        !data.user ? this.props.switchPlayer('player1') : null;
+        !this.props.playerAssigned && !data.user && this.props.setUserPlayer('player2'); // and set player to player2
+        !data.user && socket.emit('setLoggedInUser', {
           username: this.props.loggedInUser,
           player: this.props.userPlayer,
           gameIndex: data.gameIndex,

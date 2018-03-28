@@ -63,13 +63,6 @@ export const setUserPlayer = (player) => (
   }
 )
 
-export const setSpectator = (spectator) => (
-  {
-    type: 'SET-SPECTATOR',
-    payload: spectator
-  }
-)
-
 export const selectHex = (hex) => (
   {
     type: 'SELECT-HEX',

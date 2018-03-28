@@ -33,16 +33,16 @@ class Main extends React.Component {
       this.props.setSocket(socket);
     })();
 
-    axios.get('/persistUser')
-      .then(data => {
-        console.log('data from session:', data);
-        if (data.data) {
+    // axios.get('/persistUser')
+    //   .then(data => {
+    //     console.log('data from session:', data);
+    //     if (data.data) {
 
-        }
-      })
-      .catch(err => {
-        console.log('err from persistUser:', err);
-      })
+    //     }
+    //   })
+    //   .catch(err => {
+    //     console.log('err from persistUser:', err);
+    //   })
     axios.get('/rooms')
       .then(rooms => {
         for (let room in rooms.data) {

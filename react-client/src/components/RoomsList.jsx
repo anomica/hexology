@@ -4,21 +4,30 @@ import { bindActionCreators } from 'redux';
 import { Segment, Image, Feed, Label, Button } from 'semantic-ui-react';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
-import { updateRoom, newRoom, deleteRoom } from '../../src/actions/actions.js';
+import { login, updateRoom, newRoom, deleteRoom } from '../../src/actions/actions.js';
 
 const RoomsList = props => {
   
-  const joinGame = (room, type, index) => {
-    props.history.push({
-      pathname: `/game/room?${room}`,
-      state: {
-        detail: room,
-        extra: 'join',
-        type: type || null,
-        gameIndex: index || null
-      }
-    })
+  const joinGame = async (room, type, index) => {
+    if (type) {
+      const login = await props.login('spectator');
+    }
+    setTimeout(console.log('loggedInUser:', props.loggedInUser), 2000);
+    console.log('type:', type);
+      setTimeout(() => {
+        props.history.push({
+        pathname: `/game/room?${room}`,
+        state: {
+          detail: room,
+          extra: 'join',
+          type: type ? type : null,
+          gameIndex: index ? index : null
+        }
+      })
+    }, 3000);
   }
+
+    
 
   const refreshRooms = async () => {
     let socket = await props.socket;
@@ -75,12 +84,13 @@ const RoomsList = props => {
 const mapStateToProps = state => {
   return {
     rooms: state.state.rooms,
-    socket: state.state.socket
+    socket: state.state.socket,
+    loggedInUser: state.state.loggedInUser
   }
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ newRoom, deleteRoom, updateRoom }, dispatch);
+  return bindActionCreators({ login, newRoom, deleteRoom, updateRoom }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(RoomsList));

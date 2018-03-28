@@ -268,12 +268,15 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('watchGame', data => {
     console.log('data.room:', data.room);
-    socket.join(data.room);
-    const gameBoard = {
-      board: games[data.gameIndex]
+    const board = {
+      board: games[data.gameIndex],
+      gameIndex: data.gameIndex,
+      room: data.room,
+      user: data.username
     }
-    socket.to(socket.id).emit('watchGame',);
-    console.log('io.sockets.adapter.rooms[data.room]', io.sockets.adapter.rooms[data.room]);
+    console.log('user in watchGame:', data.username);
+    socket.join(data.room);
+    socket.to(socket.id).emit('gameCreated', board);
   })
 
   socket.on('setLoggedInUser', data => {

@@ -96,12 +96,6 @@ const reducers = (state = defaultState, action) => {
         userPlayer: action.payload,
         playerAssigned: true
       }
-    case 'SET-SPECTATOR': 
-      console.log('action.payload:', action.payload);
-      return {
-        ...state,
-        spectators: state.spectators.push(action.payload)
-      }
     case 'DRAW-BOARD':
       return {
         ...state,
@@ -235,9 +229,13 @@ const reducers = (state = defaultState, action) => {
         [type]: !state[type]
       }
     case 'LOGIN':
+      let user;
+      action.payload === 'spectator' ? user = state.loggedInUser + '-spectator' 
+      : user = action.payload;
+      console.log('user in action:', user);
       return {
         ...state,
-        loggedInUser: action.payload
+        loggedInUser: user
       }
     case 'SET-LOGGED-IN-PLAYER': 
       return {

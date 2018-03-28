@@ -54,9 +54,7 @@ class SidebarLeft extends React.Component {
   }
 
   showLoginOrSignupModal(type) {
-    console.log('fired, type', type);
     this.props.toggleLoginSignup(type);
-    setTimeout(() => {console.log('this.state.showLogin', this.state.showLogin)})
   }
 
   handleChange(e, { name, value }) {
