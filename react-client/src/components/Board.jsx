@@ -30,7 +30,8 @@ class Board extends React.Component {
       disconnectModalOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
-      tempKnights: 0
+      tempKnights: 0,
+      spectator: false
     }
   }
 
@@ -38,10 +39,14 @@ class Board extends React.Component {
     (async () => {
       let socket = this.props.socket;
       if (this.props.location.state.type) {
-        socket.emit('watchGame', {
-          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
-          username: this.props.loggedInUser,
-          gameIndex: this.props.location.state.gameIndex
+        this.setState({
+          spectator: true
+        }, () => {
+          socket.emit('watchGame', {
+            room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
+            username: this.props.loggedInUser,
+            gameIndex: this.props.location.state.gameIndex
+          })
         })
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
@@ -60,6 +65,7 @@ class Board extends React.Component {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
       socket.on('gameCreated', data => {
+        console.log('data from gameCreated:', data);
         this.props.drawBoard(data.board); // if the server sends an object, it means that the player is player 2
         this.props.setGameIndex(data.gameIndex); // if so, set game index
         this.props.selectHex({}); // initialize selected hex

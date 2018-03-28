@@ -274,9 +274,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       room: data.room,
       user: data.username
     }
-    console.log('user in watchGame:', data.username);
     socket.join(data.room);
-    socket.to(socket.id).emit('gameCreated', board);
+    io.to(socket.id).emit('gameCreated', board);
   })
 
   socket.on('setLoggedInUser', data => {

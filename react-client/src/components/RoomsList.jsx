@@ -9,22 +9,15 @@ import { login, updateRoom, newRoom, deleteRoom } from '../../src/actions/action
 const RoomsList = props => {
   
   const joinGame = async (room, type, index) => {
-    if (type) {
-      const login = await props.login('spectator');
+    props.history.push({
+    pathname: `/game/room?${room}`,
+    state: {
+      detail: room,
+      extra: 'join',
+      type: type ? type : null,
+      gameIndex: index ? index : null
     }
-    setTimeout(console.log('loggedInUser:', props.loggedInUser), 2000);
-    console.log('type:', type);
-      setTimeout(() => {
-        props.history.push({
-        pathname: `/game/room?${room}`,
-        state: {
-          detail: room,
-          extra: 'join',
-          type: type ? type : null,
-          gameIndex: index ? index : null
-        }
-      })
-    }, 3000);
+    })
   }
 
     

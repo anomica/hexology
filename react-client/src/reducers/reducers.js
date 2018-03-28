@@ -16,7 +16,6 @@ const reducers = (state = defaultState, action) => {
         }
       }
     case 'UPDATE-ROOM':
-    console.log('action.payload:', action.payload);
       return {
         ...state,
         rooms: {
@@ -97,6 +96,8 @@ const reducers = (state = defaultState, action) => {
         playerAssigned: true
       }
     case 'DRAW-BOARD':
+      let resourcesOne;
+      let resourcesTwo;
       return {
         ...state,
         boardState: action.payload,
