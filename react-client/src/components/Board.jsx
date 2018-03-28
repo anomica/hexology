@@ -70,7 +70,6 @@ class Board extends React.Component {
       socket.on('move', (move) => { // when socket receives result of move request,
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
         if (move.tie) {
-          console.log('hey')
           this.setState({
             combatModalOpen: true,
           });
@@ -122,7 +121,6 @@ class Board extends React.Component {
         setTimeout(() => this.resetCombatModal(), 5001);
       })
       socket.on('tieGame', () => {
-        console.log('hey')
         setTimeout(() => {
           this.setState({ combatMessage: 'The war has ended in a stalemate. Try again.'});
         }, 2500);
