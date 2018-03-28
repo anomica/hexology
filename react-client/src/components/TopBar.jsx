@@ -21,6 +21,7 @@ class TopBar extends React.Component {
   }
 
   exitGame() {
+    console.log('exit game props:', this.props)
     this.props.exitGame();
     this.props.setRoom(null);
     this.props.resetBoard();

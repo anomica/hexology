@@ -102,6 +102,7 @@ class Board extends React.Component {
         this.props.knights(this.props.currentPlayer);
       });
       socket.on('troopsDeployed', data => {
+        console.log('troops deployed data: ', data);
         this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
       })
       socket.on('combatWin', () => {
@@ -265,7 +266,7 @@ class Board extends React.Component {
       quantity: this.props.deployment.quantity,
       gameIndex: this.props.gameIndex,
       room: this.props.room,
-      hexId: hex.index
+      hexLongIndex: hex.index
     })
   }
 
@@ -338,16 +339,16 @@ class Board extends React.Component {
                       }
                       if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
                         targetClass += ' swordsmen';
-                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archer') {
+                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'archers') {
                         targetClass += ' archer';
-                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knight') {
+                      } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knights') {
                         targetClass += ' knight';
                       }
                       return <Hexagon
                         key={uuidv4()}
                         className={targetClass}
                         onClick={() => {
-                          this.props.deployment ? this.addUnitsToHex(index) :
+                          this.props.deployment ? this.addUnitsToHex(index, hex) :
                           this.handleClick(hex);
                           this.setState({ hex: hex });
                         }}
@@ -458,7 +459,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank,setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, resetBoard }, dispatch);
