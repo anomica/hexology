@@ -1,4 +1,5 @@
 import { store } from '../store/index.js';
+import { evaluateCombat } from './hexbotUtils.js';
 
 const boardRelationships = {
   0: [1, 4],
@@ -29,6 +30,8 @@ const hexbot = (state = store.getState().state) => {
   let playerOneTotalUnits = state.playerOneTotalUnits, playerTwoTotalUnits = state.playerTwoTotalUnits;
   let playerOneResources = state.playerOneResources, playerTwoResources = state.playerTwoResources;
   let playerOneUnitBank = state.playerOneUnitBank, playerTwoUnitBank = state.playerTwoUnitBank;
+  let bestMove = [0, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move to, second is heuristic of move
+
 
   let turnCounter = 2;
   let botHexes = [], playerHexes = [], adjacentEnemies = {}, secondaryEnemies = {};
@@ -54,33 +57,15 @@ const hexbot = (state = store.getState().state) => {
     }
   });
 
+
+
   if (Object.keys(adjacentEnemies).length !== 0) {
     for (let botHex in adjacentEnemies) {
       adjacentEnemies[botHex].forEach(threat => {
-        // evaluateCombat(boardState[botHex], boardState[threat]);
+        let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
+        console.log(outcome);
       })
     }
-  }
-
-  const evaluateCombat = (botHex, playerHex) => {
-    let bSwordsmen = botHex.swordsmen, bArchers = botHex.archers, bKnights = botHex.knights;
-    let pSwordsmen = playerHex.swordsmen, pArchers = playerHex.archers, pKnights = playerHex.knights;
-
-    console.log('starting troops bot: ', bSwordsmen, bArchers, bKnights);
-    console.log('starting troops player: ', pSwordsmen, pArchers, pKnights);
-
-    bKnights && pArchers ? bKnights -= pArchers : null; // first, archers pick off knights from afar
-    pKnights && bArchers ? pKnights -= bArchers : null;
-
-    bSwordsmen && pKnights ? bSwordsmen -= (pKnights * 3) : null; // then, knights crash against swordsmen
-    pSwordsmen && bKnights ? pSwordsmen -= (bKnights * 3) : null;
-
-    bArchers && pSwordsmen ? bArchers -= (pSwordsmen * 2) : null; // finally, swordsmen take out archers
-    pArchers && bSwordsmen ? pArchers -= (bSwordsmen * 2) : null;
-
-    console.log('ending troops bot: ', bSwordsmen, bArchers, bKnights);
-    console.log('ending troops player: ', pSwordsmen, pArchers, pKnights);
-
   }
 
   let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
