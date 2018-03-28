@@ -627,8 +627,8 @@ const moveUnits = async (data, socket) => {
               await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
             }
 
-            io.to(socketId).emit('loseGame');
-            socket.to(room).emit('winGame');
+            io.to(socketId).emit('loseGame', result.gameOver);
+            socket.to(room).emit('winGame', result.gameOver);
           }
 
           const board = await gameInit(5, 4); // init board for new game
@@ -733,13 +733,13 @@ const moveUnits = async (data, socket) => {
 
           if (result.flag === 'attacker') {
             // console.log('\n-----------------------------> ATTACKER WON THE COMBAT BATTLE <-----------------------------\n');
-            await io.to(socketId).emit('combatWin');
-            await socket.to(room).emit('combatLoss');
+            await io.to(socketId).emit('combatWin', updatedTarget.player);
+            await socket.to(room).emit('combatLoss', updatedTarget.player);
             
           } else if (result.flag === 'defender') {
             // console.log('\n-----------------------------> DEFENDER WON THE COMBAT BATTLE <-----------------------------\n');
-            await io.to(socketId).emit('combatLoss');
-            await socket.to(room).emit('combatWin');
+            await io.to(socketId).emit('combatLoss', updatedTarget.player);
+            await socket.to(room).emit('combatWin', updatedTarget.player);
           }
         }
       }

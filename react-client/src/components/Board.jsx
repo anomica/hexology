@@ -121,36 +121,54 @@ class Board extends React.Component {
         console.log('troops deployed data: ', data);
         this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
       })
-      socket.on('combatWin', () => {
+      socket.on('combatWin', (data) => {
+        let combatMessage;
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          combatMessage = `${data} is victorious!` :
+          combatMessage = 'You are victorious!';
         setTimeout(() => this.setState({
-          combatMessage: 'You are victorious!',
+          combatMessage: combatMessage,
           combatIcon: 'https://royalarmouries.files.wordpress.com/2015/10/di-2015-3939.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
-      socket.on('combatLoss', () => {
+      socket.on('combatLoss', (data) => {
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          combatMessage = `${data} is victorious!` :
+          combatMessage = 'Your armies have been bested.';
         setTimeout(() => this.setState({
-          combatMessage: 'Your armies have been bested.',
+          combatMessage: combatMessage,
           combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       })
       socket.on('tieGame', () => {
+        let tag;
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          '' : tag = 'Try again';
         setTimeout(() => {
-          this.setState({ combatMessage: 'The war has ended in a stalemate. Try again.'});
+          this.setState({ combatMessage: `The war has ended in a stalemate. ${tag}`});
         }, 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       })
-      socket.on('winGame', () => {
+      socket.on('winGame', (data) => {
+        let combatMessage;
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          combatMessage = `${data} wins the battle and the day!` :
+          combatMessage = 'Congratulations! You have won the battle, and the day!';
         setTimeout(() => this.setState({
-          combatMessage: 'Congratulations! You have won the battle, and the day!',
+          combatMessage: combatMessage,
           combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
-      socket.on('loseGame', () => {
+      socket.on('loseGame', (data) => {
+        let combatMessage;
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          combatMessage = data + ' wins the battle and the day!' :
+          combatMessage = 'Your armies have been bested, and your enemy is victorious. Better luck next time.';
         setTimeout(() => this.setState({
-          combatMessage: 'Your armies have been bested, and your enemy is victorious. Better luck next time.',
+          combatMessage: combatMessage,
           combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
