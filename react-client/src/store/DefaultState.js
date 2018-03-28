@@ -29,7 +29,8 @@ const DefaultState = {
   showLogin: false,
   showSignup: false,
   loggedInUser: 'anonymous',
-  spectator: false
+  spectator: false,
+  hexbot: false
 }
 
 export default DefaultState;

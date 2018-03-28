@@ -16,16 +16,18 @@ import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
 import UnitBank from './UnitBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
+import hexbot from '../hexbot/hexbot.js';
 
 class Board extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
       hex: null,
       modalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
+      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
       confirmOpen: false,
       disconnectModalOpen: false,
       tempSwordsmen: 0,
@@ -92,6 +94,7 @@ class Board extends React.Component {
         if (move.updatedUnitCounts) {
           this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
         }
+        this.props.updateResources(move.playerOneResources, move.playerTwoResources);
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
       });
       socket.on('watchGame', data => {
@@ -118,7 +121,6 @@ class Board extends React.Component {
         this.props.knights(this.props.currentPlayer);
       });
       socket.on('troopsDeployed', data => {
-        console.log('troops deployed data: ', data);
         this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
       })
       socket.on('combatWin', (data) => {
@@ -189,7 +191,7 @@ class Board extends React.Component {
   resetCombatModal() {
     this.setState({
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
+      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
     })
   }
 
@@ -319,6 +321,7 @@ class Board extends React.Component {
   }
 
   nextTurn() { // after move completes,
+    this.props.boardState ? hexbot() : null;
     let currentPlayer = this.props.currentPlayer;
     currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1'; // toggle player from player 1 to player 2 or vice versa
     this.props.switchPlayer(currentPlayer);
@@ -381,7 +384,7 @@ class Board extends React.Component {
                         key={uuidv4()}
                         className={targetClass}
                         onClick={() => {
-                          this.props.deployment ? this.addUnitsToHex(index, hex) :
+                          this.props.deployment && hex.player === this.props.userPlayer ? this.addUnitsToHex(index, hex) :
                           this.handleClick(hex);
                           this.setState({ hex: hex });
                         }}
@@ -488,7 +491,8 @@ const mapStateToProps = (state) => {
     loggedInUser: state.state.loggedInUser,
     playerOne: state.state.playerOne,
     playerTwo: state.state.playerTwo,
-    spectator: state.state.spectator
+    spectator: state.state.spectator,
+    hexbot: state.state.hexbot
   }
 }
 

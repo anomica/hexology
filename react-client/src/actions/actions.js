@@ -246,3 +246,10 @@ export const setSpectator = (isTrue) => (
     payload: isTrue
   }
 )
+
+export const setHexbot = value => (
+  {
+    type: 'SET-HEXBOT',
+    payload: value
+  }
+)

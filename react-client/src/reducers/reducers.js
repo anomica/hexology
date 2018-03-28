@@ -152,25 +152,10 @@ const reducers = (state = defaultState, action) => {
         hasMetal: false
       }
       newBoardState.splice(action.payload.hexIndex, 1, reinforcedHex); // replace hex with used up resource hex
-      if (state.currentPlayer === 'player1') { // for player 1,
         return {
           ...state,
           boardState: newBoardState,
-          playerOneResources: {
-            ...playerOne,
-            [resource]: playerOne[resource] += 10 // add ten to whichever resource is necessary
-          }
         }
-      } else if (state.currentPlayer === 'player2') { // same, but for player 2
-        return {
-          ...state,
-          boardState: newBoardState,
-          playerTwoResources: {
-            ...playerTwo,
-            [resource]: playerTwo[resource] += 10
-          }
-        }
-      }
     case 'UPDATE-RESOURCES':
       return {
         ...state,
@@ -219,7 +204,7 @@ const reducers = (state = defaultState, action) => {
       }
     case 'TOGGLE-LOGIN-SIGNUP':
       let type;
-      action.payload === 'signup' ? type = 'showSignup' 
+      action.payload === 'signup' ? type = 'showSignup'
       : type = 'showLogin';
       return {
         ...state,
@@ -234,11 +219,16 @@ const reducers = (state = defaultState, action) => {
         ...state,
         loggedInUser: user
       }
-    case 'SET-LOGGED-IN-PLAYER': 
+    case 'SET-LOGGED-IN-PLAYER':
       return {
         ...state,
         playerOne: action.payload.player1,
         playerTwo: action.payload.player2
+      }
+    case 'SET-HEXBOT':
+      return {
+        ...state,
+        hexbot: action.payload
       }
     default: return state;
 
