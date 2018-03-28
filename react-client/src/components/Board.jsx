@@ -355,11 +355,11 @@ class Board extends React.Component {
                   <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
                     {this.props.boardState ? this.props.boardState.map((hex, index) => {
                       let targetClass = '';
-                      if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
+                      if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
                         targetClass += 'opponent';
                       } else if (this.props.selectedHex.index === hex.index) {
                         targetClass += 'selected';
-                      } else if (hex.player === this.props.userPlayer) {
+                      } else if (hex.player === this.props.userPlayer || (this.props.spectator && hex.player === 'player1')) {
                         targetClass += 'friendly';
                       } else if (this.props.neighbors.indexOf(hex.index) > -1) {
                         targetClass += 'neighbor';
