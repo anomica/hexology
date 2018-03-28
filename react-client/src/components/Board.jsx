@@ -63,12 +63,10 @@ class Board extends React.Component {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
       socket.on('gameCreated', data => {
-        console.log('data from gameCreated:', data);
         this.props.drawBoard(data); // if the server sends an object, it means that the player is player 2
         this.props.setGameIndex(data.gameIndex); // if so, set game index
         this.props.selectHex({}); // initialize selected hex
         this.props.highlightNeighbors([]); // and neighbors
-        console.log('this.props.playerAssigned', this.props.playerAssigned);
         this.props.user ? null : this.props.updateUnitCounts(10, 10);
         this.props.switchPlayer('player1');
         !this.props.spectator && !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
@@ -98,7 +96,6 @@ class Board extends React.Component {
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
       });
       socket.on('watchGame', data => {
-        console.log('data:', data);
         this.props.setSpectator(this.props.loggedInUser);
       })
       socket.on('setLoggedInUser', data => {

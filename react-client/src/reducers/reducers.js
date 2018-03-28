@@ -101,7 +101,6 @@ const reducers = (state = defaultState, action) => {
         playerAssigned: true
       }
     case 'DRAW-BOARD':
-      console.log('action.payload.board', action.payload.board)
       return {
         ...state,
         boardState: action.payload.board,
@@ -214,7 +213,6 @@ const reducers = (state = defaultState, action) => {
       let user;
       action.payload === 'spectator' ? user = state.loggedInUser + '-spectator' 
       : user = action.payload;
-      console.log('user in action:', user);
       return {
         ...state,
         loggedInUser: user

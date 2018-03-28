@@ -389,7 +389,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   })
 
   socket.on('sendMessage', (request) => {
-    io.to(room).emit('newMessage', request);
+    io.in(room).emit('newMessage', request);
   });
 
   socket.on('leaveRoom', data => {

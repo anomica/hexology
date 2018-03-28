@@ -20,10 +20,6 @@ class TopBar extends React.Component {
     }
   }
 
-  componentDidMount() {
-    console.log('this.props.spectator', this.props.spectator)
-  }
-
   exitGame() {
     console.log('exit game props:', this.props)
     this.props.exitGame();
