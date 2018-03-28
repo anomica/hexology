@@ -239,3 +239,10 @@ export const setLoggedInPlayer = (user1, user2) => (
     }
   }
 )
+
+export const setSpectator = (isTrue) => (
+  {
+    type: 'SET-SPECTATOR',
+    payload: isTrue
+  }
+)

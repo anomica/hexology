@@ -28,7 +28,8 @@ const DefaultState = {
   deployment: null,
   showLogin: false,
   showSignup: false,
-  loggedInUser: 'anonymous'
+  loggedInUser: 'anonymous',
+  spectator: false
 }
 
 export default DefaultState;

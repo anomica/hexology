@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
-import { setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -30,8 +30,7 @@ class Board extends React.Component {
       disconnectModalOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
-      tempKnights: 0,
-      spectator: false
+      tempKnights: 0
     }
   }
 
@@ -39,14 +38,11 @@ class Board extends React.Component {
     (async () => {
       let socket = this.props.socket;
       if (this.props.location.state.type) {
-        this.setState({
-          spectator: true
-        }, () => {
-          socket.emit('watchGame', {
-            room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
-            username: this.props.loggedInUser,
-            gameIndex: this.props.location.state.gameIndex
-          })
+        this.props.setSpectator(true);
+        socket.emit('watchGame', {
+          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
+          username: this.props.loggedInUser,
+          gameIndex: this.props.location.state.gameIndex
         })
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
@@ -70,6 +66,7 @@ class Board extends React.Component {
         this.props.setGameIndex(data.gameIndex); // if so, set game index
         this.props.selectHex({}); // initialize selected hex
         this.props.highlightNeighbors([]); // and neighbors
+        console.log('this.props.playerAssigned', this.props.playerAssigned);
         this.props.user ? null : this.props.updateUnitCounts(10, 10);
         this.props.switchPlayer('player1');
         !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
@@ -477,7 +474,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, resetBoard }, dispatch);

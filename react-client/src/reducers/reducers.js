@@ -53,6 +53,11 @@ const reducers = (state = defaultState, action) => {
         room: null,
         socket: null,
       }
+    case 'SET-SPECTATOR':
+      return {
+        ...state,
+        spectator: action.payload
+      }
     case 'RESET-BOARD':
       return {
         ...state,
