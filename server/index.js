@@ -495,9 +495,9 @@ const moveUnits = async (data, socket) => {
 
             console.log('\ncurrentPlayer: ', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
 
-            if (result.gameOver === 'player1') { // if winner is player1
+            if (result.gameOver === 'player1') { // if player1 won
               await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
-            } else if (result.gameOver === 'player2' && currentPlayer === 'player2') {
+            } else if (result.gameOver === 'player2') { // if player2 won
               await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
             }
 
@@ -505,6 +505,13 @@ const moveUnits = async (data, socket) => {
             socket.to(room).emit('loseGame'); // while the rest of the room (defender) gets lose message
 
           } else {
+
+            if (result.gameOver === 'player1') { // if player1 won
+              await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
+            } else if (result.gameOver === 'player2') { // if player2 won
+              await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
+            }
+
             io.to(socketId).emit('loseGame');
             socket.to(room).emit('winGame');
           }
