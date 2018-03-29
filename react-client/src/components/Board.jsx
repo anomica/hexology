@@ -33,7 +33,8 @@ class Board extends React.Component {
       tempSwordsmen: 0,
       tempArchers: 0,
       tempKnights: 0,
-      timer:0
+      timer:0,
+      turnsForfeited: 0
     }
   }
 
@@ -114,12 +115,21 @@ class Board extends React.Component {
         })
       });
 
-      setInterval(() => {
-        if (this.state.timer === 60) {
+      setInterval(async () => {
+        if (this.state.timer === 30) {
           if (this.props.userPlayer === this.props.currentPlayer) {
             alert('You have 30 seconds remaining to finish your turn');
           }
-        } else if (this.state.timer > 90) {
+        } else if (this.state.timer > 45) {
+          if (this.props.userPlayer === this.props.currentPlayer) {
+            await this.setState({
+              turnsForfeited: this.state.turnsForfeited += 1
+            })
+            console.log('this.state.turnsForfeited:', this.state.turnsForfeited);
+            if (this.state.turnsForfeited > 2) {
+              socket.emit('optOut', this.props.room);
+            }
+          }
           this.nextTurn();
           this.setState({
             timer: 0
