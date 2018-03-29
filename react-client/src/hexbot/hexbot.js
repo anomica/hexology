@@ -1,5 +1,6 @@
 import { store } from '../store/index.js';
 import { evaluateCombat } from './hexbotUtils.js';
+import _ from 'lodash';
 
 const boardRelationships = {
   0: [1, 4],
@@ -27,9 +28,9 @@ const hexbot = (state = store.getState().state) => {
   const room = state.room;
   let boardState = state.boardState;
   let gameIndex = state.gameIndex;
-  let playerOneTotalUnits = state.playerOneTotalUnits, playerTwoTotalUnits = state.playerTwoTotalUnits;
-  let playerOneResources = state.playerOneResources, playerTwoResources = state.playerTwoResources;
-  let playerOneUnitBank = state.playerOneUnitBank, playerTwoUnitBank = state.playerTwoUnitBank;
+  let playerTotalUnits = state.playerOneTotalUnits, botTotalUnits = state.playerTwoTotalUnits;
+  let playerResources = state.playerOneResources, botResources = state.playerTwoResources;
+  let playerUnitBank = state.playerOneUnitBank, botUnitBank = state.playerTwoUnitBank;
   let bestMove = [0, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move to, second is heuristic of move
 
 
@@ -72,6 +73,42 @@ const hexbot = (state = store.getState().state) => {
         let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
         secondaryEnemies[botHex][threat] = outcome;
       })
+    }
+  }
+
+  if (Object.keys(adjacentEnemies).length > 0) {
+    for (let botHex in adjacentEnemies) {
+      for (let combatIndex in adjacentEnemies[botHex]) {
+        if (adjacentEnemies[botHex][combatIndex].tie || adjacentEnemies[botHex][combatIndex].armyDiff < 0) {
+          evaluateCombatAfterPurchase(adjacentEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState);
+        }
+      }
+    }
+  }
+
+  function evaluateCombatAfterPurchase(combat, combatIndex, resources, botHex, boardState) {
+    let tempBoardState = _.cloneDeep(boardState);
+    let swordsmenPurchase = false, archersPurchase = false, knightsPurchase = false;
+    if (resources.gold >= 10 && resources.wood >= 20) {
+      tempBoardState[botHex].archers += 10;
+      let outcome = evaluateCombat(tempBoardState[botHex], tempBoardState[combatIndex]);
+      if (outcome.armyDiff > 0 || outcome.tie) {
+        archersPurchase = true;
+      }
+    }
+    if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
+      tempBoardState[botHex].knights += 10;
+      let outcome = evaluateCombat(tempBoardState[botHex], tempBoardState[combatIndex]);
+      if (outcome.armyDiff > 0 || outcome.tie) {
+        knightsPurchase = true;
+      }
+    }
+    if (resources.gold >= 10 && resources.wood >= 10) {
+      tempBoardState[botHex].swordsmen += 10;
+      let outcome = evaluateCombat(tempBoardState[botHex], tempBoardState[combatIndex]);
+      if (outcome.armyDiff > 0 || outcome.tie) {
+        swordsmenPurchase = true;
+      }
     }
   }
 
