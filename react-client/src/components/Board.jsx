@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
-import { setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -84,7 +84,6 @@ class Board extends React.Component {
           this.setState({
             timer: this.state.timer += 1
           })
-          console.log('this.state.timer', this.state.timer);
         }, 1000)
       });
       socket.on('move', (move) => { // when socket receives result of move request,
@@ -117,11 +116,11 @@ class Board extends React.Component {
       });
 
       setInterval(async () => {
-        if (this.state.timer === 30) {
+        if (this.state.timer === 90) {
           if (this.props.userPlayer === this.props.currentPlayer) {
             alert('You have 30 seconds remaining to finish your turn');
           }
-        } else if (this.state.timer > 45) {
+        } else if (this.state.timer > 120) {
           alert(`${this.props.currentPlayer} took to long to make a move and forfeits the turn`)
           await this.nextTurn();
           await this.setState({

@@ -27,6 +27,7 @@ const RoomsList = props => {
     let socket = await props.socket;
     if (socket) {
       socket.on('newRoom', (room) => {
+        console.log('room in newRoom:', room);
         room.room.player1 = room.player1
         props.newRoom(room);
       })
@@ -34,6 +35,7 @@ const RoomsList = props => {
         props.deleteRoom(room);
       })
       socket.on('updateRoom', (room) => {
+        console.log('room in updateRoom:', room);
         props.updateRoom(room);
       })
     }

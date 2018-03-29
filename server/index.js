@@ -301,11 +301,11 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     room = newRoom;
     let gameType = request.gameType;
     socket.join(newRoom); // create a new room
+    io.sockets.adapter.rooms[room].player1 = request.username;
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
     gameType === 'public' && socket.broadcast.emit('newRoom', { 
       roomName: newRoom, 
-      room: io.sockets.adapter.rooms[newRoom],
-      player1: request.username
+      room: io.sockets.adapter.rooms[newRoom]
      });
     roomNum++; // increment room count to assign new ro
   });
@@ -315,7 +315,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
     room = data.room;
-    room.player2 = data.username
+    io.sockets.adapter.rooms[room].player2 = data.username;
     socket.broadcast.emit('updateRoom', {
       room: data.room,
     })
@@ -390,7 +390,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   })
 
   socket.on('sendMessage', (request) => {
-    console.log('request:', request);
     io.to(request.room).emit('newMessage', request);
   });
 
@@ -445,7 +444,7 @@ const assignLoggedInUser = async (username, player, gameIndex, room) => { // nee
 
   let p1Username = await db.getPlayerUsername('player1', gameIndex, room); // get player1 username
   let p2Username = await db.getPlayerUsername('player2', gameIndex, room); // get player2 username
-
+  console.log('p1Username, p2Username', p1Username, p2Username);
   await io.to(room).emit('setLoggedInUser', { // need to pull from DB here
     player1: p1Username[0].username,
     player2: p2Username[0].username

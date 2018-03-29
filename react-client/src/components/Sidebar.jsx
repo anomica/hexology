@@ -43,7 +43,10 @@ class SidebarLeft extends React.Component {
 
   newGame() {
     this.state.hexbot && this.props.setHexbot(true);
-    this.props.socket.emit('newGame', { gameType: this.state.gameType });
+    this.props.socket.emit('newGame', { 
+      gameType: this.state.gameType,
+      username: this.props.loggedInUser
+     });
     this.props.socket.on('newGame', data => {
       this.props.setRoom(data.room);
       this.props.history.push({
