@@ -31,6 +31,7 @@ const hexbot = (state = store.getState().state) => {
   let playerTotalUnits = state.playerOneTotalUnits, botTotalUnits = state.playerTwoTotalUnits;
   let playerResources = state.playerOneResources, botResources = state.playerTwoResources;
   let playerUnitBank = state.playerOneUnitBank, botUnitBank = state.playerTwoUnitBank;
+  let possibleMoves = {};
   let bestMove = [0, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move to, second is heuristic of move
 
 
@@ -87,6 +88,7 @@ const hexbot = (state = store.getState().state) => {
         let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
         adjacentEnemies[botHex][threat] = outcome; // collect result of that combat in adjacent enemies object
       })
+      delete adjacentEnemies[botHex].threats;
     }
   }
 
@@ -96,6 +98,7 @@ const hexbot = (state = store.getState().state) => {
         let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
         secondaryEnemies[botHex][threat] = outcome;
       })
+      delete secondaryEnemies[botHex].threats;
     }
   }
 
@@ -104,6 +107,37 @@ const hexbot = (state = store.getState().state) => {
       for (let combatIndex in adjacentEnemies[botHex]) { // simulate each combat
         if (adjacentEnemies[botHex][combatIndex].tie || adjacentEnemies[botHex][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
           let newOutcome = evaluateCombatAfterPurchase(adjacentEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState); // determine if a purchase the bot can make would change outcome
+          if (newOutcome.path && !newOutcome.tie) { // if a purchase could lead to a win,
+            possibleMoves.hasOwnProperty(botHex) ? possibleMoves[botHex] = { ...possibleMoves[botHex] } : possibleMoves[botHex] = {};
+            possibleMoves[botHex][combatIndex] = {
+              purchase: newOutcome.path,
+              cost: newOutcome.cost,
+              winCombat: true
+            }
+          } else if (newOutcome.tie) { // if a purchase could lead to a tie,
+            possibleMoves.hasOwnProperty(botHex) ? possibleMoves[botHex] = { ...possibleMoves[botHex] } : possibleMoves[botHex] = {};
+            possibleMoves[botHex][combatIndex] = {
+              [combatIndex]: {
+                purchase: newOutcome.path,
+                cost: newOutcome.cost,
+                tie: true
+              }
+            }
+          } else { // if a purchase cannot lead to a win,
+            possibleMoves.hasOwnProperty(botHex) ? possibleMoves[botHex] = { ...possibleMoves[botHex] } : possibleMoves[botHex] = {};
+            possibleMoves[botHex][combatIndex] = {
+              [combatIndex]: {
+                loseCombat: true
+              }
+            }
+          }
+        } else { // if an attack will win outright
+          possibleMoves.hasOwnProperty(botHex) ? possibleMoves[botHex] = { ...possibleMoves[botHex] } : possibleMoves[botHex] = {};
+          possibleMoves[botHex][combatIndex] = {
+            [combatIndex]: {
+              winCombat: true
+            }
+          }
         }
       }
     }
@@ -120,9 +154,7 @@ const hexbot = (state = store.getState().state) => {
     let tie = false;
 
     victoryPossibleThisTurn(botHex, combatHex, resources.gold, resources.wood, resources.metal, [], 0);
-    console.log(cheapest, path, tie);
     !path && victoryPossibleThisTurn(botHex, combatHex, resources.gold, resources.wood, resources.metal, [], 0, true);
-    console.log(cheapest, path, tie);
 
     function victoryPossibleThisTurn(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag) {
       if (gold >= 10 && metal >= 10) {
@@ -145,7 +177,7 @@ const hexbot = (state = store.getState().state) => {
         if (resourceCost < cheapest) {
           cheapest = resourceCost;
           path = purchases;
-          tieFlag && tie = true;
+          tieFlag ? tie = true : null;
         }
       } else {
         victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag);
@@ -161,7 +193,7 @@ const hexbot = (state = store.getState().state) => {
         if (resourceCost < cheapest) {
           cheapest = resourceCost;
           path = purchases;
-          tieFlag && tie = true;
+          tieFlag ? tie = true : null;
         }
       } else {
         victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag);
@@ -177,13 +209,13 @@ const hexbot = (state = store.getState().state) => {
         if (resourceCost < cheapest) {
           cheapest = resourceCost;
           path = purchases;
-          tieFlag && tie = true;
+          tieFlag ? tie = true : null;
         }
       } else {
         victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag);
       }
     }
-
+    return { path: path, tie: tie, cost: cheapest }
   }
 
   let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
