@@ -15,6 +15,14 @@ const reducers = (state = defaultState, action) => {
           ...action.payload
         }
       }
+    case 'UPDATE-ROOM':
+      return {
+        ...state,
+        rooms: {
+          ...state.rooms,
+          ...action.payload
+        }
+      }
     case 'SET-SOCKET':
       return {
         ...state,
@@ -44,6 +52,11 @@ const reducers = (state = defaultState, action) => {
         ...state,
         room: null,
         socket: null,
+      }
+    case 'SET-SPECTATOR':
+      return {
+        ...state,
+        spectator: action.payload
       }
     case 'RESET-BOARD':
       return {
@@ -90,17 +103,9 @@ const reducers = (state = defaultState, action) => {
     case 'DRAW-BOARD':
       return {
         ...state,
-        boardState: action.payload,
-        playerOneResources: {
-          gold: 10,
-          wood: 10,
-          metal: 10
-        },
-        playerTwoResources: {
-          gold: 10,
-          wood: 10,
-          metal: 10
-        }
+        boardState: action.payload.board,
+        playerOneResources: action.payload.playerOneResources,
+        playerTwoResources: action.payload.playerTwoResources
       }
     case 'SET-GAME-INDEX':
       return {
@@ -205,9 +210,12 @@ const reducers = (state = defaultState, action) => {
         [type]: !state[type]
       }
     case 'LOGIN':
+      let user;
+      action.payload === 'spectator' ? user = state.loggedInUser + '-spectator' 
+      : user = action.payload;
       return {
         ...state,
-        loggedInUser: action.payload
+        loggedInUser: user
       }
     case 'SET-LOGGED-IN-PLAYER':
       return {

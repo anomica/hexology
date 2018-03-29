@@ -227,6 +227,16 @@ const distributeResources = (board, meridianHexes) => {
 }
 
 app.get('/rooms', (req, res) => {
+  rooms = io.sockets.adapter.rooms
+  for (room in rooms) {
+    if (rooms[room].length === 2) {
+      for (game in games) {
+        if (games[game].room === room) {
+          rooms[room].gameIndex = games[game].index;
+        }
+      }
+    }
+  }
   res.status(200).json(io.sockets.adapter.rooms);
 });
 
@@ -292,7 +302,11 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let gameType = request.gameType;
     socket.join(newRoom); // create a new room
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
-    gameType === 'public' && socket.broadcast.emit('newRoom', { roomName: newRoom, room: io.sockets.adapter.rooms[newRoom] });
+    gameType === 'public' && socket.broadcast.emit('newRoom', { 
+      roomName: newRoom, 
+      room: io.sockets.adapter.rooms[newRoom],
+      player1: request.username
+     });
     roomNum++; // increment room count to assign new ro
   });
 
@@ -301,7 +315,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
     room = data.room;
-
+    room.player2 = data.username
+    socket.broadcast.emit('updateRoom', {
+      room: data.room,
+    })
     //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
@@ -317,20 +334,31 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       },
       playerOneTotalUnits: 10,
       playerTwoTotalUnits: 10,
+      room: data.room,
+      index: gameIndex
     };
 
     const newGameBoard = {
       board: board,
       gameIndex: gameIndex,
-      room: room
+      room: room,
+      playerOneResources: games[gameIndex].playerOneResources,
+      playerTwoResources: games[gameIndex].playerTwoResources
     }
-
+    
     /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
     await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
   });
+
+  socket.on('watchGame', data => {
+    socket.join(data.room);
+    const game = games[data.gameIndex];
+    game.user = data.username;
+    io.to(socket.id).emit('gameCreated', games[data.gameIndex]);
+  })
 
   socket.on('setLoggedInUser', data => {
     assignLoggedInUser(data.username, data.player, data.gameIndex, data.room)
@@ -361,7 +389,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   })
 
   socket.on('sendMessage', (request) => {
-    io.to(room).emit('newMessage', request);
+    io.in(room).emit('newMessage', request);
   });
 
   socket.on('leaveRoom', data => {
@@ -588,15 +616,7 @@ const moveUnits = async (data, socket) => {
 
             // console.log('\ncurrentPlayer: ', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
 
-            if (result.gameOver === 'player1') { // if player1 won
-              await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
-            } else if (result.gameOver === 'player2') { // if player2 won
-              await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
-            }
-
-            io.to(socketId).emit('winGame'); // the attacker gets a personal win message
-            socket.to(room).emit('loseGame'); // while the rest of the room (defender) gets lose message
-
+  
           } else {
 
             if (result.gameOver === 'player1') { // if player1 won
@@ -604,9 +624,8 @@ const moveUnits = async (data, socket) => {
             } else if (result.gameOver === 'player2') { // if player2 won
               await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
             }
-
-            io.to(socketId).emit('loseGame');
-            socket.to(room).emit('winGame');
+            io.to(socketId).emit('loseGame', result.gameOver);
+            socket.to(room).emit('winGame', result.gameOver);
           }
 
           const board = await gameInit(5, 4); // init board for new game
@@ -714,13 +733,12 @@ const moveUnits = async (data, socket) => {
 
           if (result.flag === 'attacker') {
             // console.log('\n-----------------------------> ATTACKER WON THE COMBAT BATTLE <-----------------------------\n');
-            await io.to(socketId).emit('combatWin');
-            await socket.to(room).emit('combatLoss');
-
+            await io.to(socketId).emit('combatWin', updatedTarget.player);
+            await socket.to(room).emit('combatLoss', updatedTarget.player);
           } else if (result.flag === 'defender') {
             // console.log('\n-----------------------------> DEFENDER WON THE COMBAT BATTLE <-----------------------------\n');
-            await io.to(socketId).emit('combatLoss');
-            await socket.to(room).emit('combatWin');
+            await io.to(socketId).emit('combatLoss', updatedTarget.player);
+            await socket.to(room).emit('combatWin', updatedTarget.player);
           }
         }
       }
