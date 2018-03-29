@@ -35,21 +35,44 @@ const hexbot = (state = store.getState().state) => {
 
 
   let turnCounter = 2;
-  let botHexes = [], playerHexes = [], adjacentEnemies = {}, secondaryEnemies = {};
+  let botHexes = [], playerHexes = [], adjacentEnemies = {}, secondaryEnemies = {}, adjacentResources = {}, secondaryResources = {}; // collect all adjacent and secondary adjacent threats and resources
   boardState.forEach(hex => {
+    let hexIndex = boardState.indexOf(hex);
     if (hex.player === 'player2') {
-      let hexIndex = boardState.indexOf(hex);
       botHexes.push(hexIndex);
       boardRelationships[hexIndex].forEach(neighbor => {
         if (boardState[neighbor].player === 'player1') {
           adjacentEnemies.hasOwnProperty(hexIndex) ?
           adjacentEnemies[hexIndex].threats.push(neighbor) : adjacentEnemies[hexIndex] = { threats: [neighbor] };
         }
+
+        if (boardState[neighbor].hasGold) {
+          adjacentResources.hasOwnProperty(hexIndex) ?
+          adjacentResources[hexIndex].resources.push([neighbor, 'gold']) : adjacentResources[hexIndex] = { resources: [[neighbor, 'gold']] };
+        } else if (boardState[neighbor].hasWood) {
+          adjacentResources.hasOwnProperty(hexIndex) ?
+          adjacentResources[hexIndex].resources.push([neighbor, 'wood']) : adjacentResources[hexIndex] = { resources: [[neighbor, 'wood']] };
+        } else if (boardState[neighbor].hasMetal) {
+          adjacentResources.hasOwnProperty(hexIndex) ?
+          adjacentResources[hexIndex].resources.push([neighbor, 'metal']) : adjacentResources[hexIndex] = { resources: [[neighbor, 'metal']] };
+        }
+
         boardRelationships[neighbor].forEach(otherNeighbor => {
           if (boardState[otherNeighbor].player === 'player1' && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
             secondaryEnemies.hasOwnProperty(hexIndex)
             && secondaryEnemies[hexIndex].threats.indexOf(otherNeighbor) === -1 ?
             secondaryEnemies[hexIndex].threats.push(otherNeighbor) : secondaryEnemies[hexIndex] = { threats: [otherNeighbor] };
+          }
+
+          if (boardState[otherNeighbor].hasGold && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
+            secondaryResources.hasOwnProperty(hexIndex) ?
+            secondaryResources[hexIndex].resources.push([otherNeighbor, 'gold']) : secondaryResources[hexIndex] = { resources: [[otherNeighbor, 'gold']] };
+          } else if (boardState[otherNeighbor].hasWood && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
+            secondaryResources.hasOwnProperty(hexIndex) ?
+            secondaryResources[hexIndex].resources.push([otherNeighbor, 'wood']) : secondaryResources[hexIndex] = { resources: [[otherNeighbor, 'wood']] };
+          } else if (boardState[otherNeighbor].hasMetal && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
+            secondaryResources.hasOwnProperty(hexIndex) ?
+            secondaryResources[hexIndex].resources.push([otherNeighbor, 'metal']) : secondaryResources[hexIndex] = { resources: [[otherNeighbor, 'metal']] };
           }
         })
       })
