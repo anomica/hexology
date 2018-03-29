@@ -121,19 +121,12 @@ class Board extends React.Component {
             alert('You have 30 seconds remaining to finish your turn');
           }
         } else if (this.state.timer > 45) {
-          if (this.props.userPlayer === this.props.currentPlayer) {
-            await this.setState({
-              turnsForfeited: this.state.turnsForfeited += 1
-            })
-            console.log('this.state.turnsForfeited:', this.state.turnsForfeited);
-            if (this.state.turnsForfeited > 2) {
-              socket.emit('optOut', this.props.room);
-            }
-          }
-          this.nextTurn();
-          this.setState({
+          alert(`${this.props.currentPlayer} took to long to make a move and forfeits the turn`)
+          await this.nextTurn();
+          await this.setState({
             timer: 0
           })
+
         }
       }, 1000)
 
