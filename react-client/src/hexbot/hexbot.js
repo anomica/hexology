@@ -117,63 +117,70 @@ const hexbot = (state = store.getState().state) => {
 
     let cheapest = Number.POSITIVE_INFINITY;
     let path = false;
+    let tie = false;
 
     victoryPossibleThisTurn(botHex, combatHex, resources.gold, resources.wood, resources.metal, [], 0);
+    console.log(cheapest, path, tie);
+    !path && victoryPossibleThisTurn(botHex, combatHex, resources.gold, resources.wood, resources.metal, [], 0, true);
+    console.log(cheapest, path, tie);
 
-    function victoryPossibleThisTurn(botHex, combatHex, gold, wood, metal, purchases, resourceCost) {
+    function victoryPossibleThisTurn(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag) {
       if (gold >= 10 && metal >= 10) {
-        buySwordsmen(botHex, combatHex, gold - 10, wood, metal - 10, purchases.concat('swordsmen'), resourceCost + 20)
+        buySwordsmen(botHex, combatHex, gold - 10, wood, metal - 10, purchases.concat('swordsmen'), resourceCost + 20, tieFlag)
       }
       if (gold >= 10 && wood >= 20) {
-        buyArchers(botHex, combatHex, gold - 10, wood - 20, metal, purchases.concat('archers'), resourceCost + 30)
+        buyArchers(botHex, combatHex, gold - 10, wood - 20, metal, purchases.concat('archers'), resourceCost + 30, tieFlag)
       }
       if (gold >= 20 && wood >= 20 && metal >= 20) {
-        buyKnights(botHex, combatHex, gold - 20, wood - 20, metal - 20, purchases.concat('knights'), resourceCost + 60)
+        buyKnights(botHex, combatHex, gold - 20, wood - 20, metal - 20, purchases.concat('knights'), resourceCost + 60, tieFlag)
       }
     }
 
-    function buySwordsmen(botHex, combatHex, gold, wood, metal, purchases, resourceCost) {
+    function buySwordsmen(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag) {
       let botHexCopy = _.cloneDeep(botHex);
       botHexCopy.swordsmen += 10;
 
       let outcome = evaluateCombat(botHexCopy, combatHex);
-      if (outcome.armyDiff > 0) {
+      if (tieFlag ? outcome.tie : outcome.armyDiff > 0 && !outcome.tie) {
         if (resourceCost < cheapest) {
           cheapest = resourceCost;
           path = purchases;
+          tieFlag && tie = true;
         }
       } else {
-        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost);
+        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag);
       }
     }
 
-    function buyArchers(botHex, combatHex, gold, wood, metal, purchases, resourceCost) {
+    function buyArchers(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag) {
       let botHexCopy = _.cloneDeep(botHex);
       botHexCopy.archers += 10;
 
       let outcome = evaluateCombat(botHexCopy, combatHex);
-      if (outcome.armyDiff > 0) {
+      if (tieFlag ? outcome.tie : outcome.armyDiff > 0 && !outcome.tie) {
         if (resourceCost < cheapest) {
           cheapest = resourceCost;
           path = purchases;
+          tieFlag && tie = true;
         }
       } else {
-        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost);
+        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag);
       }
     }
 
-    function buyKnights(botHex, combatHex, gold, wood, metal, purchases, resourceCost) {
+    function buyKnights(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag) {
       let botHexCopy = _.cloneDeep(botHex);
       botHexCopy.knights += 10;
 
       let outcome = evaluateCombat(botHexCopy, combatHex);
-      if (outcome.armyDiff > 0) {
+      if (tieFlag ? outcome.tie : outcome.armyDiff > 0 && !outcome.tie) {
         if (resourceCost < cheapest) {
           cheapest = resourceCost;
           path = purchases;
+          tieFlag && tie = true;
         }
       } else {
-        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost);
+        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag);
       }
     }
 
