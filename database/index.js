@@ -776,16 +776,20 @@ const getUsernames = async () => {
 }
 
 /////////////////////// Gets user's existing games ///////////////////////
-const retrieveUserGames = async (userId, currentPlayer, gameIndex, room) => {
-  if (currentPlayer == 'player2' && userId !== 1 && userId !== 2) {
+const retrieveUserGames = async (username, currentPlayer) => {
+  console.log('\n///// inside retrieving user games function in database...\n');
+  let user = await getUserId(username, currentPlayer);
+  if (currentPlayer == 'player2' && username !== 'anonymous') {
     return await knex('games')
       .select()
-      .where(knex.raw(`'${gameIndex}' = game_index AND ${userId} = player2`))
-  } else if (currentPlayer === 'player1' && userId !== 1 && userId !== 2) {
-    return await knex('games')
-      .select()
-      .where(knex.raw(`'${gameIndex}' = game_index AND ${userId} = player1`))
+      .where(knex.raw(`${user[0].user_id} = player2`))
   }
+  if (currentPlayer == 'player1' && username !== 'anonymous') {
+    return await knex('games')
+      .select()
+      .where(knex.raw(`${user[0].user_id} = player1`))
+  }
+  console.log('\nCOMPLETED retrieving user games function in database... /////\n')
 }
 
 module.exports = {
@@ -819,9 +823,9 @@ module.exports = {
   getPlayerBank,
   updatePlayerTotalUnits,
   setGamePlayers,
-  getPlayerUsername,
   forceEndGame,
   getGameIdByRoom,
   getUsernames,
-  retrieveUserGames
+  retrieveUserGames,
+  getPlayerUsername
 };

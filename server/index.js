@@ -58,12 +58,20 @@ app.post('/login', passport.authenticate('local-login'), (req, res) => {
   res.status(201).json(req.user);
 });
 
+app.post('/usergames', async (req, res) => {
+  console.log('usergames: ', req.body)
+  let games = await db.retrieveUserGames(req.body.username, 'player1');
+  let gamesAsPlayerTwo = await db.retrieveUserGames(req.body.username, 'player2');
+  games = games.concat(gamesAsPlayerTwo);
+  res.status(201).json(games);
+});
+
 app.post('/logout', isLoggedIn, function (req, res) {
   req.logout();
   res.clearCookie('connect.sid').status(200).redirect('/');
 });
 
-let games = {}; // TODO: TAKE THIS OUT
+let games = {};
 
 const coordinateGenerator = (numRows, numCols) => { // creates an array of coordinates for hexes
   let j = 0;
@@ -281,8 +289,6 @@ app.get('/userwins', async (req, res) => {
 io.on('connection', async (socket) => { // initialize socket on user connection
   console.log('User connected');
 
-  loadSelectedGame('c233f141-2f54-4cab-8058-cc219ec2d041', '*0'); //TODO: take out; testing
-
   let room; // track room that client is in, when they enter a room, to help with disconnect
 
   socket.on('sendEmail', request => {
@@ -309,7 +315,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let gameIndex = uuidv4();
     room = data.room;
 
-    //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
       playerOneResources: { // p1 resources,
@@ -333,9 +338,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     }
 
     /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-    // let playerOne = // need to get username to get user id from db
-    // let playerTwo = // need to get username to get user id from db
-
     await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
     /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -344,9 +346,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('setLoggedInUser', data => {
     assignLoggedInUser(data.username, data.player, data.gameIndex, data.room);
-
-    // TODO: get user games now?
-    // getUserGames();
   });
 
   socket.on('move', data => { // move listener
@@ -422,15 +421,11 @@ const assignLoggedInUser = async (username, player, gameIndex, room) => { // nee
 
   let p1Username = await db.getPlayerUsername('player1', gameIndex, room); // get player1 username
   let p2Username = await db.getPlayerUsername('player2', gameIndex, room); // get player2 username
-  
+
   await io.to(room).emit('setLoggedInUser', {
     player1: p1Username[0].username,
     player2: p2Username[0].username
   })
-
-  // console.log('\nCURRENT PLAYERS IN THE GAME:\n')
-  // console.log('\np1Username: ', p1Username[0].username);
-  // console.log('p2Username: ', p2Username[0].username, '\n');
 }
 
 const getUserGames = async (username, currentPlayer, gameIndex, room) => {
@@ -440,17 +435,10 @@ const getUserGames = async (username, currentPlayer, gameIndex, room) => {
   if (currentPlayer === 'player1' && username !== 'anonymous') {
     user = await db.getUserId(username, 'player1'); // get user id
     userGames = await db.retrieveUserGames(user[0].user_id, currentPlayer, gameIndex, room); // get games for user by querying based on user id
-    // get the board for each game?
   } else if (currentPlayer === 'player2' && username !== 'anonymous') {
     user = await db.getUserId(username, 'player2'); // get user id
     userGames = await db.retrieveUserGames(user[0].user_id, currentPlayer, gameIndex, room); // get games for user by querying based on user id
-    // get the board for each game?
   }
-
-  console.log('\nuser from db:\n', user)
-  console.log('\nuser games from db:\n', userGames);
-
-  console.log('done getting user games');
 }
 
 const loadSelectedGame = async (gameIndex, room) => {
@@ -2194,14 +2182,6 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
 app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../react-client/dist', 'index.html'));
 });
-
-//////////////////////////////////////////////////
-// TODO: Take out this section - JUST FOR TESTING
-app.post('/users', (req, res) => {
-  db.addUser(req.body.username, req.body.email, req.body.password);
-  res.end();
-})
-//////////////////////////////////////////////////
 
 // io.listen(process.env.PORT || 3000);
 const PORT = 8080;

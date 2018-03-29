@@ -56,7 +56,7 @@ class Leaderboard extends React.Component {
           </Table.Row>
         </Table.Header>
 
-        <Table.Body style={{textAlign: 'center'}}>
+        <Table.Body>
           {this.state.users.slice(0, 5).map( (user, key) => (
             <Table.Row key={key}>
               <Table.Cell style={{textAlign: 'center'}}>
@@ -64,10 +64,8 @@ class Leaderboard extends React.Component {
               </Table.Cell>
               <Table.Cell>
                 <Header as='h4' image>
-                  {/* <Image src='/assets/images/avatar/small/lena.png' rounded size='mini' /> */}
                   <Header.Content>
-                      {user.username}
-                    {/* <Header.Subheader>sup</Header.Subheader> */}
+                    {user.username}
                   </Header.Content>
                 </Header>
               </Table.Cell>

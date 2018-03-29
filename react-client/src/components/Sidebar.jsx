@@ -32,7 +32,7 @@ class SidebarLeft extends React.Component {
 
     this.toggleMenu = this.toggleMenu.bind(this);
     this.toggleRules = this.toggleRules.bind(this);
-    this.loadGame = this.loadGame.bind(this);
+    this.showLoadGames = this.showLoadGames.bind(this);
     this.toggleLoadGames = this.toggleLoadGames.bind(this);
   }
 
@@ -62,10 +62,6 @@ class SidebarLeft extends React.Component {
     })
   }
 
-  loadGame() {
-    console.log('inside load game');
-  }
-
   showLoginOrSignupModal(type) {
     this.props.toggleLoginSignup(type);
     // setTimeout(() => {console.log('this.state.showLogin', this.state.showLogin)})
@@ -86,6 +82,18 @@ class SidebarLeft extends React.Component {
   handleChange(e, { name, value }) {
     this.setState({ [name]: value });
   }
+  
+  showLoadGames() {
+    if (this.state.loadGameModal) {
+      return (
+        <LoadGame
+          open={this.state.loadGameModal}
+          close={this.toggleLoadGames}
+          username={this.props.loggedInUser}
+        />
+      )
+    }
+  }
 
   render() {
     // Shows rules modal if rules menu item is clicked
@@ -93,14 +101,6 @@ class SidebarLeft extends React.Component {
       if (this.state.rules) {
         return (
           <Rules open={this.state.rules} close={this.toggleRules} />
-        )
-      }
-    }
-
-    const showLoadGames = () => {
-      if (this.state.loadGameModal) {
-        return (
-          <LoadGame open={this.state.loadGameModal} close={this.toggleLoadGames} />
         )
       }
     }
@@ -134,11 +134,8 @@ class SidebarLeft extends React.Component {
               <Menu.Item
                 name='load'
                 onClick={() => {
-                  console.log('save clicked');
-                  this.loadGame()
                   this.setState({ loadGameModal: !this.state.loadGameModal });
                 }}
-                // disabled={!this.state.disabled}
               >
                 <Icon name='gamepad' />
                 Load Game
@@ -249,8 +246,7 @@ class SidebarLeft extends React.Component {
           </Modal>
 
             {showRules()}
-            {showLoadGames()}
-
+            {this.showLoadGames()}
       </div>
     )
   }
