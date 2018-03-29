@@ -36,17 +36,17 @@ const hexbot = (state = store.getState().state) => {
 
   let turnCounter = 2;
   let botHexes = [], playerHexes = [], adjacentEnemies = {}, secondaryEnemies = {}, adjacentResources = {}, secondaryResources = {}; // collect all adjacent and secondary adjacent threats and resources
-  boardState.forEach(hex => {
+  boardState.forEach(hex => { // check each hex on the board
     let hexIndex = boardState.indexOf(hex);
-    if (hex.player === 'player2') {
-      botHexes.push(hexIndex);
-      boardRelationships[hexIndex].forEach(neighbor => {
-        if (boardState[neighbor].player === 'player1') {
+    if (hex.player === 'player2') { // if player 2,
+      botHexes.push(hexIndex); // it's a bot hex
+      boardRelationships[hexIndex].forEach(neighbor => { // so check each of its neighbors
+        if (boardState[neighbor].player === 'player1') { // if that neighbor has player one in it, it's owned by the player and is a threat
           adjacentEnemies.hasOwnProperty(hexIndex) ?
-          adjacentEnemies[hexIndex].threats.push(neighbor) : adjacentEnemies[hexIndex] = { threats: [neighbor] };
+          adjacentEnemies[hexIndex].threats.push(neighbor) : adjacentEnemies[hexIndex] = { threats: [neighbor] }; // so store it
         }
 
-        if (boardState[neighbor].hasGold) {
+        if (boardState[neighbor].hasGold) { // same process for resources
           adjacentResources.hasOwnProperty(hexIndex) ?
           adjacentResources[hexIndex].resources.push([neighbor, 'gold']) : adjacentResources[hexIndex] = { resources: [[neighbor, 'gold']] };
         } else if (boardState[neighbor].hasWood) {
@@ -57,7 +57,7 @@ const hexbot = (state = store.getState().state) => {
           adjacentResources[hexIndex].resources.push([neighbor, 'metal']) : adjacentResources[hexIndex] = { resources: [[neighbor, 'metal']] };
         }
 
-        boardRelationships[neighbor].forEach(otherNeighbor => {
+        boardRelationships[neighbor].forEach(otherNeighbor => { // same process for secondary neighbors, both threats and resources
           if (boardState[otherNeighbor].player === 'player1' && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
             secondaryEnemies.hasOwnProperty(hexIndex)
             && secondaryEnemies[hexIndex].threats.indexOf(otherNeighbor) === -1 ?
@@ -77,20 +77,20 @@ const hexbot = (state = store.getState().state) => {
         })
       })
     } else if (hex.player === 'player1') {
-      playerHexes.push(boardState.indexOf(hex));
+      playerHexes.push(boardState.indexOf(hex)); // also collect player (enemy) hexes to use in event that no neighbors or secondary neighbors present themselves
     }
   });
 
-  if (Object.keys(adjacentEnemies).length !== 0) {
+  if (Object.keys(adjacentEnemies).length !== 0) { // check all adjacent enemies
     for (let botHex in adjacentEnemies) {
       adjacentEnemies[botHex].threats.forEach(threat => {
         let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
-        adjacentEnemies[botHex][threat] = outcome;
+        adjacentEnemies[botHex][threat] = outcome; // collect result of that combat in adjacent enemies object
       })
     }
   }
 
-  if (Object.keys(secondaryEnemies).length !== 0) {
+  if (Object.keys(secondaryEnemies).length !== 0) { // same for secondary threats
     for (let botHex in secondaryEnemies) {
       secondaryEnemies[botHex].threats.forEach(threat => {
         let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
@@ -99,11 +99,11 @@ const hexbot = (state = store.getState().state) => {
     }
   }
 
-  if (Object.keys(adjacentEnemies).length > 0) {
+  if (Object.keys(adjacentEnemies).length > 0) { // after all primary and secondary threats collected
     for (let botHex in adjacentEnemies) {
-      for (let combatIndex in adjacentEnemies[botHex]) {
-        if (adjacentEnemies[botHex][combatIndex].tie || adjacentEnemies[botHex][combatIndex].armyDiff < 0) {
-          evaluateCombatAfterPurchase(adjacentEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState);
+      for (let combatIndex in adjacentEnemies[botHex]) { // simulate each combat
+        if (adjacentEnemies[botHex][combatIndex].tie || adjacentEnemies[botHex][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
+          let newOutcome = evaluateCombatAfterPurchase(adjacentEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState); // determine if a purchase the bot can make would change outcome
         }
       }
     }
@@ -111,28 +111,72 @@ const hexbot = (state = store.getState().state) => {
 
   function evaluateCombatAfterPurchase(combat, combatIndex, resources, botHex, boardState) {
     let tempBoardState = _.cloneDeep(boardState);
-    let swordsmenPurchase = false, archersPurchase = false, knightsPurchase = false;
-    if (resources.gold >= 10 && resources.wood >= 20) {
-      tempBoardState[botHex].archers += 10;
-      let outcome = evaluateCombat(tempBoardState[botHex], tempBoardState[combatIndex]);
-      if (outcome.armyDiff > 0 || outcome.tie) {
-        archersPurchase = true;
+    botHex = tempBoardState[botHex];
+    let combatHex = tempBoardState[combatIndex];
+    resources = _.cloneDeep(resources);
+
+    let cheapest = Number.POSITIVE_INFINITY;
+    let path = false;
+
+    victoryPossibleThisTurn(botHex, combatHex, resources.gold, resources.wood, resources.metal, [], 0);
+
+    function victoryPossibleThisTurn(botHex, combatHex, gold, wood, metal, purchases, resourceCost) {
+      if (gold >= 10 && metal >= 10) {
+        buySwordsmen(botHex, combatHex, gold - 10, wood, metal - 10, purchases.concat('swordsmen'), resourceCost + 20)
+      }
+      if (gold >= 10 && wood >= 20) {
+        buyArchers(botHex, combatHex, gold - 10, wood - 20, metal, purchases.concat('archers'), resourceCost + 30)
+      }
+      if (gold >= 20 && wood >= 20 && metal >= 20) {
+        buyKnights(botHex, combatHex, gold - 20, wood - 20, metal - 20, purchases.concat('knights'), resourceCost + 60)
       }
     }
-    if (resources.gold >= 20 && resources.wood >= 20 && resources.metal >= 20) {
-      tempBoardState[botHex].knights += 10;
-      let outcome = evaluateCombat(tempBoardState[botHex], tempBoardState[combatIndex]);
-      if (outcome.armyDiff > 0 || outcome.tie) {
-        knightsPurchase = true;
+
+    function buySwordsmen(botHex, combatHex, gold, wood, metal, purchases, resourceCost) {
+      let botHexCopy = _.cloneDeep(botHex);
+      botHexCopy.swordsmen += 10;
+
+      let outcome = evaluateCombat(botHexCopy, combatHex);
+      if (outcome.armyDiff > 0) {
+        if (resourceCost < cheapest) {
+          cheapest = resourceCost;
+          path = purchases;
+        }
+      } else {
+        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost);
       }
     }
-    if (resources.gold >= 10 && resources.wood >= 10) {
-      tempBoardState[botHex].swordsmen += 10;
-      let outcome = evaluateCombat(tempBoardState[botHex], tempBoardState[combatIndex]);
-      if (outcome.armyDiff > 0 || outcome.tie) {
-        swordsmenPurchase = true;
+
+    function buyArchers(botHex, combatHex, gold, wood, metal, purchases, resourceCost) {
+      let botHexCopy = _.cloneDeep(botHex);
+      botHexCopy.archers += 10;
+
+      let outcome = evaluateCombat(botHexCopy, combatHex);
+      if (outcome.armyDiff > 0) {
+        if (resourceCost < cheapest) {
+          cheapest = resourceCost;
+          path = purchases;
+        }
+      } else {
+        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost);
       }
     }
+
+    function buyKnights(botHex, combatHex, gold, wood, metal, purchases, resourceCost) {
+      let botHexCopy = _.cloneDeep(botHex);
+      botHexCopy.knights += 10;
+
+      let outcome = evaluateCombat(botHexCopy, combatHex);
+      if (outcome.armyDiff > 0) {
+        if (resourceCost < cheapest) {
+          cheapest = resourceCost;
+          path = purchases;
+        }
+      } else {
+        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost);
+      }
+    }
+
   }
 
   let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
