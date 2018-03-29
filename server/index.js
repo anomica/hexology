@@ -381,15 +381,17 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('initMessages', async (data) => {
+    console.log('data:', data);
     let messageHistory;
     io.to(data.room).emit('getHistory');
     socket.on('sendHistory', data => {
-      io.to(room).emit('messageHistory', { messageHistory: data.messageHistory });
+      io.to(data.room).emit('messageHistory', { messageHistory: data.messageHistory });
     })
   })
 
   socket.on('sendMessage', (request) => {
-    io.in(room).emit('newMessage', request);
+    console.log('request:', request);
+    io.to(request.room).emit('newMessage', request);
   });
 
   socket.on('optOut', (room) =>  {

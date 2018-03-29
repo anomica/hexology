@@ -19,14 +19,17 @@ class ChatWindow extends React.Component {
   componentDidMount() {
     (async () => {
       let room = await this.props.room;
+      console.log('this.props.room',this.props.room);
       await this.props.socket.emit('initMessages', { room: this.props.room });
       await this.props.socket.on('getHistory', () => {
         this.state.messageHistory.length && this.props.socket.emit('sendHistory', { messageHistory: this.state.messageHistory });
         this.props.socket.on('messageHistory', data => {
+          console.log('data:', data);
           this.setState({ messageHistory: data.messageHistory || [] });
         })
       })
       this.props.socket.on('newMessage', (data) => {
+        console.log('data:', data);
         this.setState({
           messageHistory: [...this.state.messageHistory, { message: data.message, username: data.username, socketId: data.socketId }]
         })
@@ -39,12 +42,16 @@ class ChatWindow extends React.Component {
   }
 
   submitMessage() {
-    this.props.socket.emit('sendMessage', {
-      message: this.state.message,
-      username: this.props.loggedInUser,
-      socketId: this.props.socket.id
-    });
-    this.setState({ message: '' })
+    (async () => {
+      let room = await this.props.room;
+      this.props.socket.emit('sendMessage', {
+        message: this.state.message,
+        username: this.props.loggedInUser,
+        socketId: this.props.socket.id,
+        room: this.props.room
+      });
+      this.setState({ message: '' })
+    })();
   }
 
   render() {
