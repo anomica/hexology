@@ -11,7 +11,7 @@ import Signup from './Signup.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
-import { toggleLoginSignup, exitGame, setRoom, login } from '../../src/actions/actions.js';
+import { toggleLoginSignup, exitGame, setRoom, login, setHexbot } from '../../src/actions/actions.js';
 import axios from 'axios';
 
 class SidebarLeft extends React.Component {
@@ -27,7 +27,8 @@ class SidebarLeft extends React.Component {
       rules: false,
       logoutModal: false,
       loadGameModal: false,
-      disabled: window.location.href.indexOf('game') === -1 ? false : true
+      disabled: window.location.href.indexOf('game') === -1 ? false : true,
+      hexbot: false
     }
 
     this.toggleMenu = this.toggleMenu.bind(this);
@@ -50,6 +51,7 @@ class SidebarLeft extends React.Component {
   }
 
   newGame() {
+    this.state.hexbot && this.props.setHexbot(true);
     this.props.socket.emit('newGame', { gameType: this.state.gameType });
     this.props.socket.on('newGame', data => {
       this.props.setRoom(data.room);
@@ -223,6 +225,16 @@ class SidebarLeft extends React.Component {
                       onChange={this.handleChange.bind(this)}
                       label='Game Type'
                      />
+                    <Form.Select
+                      required
+                      label
+                      placeholder={'No'}
+                      options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
+                      name={'hexbot'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Play Against Hexbot?'
+                     />
+                   <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
                   </Form.Group>
                 </Form>
               </Modal.Description>
@@ -267,7 +279,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup, login }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup, login, setHexbot }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));

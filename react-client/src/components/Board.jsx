@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
-import { setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -16,16 +16,18 @@ import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
 import UnitBank from './UnitBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
+import hexbot from '../hexbot/hexbot.js';
 
 class Board extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
       hex: null,
       modalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
+      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
       confirmOpen: false,
       disconnectModalOpen: false,
       tempSwordsmen: 0,
@@ -37,28 +39,38 @@ class Board extends React.Component {
   componentDidMount() {
     (async () => {
       let socket = this.props.socket;
-      if (!this.props.location.state || this.props.location.state.extra === 'join') {
+      if (this.props.location.state.type) {
+        await this.props.setSpectator(true);
+        socket.emit('watchGame', {
+          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
+          username: this.props.loggedInUser,
+          gameIndex: this.props.location.state.gameIndex
+        })
+      } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
           socket = await socketIOClient('http://127.0.0.1:3000');
           this.props.setSocket(socket);
         }
         socket.emit('joinGame', {
-          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]
+          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
+          username: this.props.loggedInUser,
+          spectator: true
         });
         !this.props.playerAssigned && this.props.setUserPlayer('player2');
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
+        
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
       socket.on('gameCreated', data => {
-        this.props.drawBoard(data.board); // if the server sends an object, it means that the player is player 2
+        this.props.drawBoard(data); // if the server sends an object, it means that the player is player 2
         this.props.setGameIndex(data.gameIndex); // if so, set game index
         this.props.selectHex({}); // initialize selected hex
         this.props.highlightNeighbors([]); // and neighbors
-        this.props.updateUnitCounts(10, 10);
+        this.props.user ? null : this.props.updateUnitCounts(10, 10);
         this.props.switchPlayer('player1');
-        !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
-        socket.emit('setLoggedInUser', {
+        !this.props.spectator && !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+        !this.props.spectator && socket.emit('setLoggedInUser', {
           username: this.props.loggedInUser,
           player: this.props.userPlayer,
           gameIndex: data.gameIndex,
@@ -80,8 +92,12 @@ class Board extends React.Component {
         if (move.updatedUnitCounts) {
           this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
         }
+        this.props.updateResources(move.playerOneResources, move.playerTwoResources);
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
       });
+      socket.on('watchGame', data => {
+        this.props.setSpectator(this.props.loggedInUser);
+      })
       socket.on('setLoggedInUser', data => {
         this.props.setLoggedInPlayer(data.player1, data.player2);
       })
@@ -102,39 +118,56 @@ class Board extends React.Component {
         this.props.knights(this.props.currentPlayer);
       });
       socket.on('troopsDeployed', data => {
-        console.log('troops deployed data: ', data);
         this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
       })
-      socket.on('combatWin', () => {
+      socket.on('combatWin', (data) => {
+        let combatMessage;
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          combatMessage = `${data} is victorious!` :
+          combatMessage = 'You are victorious!';
         setTimeout(() => this.setState({
-          combatMessage: 'You are victorious!',
+          combatMessage: combatMessage,
           combatIcon: 'https://royalarmouries.files.wordpress.com/2015/10/di-2015-3939.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
-      socket.on('combatLoss', () => {
+      socket.on('combatLoss', (data) => {
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          combatMessage = `${data} is victorious!` :
+          combatMessage = 'Your armies have been bested.';
         setTimeout(() => this.setState({
-          combatMessage: 'Your armies have been bested.',
+          combatMessage: combatMessage,
           combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       })
       socket.on('tieGame', () => {
+        let tag;
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          '' : tag = 'Try again';
         setTimeout(() => {
-          this.setState({ combatMessage: 'The war has ended in a stalemate. Try again.'});
+          this.setState({ combatMessage: `The war has ended in a stalemate. ${tag}`});
         }, 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       })
-      socket.on('winGame', () => {
+      socket.on('winGame', (data) => {
+        let combatMessage;
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          combatMessage = `${data} wins the battle and the day!` :
+          combatMessage = 'Congratulations! You have won the battle, and the day!';
         setTimeout(() => this.setState({
-          combatMessage: 'Congratulations! You have won the battle, and the day!',
+          combatMessage: combatMessage,
           combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
-      socket.on('loseGame', () => {
+      socket.on('loseGame', (data) => {
+        let combatMessage;
+        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+          combatMessage = data + ' wins the battle and the day!' :
+          combatMessage = 'Your armies have been bested, and your enemy is victorious. Better luck next time.';
         setTimeout(() => this.setState({
-          combatMessage: 'Your armies have been bested, and your enemy is victorious. Better luck next time.',
+          combatMessage: combatMessage,
           combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
@@ -155,7 +188,7 @@ class Board extends React.Component {
   resetCombatModal() {
     this.setState({
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'https://cdn.pixabay.com/photo/2014/04/03/10/55/swords-311733_960_720.png',
+      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
     })
   }
 
@@ -285,6 +318,7 @@ class Board extends React.Component {
   }
 
   nextTurn() { // after move completes,
+    this.props.boardState ? hexbot() : null;
     let currentPlayer = this.props.currentPlayer;
     currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1'; // toggle player from player 1 to player 2 or vice versa
     this.props.switchPlayer(currentPlayer);
@@ -305,7 +339,6 @@ class Board extends React.Component {
     return (
       <div>
         <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
-
         <Grid>
           <Grid.Row>
             <Grid.Column width={2}>
@@ -322,11 +355,11 @@ class Board extends React.Component {
                   <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
                     {this.props.boardState ? this.props.boardState.map((hex, index) => {
                       let targetClass = '';
-                      if (hex.player !== null && hex.player !== this.props.userPlayer) { // logic for assigning CSS classes
+                      if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
                         targetClass += 'opponent';
                       } else if (this.props.selectedHex.index === hex.index) {
                         targetClass += 'selected';
-                      } else if (hex.player === this.props.userPlayer) {
+                      } else if (hex.player === this.props.userPlayer || (this.props.spectator && hex.player === 'player1')) {
                         targetClass += 'friendly';
                       } else if (this.props.neighbors.indexOf(hex.index) > -1) {
                         targetClass += 'neighbor';
@@ -348,7 +381,7 @@ class Board extends React.Component {
                         key={uuidv4()}
                         className={targetClass}
                         onClick={() => {
-                          this.props.deployment ? this.addUnitsToHex(index, hex) :
+                          this.props.deployment && hex.player === this.props.userPlayer ? this.addUnitsToHex(index, hex) :
                           this.handleClick(hex);
                           this.setState({ hex: hex });
                         }}
@@ -454,12 +487,14 @@ const mapStateToProps = (state) => {
     menuVisible: state.state.menuVisible,
     loggedInUser: state.state.loggedInUser,
     playerOne: state.state.playerOne,
-    playerTwo: state.state.playerTwo
+    playerTwo: state.state.playerTwo,
+    spectator: state.state.spectator,
+    hexbot: state.state.hexbot
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, resetBoard }, dispatch);

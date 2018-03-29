@@ -71,8 +71,7 @@ class TopBar extends React.Component {
             onClick={this.exitGame.bind(this)}
           >Exit Game</Button>
         </div>
-        <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : 'player two'}!</Header>
-
+        <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
         {this.props.boardState ? null :
           (this.state.inviteSent ? <Segment>Invite sent to {this.state.email}</Segment> :
             <Segment>Want to play with a friend?
@@ -105,7 +104,7 @@ class TopBar extends React.Component {
           <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
             (this.props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') :
             `Game will begin when both players have joined.`}</strong>
-          {this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
+          {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
             <UnitShop>Shop</UnitShop> : null
             }
           </Segment>
@@ -171,7 +170,8 @@ const mapStateToProps = state => {
     menuVisible: state.state.menuVisible,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
-    loggedInUser: state.state.loggedInUser
+    loggedInUser: state.state.loggedInUser,
+    spectator: state.state.spectator
   }
 }
 

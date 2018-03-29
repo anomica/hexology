@@ -28,6 +28,15 @@ export const newRoom = (room) => (
   }
 )
 
+export const updateRoom = (room) => (
+  {
+    type: 'UPDATE-ROOM',
+    payload: {
+      [room.roomName]: room.room
+    }
+  }
+)
+
 export const deleteRoom = (room) => (
   {
     type: 'DELETE-ROOM',
@@ -228,5 +237,19 @@ export const setLoggedInPlayer = (user1, user2) => (
       player1: user1,
       player2: user2
     }
+  }
+)
+
+export const setSpectator = (isTrue) => (
+  {
+    type: 'SET-SPECTATOR',
+    payload: isTrue
+  }
+)
+
+export const setHexbot = value => (
+  {
+    type: 'SET-HEXBOT',
+    payload: value
   }
 )

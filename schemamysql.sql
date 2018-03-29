@@ -13,7 +13,7 @@ CREATE TABLE users (
   wins INT DEFAULT 0,
   losses INT DEFAULT 0,
   PRIMARY KEY (user_id)
-); 
+);
 
 -- Games table
 DROP TABLE IF EXISTS games;
@@ -51,7 +51,7 @@ CREATE TABLE games (
   PRIMARY KEY (game_id),
   FOREIGN KEY (player1) REFERENCES users (user_id),
   FOREIGN KEY (player2) REFERENCES users (user_id)
-); 
+);
 
 -- Hex table
 DROP TABLE IF EXISTS hex;
@@ -79,7 +79,7 @@ CREATE TABLE hex (
   PRIMARY KEY (hex_id),
   FOREIGN KEY (game_id) REFERENCES games (game_id),
   FOREIGN KEY (player) REFERENCES users (user_id)
-); 
+);
 
 INSERT INTO users (username, email, password)
 VALUES

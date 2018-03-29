@@ -33,15 +33,17 @@ class Main extends React.Component {
       this.props.setSocket(socket);
     })();
 
-    axios.get('/persistUser')
-      .then(data => {
-        if (data.data) {
-          this.props.login(data.data.username);
-        }
-      })
-      .catch(err => {
-        console.log('err from persistUser:', err);
-      })
+    // axios.get('/persistUser')
+    //   .then(data => {
+    //     console.log('data from session:', data);
+    //     if (data.data) {
+
+    //     }
+    //   })
+    //   .catch(err => {
+    //     console.log('err from persistUser:', err);
+    //   })
+
     axios.get('/rooms')
       .then(rooms => {
         for (let room in rooms.data) {
@@ -49,6 +51,7 @@ class Main extends React.Component {
             delete rooms.data[room]
           }
         }
+        console.log('rooms.data:', rooms.data);
         this.props.setRooms(rooms.data);
       })
       .catch(err => {
