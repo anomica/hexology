@@ -116,7 +116,9 @@ class Board extends React.Component {
 
       setInterval(() => {
         if (this.state.timer === 60) {
-          socket.emit('warnPlayer');
+          if (this.props.userPlayer === this.props.currentPlayer) {
+            alert('You have 30 seconds remaining to finish your turn');
+          }
         } else if (this.state.timer > 90) {
           this.nextTurn();
           this.setState({
@@ -202,9 +204,7 @@ class Board extends React.Component {
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
-      socket.on('warnPlayer', () => {
-        alert('You have 30 seconds remaining to finish your turn');
-      });
+ 
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
