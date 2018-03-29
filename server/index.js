@@ -392,6 +392,11 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.in(room).emit('newMessage', request);
   });
 
+  socket.on('warnPlayer', () => {
+    console.log('warningplayer');
+    io.to(socket.id).emit('warnPlayer');
+  });
+
   socket.on('leaveRoom', data => {
     if (data.room !== undefined) {
       db.forceEndGame(data.room); // updates game/marks hexes to complete in db

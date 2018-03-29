@@ -32,11 +32,13 @@ class Board extends React.Component {
       disconnectModalOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
-      tempKnights: 0
+      tempKnights: 0,
+      timer:0
     }
   }
 
   componentDidMount() {
+    let interval;
     (async () => {
       let socket = this.props.socket;
       if (this.props.location.state.type) {
@@ -76,6 +78,12 @@ class Board extends React.Component {
           gameIndex: data.gameIndex,
           room: data.room
         })
+        interval = setInterval(() => {
+          this.setState({
+            timer: this.state.timer += 1
+          })
+          console.log('this.state.timer', this.state.timer);
+        }, 1000)
       });
       socket.on('move', (move) => { // when socket receives result of move request,
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
@@ -94,7 +102,29 @@ class Board extends React.Component {
         }
         this.props.updateResources(move.playerOneResources, move.playerTwoResources);
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
+        clearInterval(interval);
+        this.setState({
+          timer: 0
+        }, () => {
+          interval = setInterval(() => {
+              this.setState({
+                timer: this.state.timer += 1
+              })
+            }, 1000)
+        })
       });
+
+      setInterval(() => {
+        if (this.state.timer === 60) {
+          socket.emit('warnPlayer');
+        } else if (this.state.timer > 90) {
+          this.nextTurn();
+          this.setState({
+            timer: 0
+          })
+        }
+      }, 1000)
+
       socket.on('watchGame', data => {
         this.props.setSpectator(this.props.loggedInUser);
       })
@@ -171,6 +201,9 @@ class Board extends React.Component {
           combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
+      });
+      socket.on('warnPlayer', () => {
+        alert('You have 30 seconds remaining to finish your turn');
       });
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')

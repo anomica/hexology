@@ -90,7 +90,7 @@ class ChatWindow extends React.Component {
                       <p key={uuidv4()}>
                         <strong
                           style={{color: message.socketId === this.props.socket.id ?
-                          'blue': 'red'}}>{message.username}:
+                            'blue': 'red'}}>{message.username}:
                         </strong>
                         {message.message}
                       </p>
@@ -102,13 +102,13 @@ class ChatWindow extends React.Component {
                   placeholder={'Say hi!'}
                   value={this.state.message}
                   onChange={this.handleChange.bind(this)}
-                />
+                  />
                 <Button
                   style={{float: 'right', marginTop: '10px'}}
                   size={'tiny'}
                   type={'submit'}
                   onClick={this.submitMessage.bind(this)}
-                >
+                  >
                 Send
               </Button>
               </Form>
