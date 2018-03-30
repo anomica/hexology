@@ -4,6 +4,7 @@ import { bindActionCreators } from 'redux';
 import { Segment, Image, Feed, Label, Button } from 'semantic-ui-react';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
+import Leaderboard from './Leaderboard.jsx';
 import { login, updateRoom, newRoom, deleteRoom } from '../../src/actions/actions.js';
 
 const RoomsList = props => {
@@ -20,14 +21,11 @@ const RoomsList = props => {
     }
     })
   }
-
-    
-
   const refreshRooms = async () => {
     let socket = await props.socket;
     if (socket) {
       socket.on('newRoom', (room) => {
-        room.room.player1 = room.player1
+        room.room.player1 = room.player1;
         props.newRoom(room);
       })
       socket.on('deleteRoom', (room) => {
@@ -46,6 +44,9 @@ const RoomsList = props => {
       
       <Feed style={{textAlign: 'center', width: '45%', marginLeft: '20%', marginTop: 0, paddingTop: '20px'}}>
         <h1>Welcome to Hexology</h1>
+
+        <Leaderboard/>
+
         <h3>Currently Open Rooms: </h3>
         {Object.keys(props.rooms).map((roomName, id) => {
           let room = props.rooms[roomName];

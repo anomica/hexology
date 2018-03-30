@@ -39,12 +39,16 @@ class ChatWindow extends React.Component {
   }
 
   submitMessage() {
-    this.props.socket.emit('sendMessage', {
-      message: this.state.message,
-      username: this.props.loggedInUser,
-      socketId: this.props.socket.id
-    });
-    this.setState({ message: '' })
+    (async () => {
+      let room = await this.props.room;
+      this.props.socket.emit('sendMessage', {
+        message: this.state.message,
+        username: this.props.loggedInUser,
+        socketId: this.props.socket.id,
+        room: this.props.room
+      });
+      this.setState({ message: '' })
+    })();
   }
 
   render() {
@@ -90,7 +94,7 @@ class ChatWindow extends React.Component {
                       <p key={uuidv4()}>
                         <strong
                           style={{color: message.socketId === this.props.socket.id ?
-                          'blue': 'red'}}>{message.username}:
+                            'blue': 'red'}}>{message.username}:
                         </strong>
                         {message.message}
                       </p>
@@ -102,13 +106,13 @@ class ChatWindow extends React.Component {
                   placeholder={'Say hi!'}
                   value={this.state.message}
                   onChange={this.handleChange.bind(this)}
-                />
+                  />
                 <Button
                   style={{float: 'right', marginTop: '10px'}}
                   size={'tiny'}
                   type={'submit'}
                   onClick={this.submitMessage.bind(this)}
-                >
+                  >
                 Send
               </Button>
               </Form>

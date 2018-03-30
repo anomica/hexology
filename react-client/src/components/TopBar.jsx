@@ -18,16 +18,25 @@ class TopBar extends React.Component {
       inviteSent: false,
       buttonMessage: 'Invite'
     }
+
+    this.saveGame = this.saveGame.bind(this);
+  }
+
+  saveGame() {
+    // console.log('inside save game')
+    // console.log('this props', this.props)
   }
 
   exitGame() {
-    console.log('exit game props:', this.props)
     this.props.exitGame();
     this.props.setRoom(null);
     this.props.resetBoard();
     this.props.deleteRoom(this.props.room);
-    this.props.socket.emit('disconnect');
-    this.props.socket.emit('leaveRoom', { room: this.props.room });
+    this.props.socket.emit('disconnect', { gameIndex: this.props.gameIndex });
+    this.props.socket.emit('leaveRoom', {
+      room: this.props.room,
+      gameIndex: this.props.gameIndex
+    });
     this.props.history.push('/');
   }
 
@@ -51,7 +60,19 @@ class TopBar extends React.Component {
     return (
       <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%' }} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
-        <Button style={{right: '10px', top: '20px', position: 'absolute'}} onClick={this.exitGame.bind(this)}>Exit Game</Button>
+
+        <div style={{right: '10px', top: '20px', position: 'absolute'}}>
+          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
+            <Button
+              style={{marginRight: '5px'}}
+              onClick={this.saveGame}
+            >Save Game</Button> : null
+          }
+
+          <Button
+            onClick={this.exitGame.bind(this)}
+          >Exit Game</Button>
+        </div>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
         {this.props.boardState ? null :
           (this.state.inviteSent ? <Segment>Invite sent to {this.state.email}</Segment> :
@@ -99,7 +120,10 @@ class TopBar extends React.Component {
               </ul>
             </Segment> :
             <Segment>
-              <strong>Waiting for player two to join...</strong>
+              <div>
+                <Icon loading name='spinner'/>
+                <strong>Waiting for player two to join...</strong>
+              </div>
             </Segment>
           }
         </Segment.Group>
@@ -145,11 +169,13 @@ const mapStateToProps = state => {
     userPlayer: state.state.userPlayer,
     boardState: state.state.boardState,
     currentPlayer: state.state.currentPlayer,
+    playerTwo: state.state.playerTwo,
     menuVisible: state.state.menuVisible,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
     loggedInUser: state.state.loggedInUser,
-    spectator: state.state.spectator
+    spectator: state.state.spectator,
+    gameIndex: state.state.gameIndex
   }
 }
 

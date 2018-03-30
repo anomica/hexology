@@ -30,7 +30,9 @@ const DefaultState = {
   showSignup: false,
   loggedInUser: 'anonymous',
   spectator: false,
-  hexbot: false
+  hexbot: false,
+  warningModalOpen: false,
+  forfeitModalOpen: false
 }
 
 export default DefaultState;

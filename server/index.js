@@ -63,7 +63,7 @@ app.post('/logout', isLoggedIn, function (req, res) {
   res.clearCookie('connect.sid').status(200).redirect('/');
 });
 
-let games = {}; // TODO: TAKE THIS OUT
+let games = {};
 
 const coordinateGenerator = (numRows, numCols) => { // creates an array of coordinates for hexes
   let j = 0;
@@ -283,6 +283,11 @@ const findOpenRooms = () => { // finds an open room, right now just picking the 
 
 setInterval(findOpenRooms, 1000);
 
+app.get('/userwins', async (req, res) => {
+  let leaderboard = await db.getUsernames(); // gets the usernames/wins from users table in db for leaderboard stuff
+  res.json(leaderboard);
+});
+
 io.on('connection', async (socket) => { // initialize socket on user connection
   console.log('User connected');
 
@@ -301,6 +306,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     room = newRoom;
     let gameType = request.gameType;
     socket.join(newRoom); // create a new room
+    io.sockets.adapter.rooms[newRoom].player1 = request.username;
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
     gameType === 'public' && socket.broadcast.emit('newRoom', { 
       roomName: newRoom, 
@@ -315,11 +321,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
     room = data.room;
-    room.player2 = data.username
+    io.sockets.adapter.rooms[room].player2 = data.username;
     socket.broadcast.emit('updateRoom', {
       room: data.room,
     })
-    //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
       playerOneResources: { // p1 resources,
@@ -347,7 +352,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     }
     
     /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-    await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
+    await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
@@ -361,7 +366,23 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   })
 
   socket.on('setLoggedInUser', data => {
-    assignLoggedInUser(data.username, data.player, data.gameIndex, data.room)
+    assignLoggedInUser(data.username, data.player, data.gameIndex, data.room);
+  });
+
+  socket.on('getUserGames', data => {
+    fetchUserGames(data.username, data.socketId);
+  });
+
+  socket.on('updateUserGamesList', data => {
+    updateUserGamesList(data.username, data.gameId, data.socketId);
+  });
+
+  socket.on('loadGame', async (data) => {
+    let oldRoom = data.oldRoom;
+    let newRoom = data.newRoom;
+    let gameIndex = data.gameIndex;
+    let socketID = data.socketId;
+    loadSelectedGame(gameIndex, oldRoom, socketID, newRoom);
   });
 
   socket.on('move', data => { // move listener
@@ -384,32 +405,28 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let messageHistory;
     io.to(data.room).emit('getHistory');
     socket.on('sendHistory', data => {
-      io.to(room).emit('messageHistory', { messageHistory: data.messageHistory });
+      io.to(data.room).emit('messageHistory', { messageHistory: data.messageHistory });
     })
   })
 
   socket.on('sendMessage', (request) => {
-    io.in(room).emit('newMessage', request);
+    io.to(request.room).emit('newMessage', request);
   });
 
-  socket.on('leaveRoom', data => {
-    if (data.room !== undefined) {
-      db.forceEndGame(data.room); // updates game/marks hexes to complete in db
-    }
-    socket.leave(data.room);
-    socket.broadcast.emit('deleteRoom', data.room);
-    room && io.to(room).emit('disconnect');
+  socket.on('leaveRoom', async (data) => {
+    await db.forceEndGame(data.gameIndex); // deletes game from db when someone leaves room
+    await socket.leave(data.room);
+    await socket.broadcast.emit('deleteRoom', data.room);
+    await room && io.to(room).emit('disconnect');
     delete io.sockets.adapter.rooms[room];
   });
 
-  socket.on('disconnect', () => {
-    if (room !== undefined) {
-      db.forceEndGame(room); // updates game/marks hexes to complete in db
-    }
-    room && io.to(room).emit('disconnect');
+  socket.on('disconnect', async (data) => {
+    await db.forceEndGame(data.gameIndex); // deletes game from db when disconnected
+    await room && io.to(room).emit('disconnect');
     console.log('user disconnected');
   });
-})
+});
 
 // assignLoggedInUser function: If using game object on server
 // const assignLoggedInUser = (username, player, gameIndex, room) => { // need to save to DB
@@ -430,23 +447,61 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 // assignLoggedInUser function: If using database
 const assignLoggedInUser = async (username, player, gameIndex, room) => { // need to save to DB
   // console.log(`\nassignLoggedInUser: username (${username}), player (${player}), gameIndex (${gameIndex}), room (${room})'n`);
-
   let user;
-  username === null ? user = 'anonymous' : user = username;
+  username === null ? user = 'anonymous' : user = username.toLowerCase();
 
   await db.setGamePlayers(user, player, gameIndex, room); // set the game player in the game in the db
 
   let p1Username = await db.getPlayerUsername('player1', gameIndex, room); // get player1 username
   let p2Username = await db.getPlayerUsername('player2', gameIndex, room); // get player2 username
-
   await io.to(room).emit('setLoggedInUser', { // need to pull from DB here
     player1: p1Username[0].username,
     player2: p2Username[0].username
   })
+}
 
-  // console.log('\nCURRENT PLAYERS IN THE GAME:\n')
-  // console.log('\np1Username: ', p1Username[0].username);
-  // console.log('p2Username: ', p2Username[0].username, '\n');
+const fetchUserGames = async (username, socketId) => {
+  let games = await db.retrieveUserGames(username, 'player1');
+  let gamesAsPlayerTwo = await db.retrieveUserGames(username, 'player2');
+  games = games.concat(gamesAsPlayerTwo);
+  await io.to(socketId).emit('getUserGames', {
+    games: games
+  })
+}
+
+const updateUserGamesList = async (username, gameId, socketId) => {
+  await db.deleteGames(gameId);
+  let updatedGames = await db.retrieveUserGames(username, 'player1');
+  let gamesAsPlayerTwo = await db.retrieveUserGames(username, 'player2');
+  updatedGames = updatedGames.concat(gamesAsPlayerTwo);
+  await io.to(socketId).emit('updateUserGamesList', {
+    games: updatedGames
+  })
+}
+
+const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom) => {
+  let gameBoard = await db.getGameBoard(oldRoom, gameIndex); // gets hexes from db
+  let game = await db.getGame(oldRoom, gameIndex); // in order to get current player from db
+  let currentGame = {
+    currentPlayer: game[0].current_player, // TODO: need to update this in db to get current player
+    userPlayer: 1, // TODO: should be each user (as 'player1' or 'player2') / need to get the user player
+    board: []
+  };
+  gameBoard.map( hex => {
+    let hexPlayer;
+    hexPlayer = hex.player ? ('player' + hex.player) : null;
+    currentGame.board.push({
+      swordsmen: hex.swordsmen,
+      archers: hex.archers,
+      knights: hex.knights,
+      coordinates: [hex.coordinate_0, hex.coordinate_1, hex.coordinate_2],
+      index: hex.hex_index,
+      player: hexPlayer
+    })
+  });
+  await io.to(socketId).emit('gameBoard', {
+    game: currentGame
+  });
 }
 
 const moveUnits = async (data, socket) => {
@@ -554,9 +609,12 @@ const moveUnits = async (data, socket) => {
             gameIndex: gameIndex,
             room: room
           }
-
+          
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
+          // let playerOne = // need to get username to get user id from db
+          // let playerTwo = // need to get username to get user id from db
+
+          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
           /////////////////////////////////////////////////////////////////////////////////////////////
 
           setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000);
@@ -655,7 +713,10 @@ const moveUnits = async (data, socket) => {
           }
 
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the databases
+          // let playerOne = // need to get username to get user id from db
+          // let playerTwo = // need to get username to get user id from db
+
+          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
           /////////////////////////////////////////////////////////////////////////////////////////////
 
           setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000); // send game board to user
@@ -1684,16 +1745,19 @@ const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room) => {
   })
 }
 
-// const deleteOldGames = async () => {
-  // let oldGames = await db.getOldGames();
-//   for (let i = 0; i < oldGames.length; i++) {
-//     await db.deleteHex(oldGames[i].game_id); // first mark hexes to delete
-//     await db.deleteGames(oldGames[i].game_id); // then delete the game
-//   }
-// }
+const deleteOldGames = async () => {
+  console.log('\nchecking for old games...\n')
+  let oldGames = await db.getOldGames();
+  console.log('\nold games in the db:\n', oldGames)
+  for (let i = 0; i < oldGames.length; i++) {
+    console.log('old game id: ', oldGames[i].game_id)
+    // await db.deleteHex(oldGames[i].game_id); // first mark hexes to delete
+    await db.deleteGames(oldGames[i].game_id); // then delete the game
+  }
+}
 
-// Check for old games and marks them as completed
-// setInterval(deleteOldGames, 86400000);
+// Check for old games and marks them as completed // 1 day = 86400000
+setInterval(deleteOldGames, 86400000);
 
 const buyUnits = async (type, player, gameIndex, socketId, room) => {
   // ********* need to add stuff in here for updating unitBanks for each player *********
@@ -2177,19 +2241,11 @@ app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../react-client/dist', 'index.html'));
 });
 
-//////////////////////////////////////////////////
-// TODO: Take out this section - JUST FOR TESTING
-app.post('/users', (req, res) => {
-  db.addUser(req.body.username, req.body.email, req.body.password);
-  res.end();
-})
-//////////////////////////////////////////////////
-
-// io.listen(process.env.PORT || 3000);
+// io.listen(process.env.PORT || 8080);
 const PORT = 8080;
 const HOST = '0.0.0.0';
-server.listen(process.env.PORT || 3000, function () {
-  console.log('listening on port 3000!');
+server.listen(process.env.PORT || 8080, function () {
+  console.log('listening on port 8080!');
 });
 
 // Game State starters

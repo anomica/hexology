@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
-import { setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank,setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -17,6 +17,7 @@ import UnitShop from './UnitShop.jsx';
 import UnitBank from './UnitBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
 import hexbot from '../hexbot/hexbot.js';
+import TimeoutModals from './TimeoutModals.jsx';
 
 class Board extends React.Component {
   constructor(props) {
@@ -32,11 +33,14 @@ class Board extends React.Component {
       disconnectModalOpen: false,
       tempSwordsmen: 0,
       tempArchers: 0,
-      tempKnights: 0
+      tempKnights: 0,
+      timer:0,
+      turnsForfeited: 0
     }
   }
 
   componentDidMount() {
+    let interval;
     (async () => {
       let socket = this.props.socket;
       if (this.props.location.state.type) {
@@ -46,6 +50,7 @@ class Board extends React.Component {
           username: this.props.loggedInUser,
           gameIndex: this.props.location.state.gameIndex
         })
+        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
           socket = await socketIOClient('http://127.0.0.1:3000');
@@ -57,8 +62,7 @@ class Board extends React.Component {
           spectator: true
         });
         !this.props.playerAssigned && this.props.setUserPlayer('player2');
-        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
-        
+        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);        
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
@@ -76,6 +80,11 @@ class Board extends React.Component {
           gameIndex: data.gameIndex,
           room: data.room
         })
+        interval = setInterval(() => {
+          this.setState({
+            timer: this.state.timer += 1
+          })
+        }, 1000)
       });
       socket.on('move', (move) => { // when socket receives result of move request,
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
@@ -94,7 +103,37 @@ class Board extends React.Component {
         }
         this.props.updateResources(move.playerOneResources, move.playerTwoResources);
         this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
+        clearInterval(interval);
+        this.setState({
+          timer: 0
+        }, () => {
+          interval = setInterval(() => {
+              this.setState({
+                timer: this.state.timer += 1
+              })
+            }, 1000)
+            
+        })
+        console.log(this.state.timer);
       });
+
+      setInterval(async () => {
+        if (this.state.timer === 30) {
+          if (this.props.userPlayer === this.props.currentPlayer) {
+            this.props.warningOpen(true);
+            setTimeout(() => this.props.warningOpen(false), 3000);
+          }
+        } else if (this.state.timer > 45) {
+          this.props.forfeitOpen(true);
+          setTimeout(() => this.props.forfeitOpen(false), 3000);
+          await this.nextTurn();
+          await this.setState({
+            timer: 0
+          })
+
+        }
+      }, 1000)
+
       socket.on('watchGame', data => {
         this.props.setSpectator(this.props.loggedInUser);
       })
@@ -172,6 +211,7 @@ class Board extends React.Component {
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
+ 
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
@@ -465,6 +505,7 @@ class Board extends React.Component {
             </Modal.Content>
           </Modal>
         </Transition>
+        <TimeoutModals />
       </div>
     );
   }
@@ -494,7 +535,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, resetBoard }, dispatch);

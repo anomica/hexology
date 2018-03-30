@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import Board from './Board.jsx';
 import Rules from './Rules.jsx';
+import LoadGame from './LoadGame.jsx';
 import Login from './Login.jsx';
 import Signup from './Signup.jsx';
 import UnitShop from './UnitShop.jsx';
@@ -21,15 +22,19 @@ class SidebarLeft extends React.Component {
       visible: true,
       newGame: false,
       newGameModalOpen: false,
+      saveGameButton: false,
       gameType: 'public',
       rules: false,
       logoutModal: false,
+      loadGameModal: false,
       disabled: window.location.href.indexOf('game') === -1 ? false : true,
       hexbot: false
     }
 
     this.toggleMenu = this.toggleMenu.bind(this);
     this.toggleRules = this.toggleRules.bind(this);
+    this.showLoadGames = this.showLoadGames.bind(this);
+    this.toggleLoadGames = this.toggleLoadGames.bind(this);
   }
 
   // toggles sidebar
@@ -41,18 +46,30 @@ class SidebarLeft extends React.Component {
     this.setState({ rules: !this.state.rules });
   }
 
+  toggleLoadGames() {
+    this.setState({ loadGameModal: !this.state.loadGameModal });
+  }
+
   newGame() {
-    this.state.hexbot && this.props.setHexbot(true);
-    this.props.socket.emit('newGame', { gameType: this.state.gameType });
-    this.props.socket.on('newGame', data => {
-      this.props.setRoom(data.room);
-      this.props.history.push({
-        pathname: `/game/room?${data.room}`,
-        state: {
-          extra: 'create',
-        }
-      })
-    })
+    (async () => {
+      let username = await this.props.loggedInUser;
+      if (username) {
+        this.state.hexbot && this.props.setHexbot(true);
+        this.props.socket.emit('newGame', { 
+          gameType: this.state.gameType,
+          username: this.props.loggedInUser
+         });
+        this.props.socket.on('newGame', data => {
+          this.props.setRoom(data.room);
+          this.props.history.push({
+            pathname: `/game/room?${data.room}`,
+            state: {
+              extra: 'create',
+            }
+          })
+        })
+      }
+    })();
   }
 
   showLoginOrSignupModal(type) {
@@ -74,6 +91,18 @@ class SidebarLeft extends React.Component {
 
   handleChange(e, { name, value }) {
     this.setState({ [name]: value });
+  }
+  
+  showLoadGames() {
+    if (this.state.loadGameModal) {
+      return (
+        <LoadGame
+          open={this.state.loadGameModal}
+          close={this.toggleLoadGames}
+          username={this.props.loggedInUser}
+        />
+      )
+    }
   }
 
   render() {
@@ -110,6 +139,19 @@ class SidebarLeft extends React.Component {
               Start New Game
             </Menu.Item>
 
+            {this.props.loggedInUser === 'anonymous' || this.props.spectator ?
+              null :
+              <Menu.Item
+                name='load'
+                onClick={() => {
+                  this.setState({ loadGameModal: !this.state.loadGameModal });
+                }}
+              >
+                <Icon name='gamepad' />
+                Load Game
+              </Menu.Item>
+            }
+
             <Menu.Item
               name='rules'
               onClick={() => this.setState({ rules: !this.state.rules })}
@@ -118,13 +160,13 @@ class SidebarLeft extends React.Component {
               Rules
             </Menu.Item>
 
-            {this.props.loggedInUser === 'anonymous' ?
+            {this.props.loggedInUser === 'anonymous' || this.props.spectator ?
               <Menu.Item
                 name='signup'
                 onClick={() => {this.showLoginOrSignupModal('signup')}}
                 >
                 <Signup />
-                <Icon name='user' />
+                <Icon name='user plus' />
                 Signup
               </Menu.Item> :
               <Menu.Item
@@ -135,7 +177,7 @@ class SidebarLeft extends React.Component {
               </Menu.Item>
             }
 
-            {this.props.loggedInUser === 'anonymous' ?
+            {this.props.loggedInUser === 'anonymous' || this.props.spectator ?
               <Menu.Item
                 name='login'
                 onClick={() => {this.showLoginOrSignupModal('login')}}
@@ -224,7 +266,7 @@ class SidebarLeft extends React.Component {
           </Modal>
 
             {showRules()}
-
+            {this.showLoadGames()}
       </div>
     )
   }
@@ -240,7 +282,8 @@ const mapStateToProps = (state) => {
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
     showLogin: state.state.showLogin,
-    loggedInUser: state.state.loggedInUser
+    loggedInUser: state.state.loggedInUser,
+    spectator: state.state.spectator
   }
 }
 
