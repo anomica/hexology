@@ -309,7 +309,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.sockets.adapter.rooms[newRoom].player1 = request.username;
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
     gameType === 'public' && socket.broadcast.emit('newRoom', { 
-      roomName: newRoom, 
+      roomName: room, 
       room: io.sockets.adapter.rooms[newRoom],
       player1: request.username
      });
@@ -323,7 +323,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     room = data.room;
     io.sockets.adapter.rooms[room].player2 = data.username;
     socket.broadcast.emit('updateRoom', {
-      room: data.room,
+      roomName: room,
+      room: io.sockets.adapter.rooms[room]
     })
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,

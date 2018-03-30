@@ -12,7 +12,7 @@ const reducers = (state = defaultState, action) => {
         ...state,
         rooms: {
           ...state.rooms,
-          ...action.payload
+          [action.payload.roomName]: action.payload.room
         }
       }
     case 'UPDATE-ROOM':
@@ -20,7 +20,7 @@ const reducers = (state = defaultState, action) => {
         ...state,
         rooms: {
           ...state.rooms,
-          ...action.payload
+          [action.payload.roomName]: action.payload.room
         }
       }
     case 'SET-SOCKET':

@@ -114,7 +114,6 @@ class Board extends React.Component {
             }, 1000)
             
         })
-        console.log(this.state.timer);
       });
 
       setInterval(async () => {
