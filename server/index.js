@@ -2242,11 +2242,11 @@ app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../react-client/dist', 'index.html'));
 });
 
-// io.listen(process.env.PORT || 3000);
+// io.listen(process.env.PORT || 8080);
 const PORT = 8080;
 const HOST = '0.0.0.0';
-server.listen(process.env.PORT || 3000, function () {
-  console.log('listening on port 3000!');
+server.listen(process.env.PORT || 8080, function () {
+  console.log('listening on port 8080!');
 });
 
 // Game State starters
