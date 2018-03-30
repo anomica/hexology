@@ -4,7 +4,7 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
-import { setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
+import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard } from '../../src/actions/actions.js';
 import axios from 'axios';
@@ -17,6 +17,7 @@ import UnitShop from './UnitShop.jsx';
 import UnitBank from './UnitBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
 import hexbot from '../hexbot/hexbot.js';
+import TimeoutModals from './TimeoutModals.jsx';
 
 class Board extends React.Component {
   constructor(props) {
@@ -112,16 +113,20 @@ class Board extends React.Component {
                 timer: this.state.timer += 1
               })
             }, 1000)
+            
         })
+        console.log(this.state.timer);
       });
 
       setInterval(async () => {
-        if (this.state.timer === 90) {
+        if (this.state.timer === 30) {
           if (this.props.userPlayer === this.props.currentPlayer) {
-            alert('You have 30 seconds remaining to finish your turn');
+            this.props.warningOpen(true);
+            setTimeout(() => this.props.warningOpen(false), 3000);
           }
-        } else if (this.state.timer > 120) {
-          alert(`${this.props.currentPlayer} took to long to make a move and forfeits the turn`)
+        } else if (this.state.timer > 45) {
+          this.props.forfeitOpen(true);
+          setTimeout(() => this.props.forfeitOpen(false), 3000);
           await this.nextTurn();
           await this.setState({
             timer: 0
@@ -501,6 +506,7 @@ class Board extends React.Component {
             </Modal.Content>
           </Modal>
         </Transition>
+        <TimeoutModals />
       </div>
     );
   }
@@ -530,7 +536,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
+  return bindActionCreators({ warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, resetBoard }, dispatch);
