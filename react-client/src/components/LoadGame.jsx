@@ -189,10 +189,11 @@ class LoadGame extends React.Component {
 }
 
 const mapStateToProps = (state) => {
+  console.log('state', state)
   return {
     socket: state.state.socket,
     loggedInUser: state.state.loggedInUser,
-    room: state.state.room
+    room: state.state.room,
   }
 }
 

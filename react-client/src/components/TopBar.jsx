@@ -23,8 +23,8 @@ class TopBar extends React.Component {
   }
 
   saveGame() {
-    console.log('inside save game')
-    console.log('this props', this.props)
+    // console.log('inside save game')
+    // console.log('this props', this.props)
   }
 
   exitGame() {
@@ -59,7 +59,7 @@ class TopBar extends React.Component {
         <Header as='h1'>Hexology</Header>
 
         <div style={{right: '10px', top: '20px', position: 'absolute'}}>
-          {this.props.loggedInUser !== 'anonymous' && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
+          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
             <Button
               style={{marginRight: '5px'}}
               onClick={this.saveGame}
@@ -166,6 +166,7 @@ const mapStateToProps = state => {
     userPlayer: state.state.userPlayer,
     boardState: state.state.boardState,
     currentPlayer: state.state.currentPlayer,
+    playerTwo: state.state.playerTwo,
     menuVisible: state.state.menuVisible,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
