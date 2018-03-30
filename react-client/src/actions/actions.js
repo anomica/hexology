@@ -240,7 +240,7 @@ export const setLoggedInPlayer = (user1, user2) => (
   }
 )
 
-export const setSpectator = (isTrue) => (
+export const setSpectator = isTrue => (
   {
     type: 'SET-SPECTATOR',
     payload: isTrue
@@ -251,5 +251,19 @@ export const setHexbot = value => (
   {
     type: 'SET-HEXBOT',
     payload: value
+  }
+)
+
+export const warningOpen = isTrue => (
+  {
+    type: 'WARNING-OPEN',
+    payload: isTrue
+  }
+)
+
+export const forfeitOpen = isTrue => (
+  {
+    type: 'FORFEIT-OPEN',
+    payload: isTrue
   }
 )

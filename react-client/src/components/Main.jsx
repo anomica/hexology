@@ -51,7 +51,6 @@ class Main extends React.Component {
             delete rooms.data[room]
           }
         }
-        console.log('rooms.data:', rooms.data);
         this.props.setRooms(rooms.data);
       })
       .catch(err => {

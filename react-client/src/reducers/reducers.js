@@ -229,6 +229,16 @@ const reducers = (state = defaultState, action) => {
         hexbot: action.payload
       }
     default: return state;
+    case 'WARNING-OPEN':
+      return {
+        ...state,
+        warningModalOpen: action.payload
+      }
+    case 'FORFEIT-OPEN':
+      return {
+        ...state,
+        forfeitModalOpen: action.payload
+      }
 
   }
 }

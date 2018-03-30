@@ -21,13 +21,11 @@ const RoomsList = props => {
     })
   }
 
-    
-
   const refreshRooms = async () => {
     let socket = await props.socket;
     if (socket) {
       socket.on('newRoom', (room) => {
-        room.room.player1 = room.player1
+        room.room.player1 = room.player1;
         props.newRoom(room);
       })
       socket.on('deleteRoom', (room) => {
