@@ -681,16 +681,24 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
     .del()
 }
 
+/////////////////////// Get game id by game Index ///////////////////////
+const getGameByGameIndex = async (gameIndex) => {
+  return await knex('games')
+    .where(knex.raw(`'${gameIndex}' = game_index`));
+}
+
 /////////////////////// Force game to end when player leaves the room ///////////////////////
-const forceEndGame = async (room) => {
-  // console.log('\nforce ending the game... room: ', room, '\n')
-  let roomNum = room.split('*').join('');
-  let gameId = await getGameIdByRoom(room);
-  await deleteHex(gameId[0].game_id); // first delete the hexes
-  await knex('games') // then delete the game
-    .where(knex.raw(`${gameId[0].game_id} = game_id`))
-    .del()
-  // console.log('\ngame successfully deleted from db\n');
+const forceEndGame = async (gameIndex) => {
+  // console.log('\nforce ending the game... gameIndex: ', gameIndex, '\n');
+  let game = await getGameByGameIndex(gameIndex);
+
+  if (game.length > 0) {
+    await deleteHex(game[0].game_id); // first delete the hexes
+    await knex('games') // then delete the game
+    .where(knex.raw(`${game[0].game_id} = game_id`))
+    .del();
+    // console.log('done deleting gam from db!');
+  }
 }
 
 /////////////////////// Gets the game ID by using the room ///////////////////////
@@ -849,5 +857,6 @@ module.exports = {
   getGameIdByRoom,
   getUsernames,
   retrieveUserGames,
-  getPlayerUsername
+  getPlayerUsername,
+  getGameByGameIndex
 };

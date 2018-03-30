@@ -139,7 +139,7 @@ class SidebarLeft extends React.Component {
               Start New Game
             </Menu.Item>
 
-            {this.props.loggedInUser === 'anonymous' ?
+            {this.props.loggedInUser === 'anonymous' || this.props.spectator ?
               null :
               <Menu.Item
                 name='load'
@@ -160,7 +160,7 @@ class SidebarLeft extends React.Component {
               Rules
             </Menu.Item>
 
-            {this.props.loggedInUser === 'anonymous' ?
+            {this.props.loggedInUser === 'anonymous' || this.props.spectator ?
               <Menu.Item
                 name='signup'
                 onClick={() => {this.showLoginOrSignupModal('signup')}}
@@ -177,7 +177,7 @@ class SidebarLeft extends React.Component {
               </Menu.Item>
             }
 
-            {this.props.loggedInUser === 'anonymous' ?
+            {this.props.loggedInUser === 'anonymous' || this.props.spectator ?
               <Menu.Item
                 name='login'
                 onClick={() => {this.showLoginOrSignupModal('login')}}
@@ -282,7 +282,8 @@ const mapStateToProps = (state) => {
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
     showLogin: state.state.showLogin,
-    loggedInUser: state.state.loggedInUser
+    loggedInUser: state.state.loggedInUser,
+    spectator: state.state.spectator
   }
 }
 

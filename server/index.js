@@ -414,19 +414,15 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('leaveRoom', async (data) => {
-    // if (data.room !== undefined) { //TODO: uncommment when done testing loading game stuff
-    //   await db.forceEndGame(data.room); // updates game/marks hexes to complete in db
-    // }
+    await db.forceEndGame(data.gameIndex); // deletes game from db when someone leaves room
     await socket.leave(data.room);
     await socket.broadcast.emit('deleteRoom', data.room);
     await room && io.to(room).emit('disconnect');
     delete io.sockets.adapter.rooms[room];
   });
 
-  socket.on('disconnect', async () => {
-    // if (room !== undefined) { //TODO: uncommment when done testing loading game stuff
-    //   await db.forceEndGame(room); // updates game/marks hexes to complete in db
-    // }
+  socket.on('disconnect', async (data) => {
+    await db.forceEndGame(data.gameIndex); // deletes game from db when disconnected
     await room && io.to(room).emit('disconnect');
     console.log('user disconnected');
   });

@@ -32,8 +32,11 @@ class TopBar extends React.Component {
     this.props.setRoom(null);
     this.props.resetBoard();
     this.props.deleteRoom(this.props.room);
-    this.props.socket.emit('disconnect');
-    this.props.socket.emit('leaveRoom', { room: this.props.room });
+    this.props.socket.emit('disconnect', { gameIndex: this.props.gameIndex });
+    this.props.socket.emit('leaveRoom', {
+      room: this.props.room,
+      gameIndex: this.props.gameIndex
+    });
     this.props.history.push('/');
   }
 
@@ -171,7 +174,8 @@ const mapStateToProps = state => {
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
     loggedInUser: state.state.loggedInUser,
-    spectator: state.state.spectator
+    spectator: state.state.spectator,
+    gameIndex: state.state.gameIndex
   }
 }
 
