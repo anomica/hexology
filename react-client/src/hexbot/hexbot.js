@@ -31,7 +31,7 @@ const hexbot = (state = store.getState().state) => {
   let playerTotalUnits = state.playerOneTotalUnits, botTotalUnits = state.playerTwoTotalUnits;
   let playerResources = state.playerOneResources, botResources = state.playerTwoResources;
   let playerUnitBank = state.playerOneUnitBank, botUnitBank = state.playerTwoUnitBank;
-  let possibleMoves = {};
+  let possibleMoves = {}, possibleNextTurnMoves = {};
   let bestMove = [0, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move to, second is heuristic of move
 
 
@@ -42,6 +42,7 @@ const hexbot = (state = store.getState().state) => {
     if (hex.player === 'player2') { // if player 2,
       botHexes.push(hexIndex); // it's a bot hex
       boardRelationships[hexIndex].forEach(neighbor => { // so check each of its neighbors
+        possibleMoves.hasOwnProperty(hexIndex) ? possibleMoves[hexIndex][neighbor] = {} : possibleMoves[hexIndex] = { [neighbor]: {} };
         if (boardState[neighbor].player === 'player1') { // if that neighbor has player one in it, it's owned by the player and is a threat
           adjacentEnemies.hasOwnProperty(hexIndex) ?
           adjacentEnemies[hexIndex].threats.push(neighbor) : adjacentEnemies[hexIndex] = { threats: [neighbor] }; // so store it
@@ -50,30 +51,49 @@ const hexbot = (state = store.getState().state) => {
         if (boardState[neighbor].hasGold) { // same process for resources
           adjacentResources.hasOwnProperty(hexIndex) ?
           adjacentResources[hexIndex].resources.push([neighbor, 'gold']) : adjacentResources[hexIndex] = { resources: [[neighbor, 'gold']] };
+          possibleMoves[hexIndex][neighbor].gold = true;
         } else if (boardState[neighbor].hasWood) {
           adjacentResources.hasOwnProperty(hexIndex) ?
           adjacentResources[hexIndex].resources.push([neighbor, 'wood']) : adjacentResources[hexIndex] = { resources: [[neighbor, 'wood']] };
+          possibleMoves[hexIndex][neighbor].wood = true;
         } else if (boardState[neighbor].hasMetal) {
           adjacentResources.hasOwnProperty(hexIndex) ?
           adjacentResources[hexIndex].resources.push([neighbor, 'metal']) : adjacentResources[hexIndex] = { resources: [[neighbor, 'metal']] };
+          possibleMoves[hexIndex][neighbor].metal = true;
         }
 
+        // secondaryEnemies = _.cloneDeep(adjacentEnemies);
         boardRelationships[neighbor].forEach(otherNeighbor => { // same process for secondary neighbors, both threats and resources
+            if (possibleNextTurnMoves.hasOwnProperty(hexIndex)) {
+              possibleNextTurnMoves[hexIndex][neighbor] = { ...possibleNextTurnMoves[hexIndex][neighbor], [otherNeighbor]: {} }
+            } else {
+              possibleNextTurnMoves[hexIndex] = {};
+              possibleNextTurnMoves[hexIndex][neighbor] = {};
+              possibleNextTurnMoves[hexIndex][neighbor] = { [otherNeighbor]: {} }
+            }
           if (boardState[otherNeighbor].player === 'player1' && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
-            secondaryEnemies.hasOwnProperty(hexIndex)
-            && secondaryEnemies[hexIndex].threats.indexOf(otherNeighbor) === -1 ?
-            secondaryEnemies[hexIndex].threats.push(otherNeighbor) : secondaryEnemies[hexIndex] = { threats: [otherNeighbor] };
+            if (!secondaryEnemies.hasOwnProperty(hexIndex)) {
+              secondaryEnemies[hexIndex] = {};
+              secondaryEnemies[hexIndex][neighbor] = {}
+              secondaryEnemies[hexIndex][neighbor].threats = [otherNeighbor];
+            } else if (secondaryEnemies[hexIndex][neighbor].threats.indexOf(otherNeighbor) === -1) {
+              secondaryEnemies[hexIndex][neighbor].threats.push(otherNeighbor);
+            }
           }
+          console.log('***************', secondaryEnemies);
 
           if (boardState[otherNeighbor].hasGold && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
             secondaryResources.hasOwnProperty(hexIndex) ?
             secondaryResources[hexIndex].resources.push([otherNeighbor, 'gold']) : secondaryResources[hexIndex] = { resources: [[otherNeighbor, 'gold']] };
+            possibleNextTurnMoves[hexIndex][neighbor][otherNeighbor].gold = true;
           } else if (boardState[otherNeighbor].hasWood && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
             secondaryResources.hasOwnProperty(hexIndex) ?
             secondaryResources[hexIndex].resources.push([otherNeighbor, 'wood']) : secondaryResources[hexIndex] = { resources: [[otherNeighbor, 'wood']] };
+            possibleNextTurnMoves[hexIndex][neighbor][otherNeighbor].wood = true;
           } else if (boardState[otherNeighbor].hasMetal && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
             secondaryResources.hasOwnProperty(hexIndex) ?
             secondaryResources[hexIndex].resources.push([otherNeighbor, 'metal']) : secondaryResources[hexIndex] = { resources: [[otherNeighbor, 'metal']] };
+            possibleNextTurnMoves[hexIndex][neighbor][otherNeighbor].metal = true;
           }
         })
       })
@@ -92,56 +112,95 @@ const hexbot = (state = store.getState().state) => {
     }
   }
 
-  if (Object.keys(secondaryEnemies).length !== 0) { // same for secondary threats
-    for (let botHex in secondaryEnemies) {
-      secondaryEnemies[botHex].threats.forEach(threat => {
-        let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
-        secondaryEnemies[botHex][threat] = outcome;
-      })
-      delete secondaryEnemies[botHex].threats;
-    }
-  }
+  console.log('--------------', secondaryEnemies);
+  // if (Object.keys(secondaryEnemies).length !== 0) { // same for secondary threats
+  //   for (let botHex in secondaryEnemies) {
+  //     for (let neighbor in secondaryEnemies[botHex]) {
+  //       secondaryEnemies[botHex][neighbor].threats.forEach(threat => {
+  //         let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
+  //         secondaryEnemies[botHex][neighbor][threat] = outcome;
+  //       })
+  //     }
+  //     delete secondaryEnemies[botHex].threats;
+  //   }
+  // }
 
-  if (Object.keys(adjacentEnemies).length > 0) { // after all primary and secondary threats collected
+
+  if (Object.keys(adjacentEnemies).length > 0) { // after all primary and secondary threats collected, deal with adjacent enemies
     for (let botHex in adjacentEnemies) {
       for (let combatIndex in adjacentEnemies[botHex]) { // simulate each combat
         if (adjacentEnemies[botHex][combatIndex].tie || adjacentEnemies[botHex][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
           let newOutcome = evaluateCombatAfterPurchase(adjacentEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState); // determine if a purchase the bot can make would change outcome
           if (newOutcome.path && !newOutcome.tie) { // if a purchase could lead to a win,
-            possibleMoves.hasOwnProperty(botHex) ? possibleMoves[botHex] = { ...possibleMoves[botHex] } : possibleMoves[botHex] = {};
             possibleMoves[botHex][combatIndex] = {
+              ...possibleMoves[botHex][combatIndex],
               purchase: newOutcome.path,
               cost: newOutcome.cost,
               winCombat: true
             }
           } else if (newOutcome.tie) { // if a purchase could lead to a tie,
-            possibleMoves.hasOwnProperty(botHex) ? possibleMoves[botHex] = { ...possibleMoves[botHex] } : possibleMoves[botHex] = {};
             possibleMoves[botHex][combatIndex] = {
-              [combatIndex]: {
-                purchase: newOutcome.path,
-                cost: newOutcome.cost,
-                tie: true
-              }
+              ...possibleMoves[botHex][combatIndex],
+              purchase: newOutcome.path,
+              cost: newOutcome.cost,
+              tie: true
             }
           } else { // if a purchase cannot lead to a win,
-            possibleMoves.hasOwnProperty(botHex) ? possibleMoves[botHex] = { ...possibleMoves[botHex] } : possibleMoves[botHex] = {};
             possibleMoves[botHex][combatIndex] = {
-              [combatIndex]: {
-                loseCombat: true
-              }
+              ...possibleMoves[botHex][combatIndex],
+              loseCombat: true
             }
           }
         } else { // if an attack will win outright
-          possibleMoves.hasOwnProperty(botHex) ? possibleMoves[botHex] = { ...possibleMoves[botHex] } : possibleMoves[botHex] = {};
           possibleMoves[botHex][combatIndex] = {
-            [combatIndex]: {
-              winCombat: true
-            }
+            ...possibleMoves[botHex][combatIndex],
+            winCombat: true
           }
         }
       }
     }
   }
+
+  // if (Object.keys(secondaryEnemies).length > 0) { // then do the same for secondary enemies
+  //   for (let botHex in secondaryEnemies) {
+  //     for (let combatIndex in secondaryEnemies[botHex]) { // simulate each combat
+  //       if (secondaryEnemies[botHex][combatIndex].tie || secondaryEnemies[botHex][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
+  //         let newOutcome = evaluateCombatAfterPurchase(secondaryEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState); // determine if a purchase the bot can make would change outcome
+  //         if (newOutcome.path && !newOutcome.tie) { // if a purchase could lead to a win,
+  //           possibleNextTurnMoves[botHex][combatIndex] = {
+  //             purchase: newOutcome.path,
+  //             cost: newOutcome.cost,
+  //             winCombat: true,
+  //             nextTurn: true
+  //           }
+  //         } else if (newOutcome.tie) { // if a purchase could lead to a tie,
+  //           possibleNextTurnMoves[botHex][combatIndex] = {
+  //             [combatIndex]: {
+  //               purchase: newOutcome.path,
+  //               cost: newOutcome.cost,
+  //               tie: true,
+  //               nextTurn: true
+  //             }
+  //           }
+  //         } else { // if a purchase cannot lead to a win,
+  //           possibleNextTurnMoves[botHex][combatIndex] = {
+  //             [combatIndex]: {
+  //               loseCombat: true,
+  //               nextTurn: true
+  //             }
+  //           }
+  //         }
+  //       } else { // if an attack will win outright
+  //         possibleNextTurnMoves[botHex][combatIndex] = {
+  //           [combatIndex]: {
+  //             winCombat: true,
+  //             nextTurn: true
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   function evaluateCombatAfterPurchase(combat, combatIndex, resources, botHex, boardState) {
     let tempBoardState = _.cloneDeep(boardState);
@@ -217,6 +276,8 @@ const hexbot = (state = store.getState().state) => {
     }
     return { path: path, tie: tie, cost: cheapest }
   }
+  console.log(possibleMoves);
+  console.log(possibleNextTurnMoves);
 
   let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
 
