@@ -62,8 +62,7 @@ class Board extends React.Component {
           spectator: true
         });
         !this.props.playerAssigned && this.props.setUserPlayer('player2');
-        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
-        
+        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);        
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
