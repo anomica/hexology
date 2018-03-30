@@ -62,7 +62,6 @@ const hexbot = (state = store.getState().state) => {
           possibleMoves[hexIndex][neighbor].metal = true;
         }
 
-        // secondaryEnemies = _.cloneDeep(adjacentEnemies);
         boardRelationships[neighbor].forEach(otherNeighbor => { // same process for secondary neighbors, both threats and resources
             if (possibleNextTurnMoves.hasOwnProperty(hexIndex)) {
               possibleNextTurnMoves[hexIndex][neighbor] = { ...possibleNextTurnMoves[hexIndex][neighbor], [otherNeighbor]: {} }
@@ -76,11 +75,15 @@ const hexbot = (state = store.getState().state) => {
               secondaryEnemies[hexIndex] = {};
               secondaryEnemies[hexIndex][neighbor] = {}
               secondaryEnemies[hexIndex][neighbor].threats = [otherNeighbor];
-            } else if (secondaryEnemies[hexIndex][neighbor].threats.indexOf(otherNeighbor) === -1) {
-              secondaryEnemies[hexIndex][neighbor].threats.push(otherNeighbor);
+            } else if (secondaryEnemies.hasOwnProperty(hexIndex) && !secondaryEnemies[hexIndex].hasOwnProperty(neighbor)) {
+              secondaryEnemies[hexIndex][neighbor] = {};
+              secondaryEnemies[hexIndex][neighbor].threats = [otherNeighbor];
+            } else {
+              if (secondaryEnemies[hexIndex][neighbor].threats.indexOf(otherNeighbor) === -1) {
+                secondaryEnemies[hexIndex][neighbor].threats.push(otherNeighbor);
+              }
             }
           }
-          console.log('***************', secondaryEnemies);
 
           if (boardState[otherNeighbor].hasGold && boardRelationships[hexIndex].indexOf(otherNeighbor) === -1) {
             secondaryResources.hasOwnProperty(hexIndex) ?
@@ -112,19 +115,17 @@ const hexbot = (state = store.getState().state) => {
     }
   }
 
-  console.log('--------------', secondaryEnemies);
-  // if (Object.keys(secondaryEnemies).length !== 0) { // same for secondary threats
-  //   for (let botHex in secondaryEnemies) {
-  //     for (let neighbor in secondaryEnemies[botHex]) {
-  //       secondaryEnemies[botHex][neighbor].threats.forEach(threat => {
-  //         let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
-  //         secondaryEnemies[botHex][neighbor][threat] = outcome;
-  //       })
-  //     }
-  //     delete secondaryEnemies[botHex].threats;
-  //   }
-  // }
-
+  if (Object.keys(secondaryEnemies).length !== 0) { // same for secondary threats
+    for (let botHex in secondaryEnemies) {
+      for (let neighbor in secondaryEnemies[botHex]) {
+        secondaryEnemies[botHex][neighbor].threats.forEach(threat => {
+          let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
+          secondaryEnemies[botHex][neighbor][threat] = outcome;
+        })
+        delete secondaryEnemies[botHex][neighbor].threats;
+      }
+    }
+  }
 
   if (Object.keys(adjacentEnemies).length > 0) { // after all primary and secondary threats collected, deal with adjacent enemies
     for (let botHex in adjacentEnemies) {
@@ -161,46 +162,48 @@ const hexbot = (state = store.getState().state) => {
     }
   }
 
-  // if (Object.keys(secondaryEnemies).length > 0) { // then do the same for secondary enemies
-  //   for (let botHex in secondaryEnemies) {
-  //     for (let combatIndex in secondaryEnemies[botHex]) { // simulate each combat
-  //       if (secondaryEnemies[botHex][combatIndex].tie || secondaryEnemies[botHex][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
-  //         let newOutcome = evaluateCombatAfterPurchase(secondaryEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState); // determine if a purchase the bot can make would change outcome
-  //         if (newOutcome.path && !newOutcome.tie) { // if a purchase could lead to a win,
-  //           possibleNextTurnMoves[botHex][combatIndex] = {
-  //             purchase: newOutcome.path,
-  //             cost: newOutcome.cost,
-  //             winCombat: true,
-  //             nextTurn: true
-  //           }
-  //         } else if (newOutcome.tie) { // if a purchase could lead to a tie,
-  //           possibleNextTurnMoves[botHex][combatIndex] = {
-  //             [combatIndex]: {
-  //               purchase: newOutcome.path,
-  //               cost: newOutcome.cost,
-  //               tie: true,
-  //               nextTurn: true
-  //             }
-  //           }
-  //         } else { // if a purchase cannot lead to a win,
-  //           possibleNextTurnMoves[botHex][combatIndex] = {
-  //             [combatIndex]: {
-  //               loseCombat: true,
-  //               nextTurn: true
-  //             }
-  //           }
-  //         }
-  //       } else { // if an attack will win outright
-  //         possibleNextTurnMoves[botHex][combatIndex] = {
-  //           [combatIndex]: {
-  //             winCombat: true,
-  //             nextTurn: true
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+  if (Object.keys(secondaryEnemies).length > 0) { // then do the same for secondary enemies
+    for (let botHex in secondaryEnemies) {
+      for (let neighbor in secondaryEnemies[botHex]) {
+        for (let combatIndex in secondaryEnemies[botHex][neighbor]) { // simulate each combat
+          if (secondaryEnemies[botHex][neighbor][combatIndex].tie || secondaryEnemies[botHex][neighbor][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
+            let newOutcome = evaluateCombatAfterPurchase(secondaryEnemies[botHex][neighbor][combatIndex], combatIndex, botResources, botHex, boardState); // determine if a purchase the bot can make would change outcome
+            if (newOutcome.path && !newOutcome.tie) { // if a purchase could lead to a win,
+              possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
+                purchase: newOutcome.path,
+                cost: newOutcome.cost,
+                winCombat: true,
+                nextTurn: true
+              }
+            } else if (newOutcome.tie) { // if a purchase could lead to a tie,
+              possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
+                [combatIndex]: {
+                  purchase: newOutcome.path,
+                  cost: newOutcome.cost,
+                  tie: true,
+                  nextTurn: true
+                }
+              }
+            } else { // if a purchase cannot lead to a win,
+              possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
+                [combatIndex]: {
+                  loseCombat: true,
+                  nextTurn: true
+                }
+              }
+            }
+          } else { // if an attack will win outright
+            possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
+              [combatIndex]: {
+                winCombat: true,
+                nextTurn: true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   function evaluateCombatAfterPurchase(combat, combatIndex, resources, botHex, boardState) {
     let tempBoardState = _.cloneDeep(boardState);
@@ -276,8 +279,8 @@ const hexbot = (state = store.getState().state) => {
     }
     return { path: path, tie: tie, cost: cheapest }
   }
-  console.log(possibleMoves);
-  console.log(possibleNextTurnMoves);
+  // console.log(possibleMoves);
+  // console.log(possibleNextTurnMoves);
 
   let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
 

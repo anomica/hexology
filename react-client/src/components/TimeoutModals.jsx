@@ -5,19 +5,17 @@ import { Modal, Icon } from 'semantic-ui-react';
 import { warningOpen, forfeitOpen } from '../../src/actions/actions.js';
 
 const TimeoutModals = (props) => {
-  console.log('props.warningOpen:', props.warningModalOpen);
-  console.log('props.forfeitOpen:', props.forfeitModalOpen);
   if (props.warningOpen !== undefined && props.forfeitOpen !== undefined) {
     return (
       <div>
         <Modal open={props.warningModalOpen} onClose={() => props.warningOpen(false)} closeIcon>
           <Modal.Content>
             <Modal.Description>
-              You have 30 seconds to finish your move 
+              You have 30 seconds to finish your move
             </Modal.Description>
           </Modal.Content>
         </Modal>
-        <Modal open={props.forfeitModalOpen} onClose={() => props.forfeitOpen(false)} closeIcon> 
+        <Modal open={props.forfeitModalOpen} onClose={() => props.forfeitOpen(false)} closeIcon>
           <Modal.Content>
             <Modal.Description>
               {props.currentPlayer + ' '} took to long to make a move and forfeits the turn

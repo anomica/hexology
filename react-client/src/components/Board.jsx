@@ -53,7 +53,7 @@ class Board extends React.Component {
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
-          socket = await socketIOClient('http://127.0.0.1:3000');
+          socket = await socketIOClient('http://127.0.0.1:8080');
           this.props.setSocket(socket);
         }
         socket.emit('joinGame', {
@@ -62,7 +62,7 @@ class Board extends React.Component {
           spectator: true
         });
         !this.props.playerAssigned && this.props.setUserPlayer('player2');
-        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);        
+        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
@@ -112,27 +112,26 @@ class Board extends React.Component {
                 timer: this.state.timer += 1
               })
             }, 1000)
-            
+
         })
-        console.log(this.state.timer);
       });
 
-      setInterval(async () => {
-        if (this.state.timer === 30) {
-          if (this.props.userPlayer === this.props.currentPlayer) {
-            this.props.warningOpen(true);
-            setTimeout(() => this.props.warningOpen(false), 3000);
-          }
-        } else if (this.state.timer > 45) {
-          this.props.forfeitOpen(true);
-          setTimeout(() => this.props.forfeitOpen(false), 3000);
-          await this.nextTurn();
-          await this.setState({
-            timer: 0
-          })
-
-        }
-      }, 1000)
+      // setInterval(async () => {
+      //   if (this.state.timer === 30) {
+      //     if (this.props.userPlayer === this.props.currentPlayer) {
+      //       this.props.warningOpen(true);
+      //       setTimeout(() => this.props.warningOpen(false), 3000);
+      //     }
+      //   } else if (this.state.timer > 45) {
+      //     this.props.forfeitOpen(true);
+      //     setTimeout(() => this.props.forfeitOpen(false), 3000);
+      //     await this.nextTurn();
+      //     await this.setState({
+      //       timer: 0
+      //     })
+      //
+      //   }
+      // }, 1000)
 
       socket.on('watchGame', data => {
         this.props.setSpectator(this.props.loggedInUser);
@@ -211,7 +210,7 @@ class Board extends React.Component {
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
- 
+
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
