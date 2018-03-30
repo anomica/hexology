@@ -16,7 +16,6 @@ class LoadGame extends React.Component {
       index: null,
       gameId: null,
     }
-    this.refreshGames = this.refreshGames.bind(this);
     this.retrieveGame = this.retrieveGame.bind(this);
     this.handleConfirm = this.handleConfirm.bind(this);
     this.handleCancel = this.handleCancel.bind(this);
@@ -32,16 +31,8 @@ class LoadGame extends React.Component {
     });
   }
 
-  refreshGames(games) {
-    // this.setState({
-    //   games: games,
-    //   open: false
-    // });
-  }
-
   handleConfirm(gameId) {
     let socket = this.props.socket;
-
     socket.emit('updateUserGamesList', {
       username: this.props.loggedInUser,
       gameId: gameId,
@@ -105,7 +96,7 @@ class LoadGame extends React.Component {
         closeIcon
       >
         <Modal.Header>My Current Games</Modal.Header>
-        <Modal.Content>
+        <Modal.Content image scrolling>
           <Modal.Description>
           { (this.state.games.length > 0)
             ? <Table celled striped selectable color='green' key='green'>
@@ -184,7 +175,6 @@ class LoadGame extends React.Component {
                           }}
                         />
                       </Table.Cell>
-
                     </Table.Row>
                   )}
                 </Table.Body>
