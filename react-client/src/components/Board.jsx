@@ -119,12 +119,12 @@ class Board extends React.Component {
       });
 
       setInterval(async () => {
-        if (this.state.timer === 30) {
+        if (this.state.timer === 90) {
           if (this.props.userPlayer === this.props.currentPlayer) {
             this.props.warningOpen(true);
             setTimeout(() => this.props.warningOpen(false), 3000);
           }
-        } else if (this.state.timer > 45) {
+        } else if (this.state.timer > 120) {
           this.props.forfeitOpen(true);
           setTimeout(() => this.props.forfeitOpen(false), 3000);
           await this.nextTurn();
