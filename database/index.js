@@ -705,7 +705,7 @@ const getGameIdByRoom = async (room) => {
 
 /////////////////////// Sets players for the game ///////////////////////
 const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
-  console.log(`\nsetGamePlayers in db: username (${username}), currentPlayer (${currentPlayer}), gameIndex (${gameIndex}), room (${room})\n`);
+  // console.log(`\nsetGamePlayers in db: username (${username}), currentPlayer (${currentPlayer}), gameIndex (${gameIndex}), room (${room})\n`);
   let roomNum = room.split('*').join('');
   let gameId = await getGameId(room, gameIndex);
 
@@ -718,7 +718,7 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
 
   if (username === 'anonymous') {
     if (currentPlayer === 'player2') {
-      console.log('\nplayer2 is anon\n')
+      // console.log('\nplayer2 is anon\n')
       playerTwo = [{user_id: 2}];
       await knex('games')
         .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
@@ -726,7 +726,7 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
       // console.log('\ncompleted updating for anon player2 (should be 2)\n')
       return;
     } else if (currentPlayer === 'player1') {
-      console.log('\nplayer1 is anon\n')
+      // console.log('\nplayer1 is anon\n')
       playerOne = [{user_id: 1}];
       await knex('games')
         .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
@@ -741,7 +741,7 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
       await knex('games')
         .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
         .update('player2', playerTwo[0].user_id)
-      console.log('\ncompleted updating user id for player2\n')
+      // console.log('\ncompleted updating user id for player2\n')
 
       // await knex('hex') //TODO: UNCOMMENT THIS LATER
       //   .where(knex.raw(`${gameId[0].game_id} = game_id AND '${playerTwoHex.hex_index}' = hex_index`))
@@ -755,7 +755,7 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
       await knex('games')
         .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
         .update('player1', playerOne[0].user_id)
-      console.log('\ncompleted updating user id for player1\n')
+      // console.log('\ncompleted updating user id for player1\n')
 
       // await knex('hex') // update hex player to user id //TODO: UNCOMMENT THIS LATER
       //   .where(knex.raw(`${gameId[0].game_id} = game_id AND '${playerOneHex.hex_index}' = hex_index`))
