@@ -3,7 +3,7 @@ import axios from 'axios';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
-import { Button, Header, Image, Modal, Icon, Form, Checkbox } from 'semantic-ui-react';
+import { Button, Header, Image, Modal, Icon, Form, Checkbox, Message, Transition } from 'semantic-ui-react';
 import { withRouter } from 'react-router';
 import { toggleLoginSignup, login } from '../../src/actions/actions.js';
 
@@ -74,16 +74,18 @@ class Signup extends React.Component {
               onChange={(e) => {this.handleChange(e, 'email')}}
               label='Email'
               type='email' />
-            <Button
-              onClick={this.signup.bind(this)}
-              type='submit'
-              style={{
-                backgroundColor: this.state.error ? 'red' : 'green',
-                color: 'white',
-                float: 'right',
-                marginBottom: '10px'
-              }}
-              >{this.state.buttonMessage}</Button>
+            <Transition animation={'jiggle'} duration={'1000'} visible={true}>
+              <Button
+                onClick={this.signup.bind(this)}
+                type='submit'
+                style={{
+                  backgroundColor: this.state.error ? 'red' : 'green',
+                  color: 'white',
+                  float: 'right',
+                  marginBottom: '10px'
+                }}
+                >{this.state.buttonMessage}</Button>
+              </Transition>
           </Form>
           </Modal.Description>
         </Modal.Content>
