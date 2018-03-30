@@ -32,12 +32,11 @@ class Leaderboard extends React.Component {
   render() {
     return (
       <Table
-        basic='very'
         celled
         collapsing
         compact
         celled striped
-        style={{ margin: 'auto', paddingTop: '20px' }}
+        style={{ margin: 'auto' }}
       >
 
         <Table.Header>
@@ -83,8 +82,6 @@ class Leaderboard extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    // rooms: state.state.rooms,
-    // socket: state.state.socket
   }
 }
 

@@ -21,9 +21,7 @@ const RoomsList = props => {
     }
     })
   }
-
-    
-
+  
   const refreshRooms = async () => {
     let socket = await props.socket;
     if (socket) {

@@ -1,45 +1,194 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 import axios from 'axios';
-import { Button, Header, Image, Modal, Icon } from 'semantic-ui-react';
+import { Button, Header, Image, Modal, Icon, List, Table, Confirm } from 'semantic-ui-react';
+import socketIOClient from 'socket.io-client';
+import { withRouter} from 'react-router';
+import { setRoom } from '../../src/actions/actions.js';
 
 class LoadGame extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      games: []
+      games: [],
+      open: false,
+      index: null,
+      gameId: null,
     }
-    this.getUserGames = this.getUserGames.bind(this);
+    this.refreshGames = this.refreshGames.bind(this);
+    this.retrieveGame = this.retrieveGame.bind(this);
+    this.handleConfirm = this.handleConfirm.bind(this);
+    this.handleCancel = this.handleCancel.bind(this);
+    this.show = this.show.bind(this);
+    this.goToGame = this.goToGame.bind(this);
   }
 
-  getUserGames() {
-    axios.post('/usergames', {
-      username: this.props.username
+  show(index, gameId) {
+    this.setState({
+      open: true,
+      index: index,
+      gameId: gameId
+    });
+  }
+
+  refreshGames(games) {
+    // this.setState({
+    //   games: games,
+    //   open: false
+    // });
+  }
+
+  handleConfirm(gameId) {
+    let socket = this.props.socket;
+
+    socket.emit('updateUserGamesList', {
+      username: this.props.loggedInUser,
+      gameId: gameId,
+      socketId: this.props.socket.id
     })
-    .then(games => {
+
+    socket.on('updateUserGamesList', (data) => {
       this.setState({
-        games: games.data
-      })
+        games: data.games,
+        open: false
+      });
     })
-    .catch(err => console.err('error in getting user games: ', err));
+  }
+
+  handleCancel() {
+    this.setState({
+      open: false,
+      index: null,
+      gameId: null
+    })
+  }
+
+  goToGame(game, roomId) {
+    this.props.history.push({
+      pathname: `/game/room?${roomId}`,
+      state: {
+        game: game
+      }
+    });
+  }
+
+  async retrieveGame(roomId, gameIndex) {
+    let socket = await this.props.socket;
+    socket.emit('loadGame', {
+      oldRoom: '*' + roomId,
+      socketId: socket.id,
+      username: this.props.loggedInUser,
+      gameIndex: gameIndex
+    });
+    socket.on('gameBoard', data => {
+      this.goToGame(data.game, '*' + roomId);
+    })
   }
 
   componentDidMount() {
-    this.getUserGames();
+    let socket = this.props.socket;
+    socket.emit('getUserGames', {
+      username: this.props.loggedInUser,
+      socketId: this.props.socket.id
+    })
+    socket.on('getUserGames', data => {
+      this.setState({ games: data.games })
+    })
   }
 
   render() {
     return (
-      <Modal open={this.props.open} onClose={this.props.close} closeIcon>
+      <Modal
+        open={this.props.open}
+        onClose={this.props.close}
+        closeIcon
+      >
         <Modal.Header>My Current Games</Modal.Header>
         <Modal.Content>
           <Modal.Description>
-            {this.state.games.length
-              ? <ol>
-                  {this.state.games.map( (game, i) =>
-                    <li key={i} onClick={() => console.log('helllooooooo')}>{game.game_id}</li>
+          { (this.state.games.length > 0)
+            ? <Table celled striped selectable color='green' key='green'>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.HeaderCell rowSpan='2' style={{textAlign: 'center'}}>Game</Table.HeaderCell>
+                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player One</Table.HeaderCell>
+                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player Two</Table.HeaderCell>
+                    <Table.HeaderCell rowSpan='2' style={{textAlign: 'center'}}>Current Turn</Table.HeaderCell>
+                    <Table.HeaderCell rowSpan='2'/>
+                  </Table.Row>
+                  <Table.Row>
+                    <Table.HeaderCell style={{textAlign: 'center'}}>Resources</Table.HeaderCell>
+                    <Table.HeaderCell style={{textAlign: 'center'}}>Units</Table.HeaderCell>
+                    <Table.HeaderCell style={{textAlign: 'center'}}>Resources</Table.HeaderCell>
+                    <Table.HeaderCell style={{textAlign: 'center'}}>Units</Table.HeaderCell>
+                  </Table.Row>
+                </Table.Header>
+
+                <Table.Body>
+                  {this.state.games.map( (game, i) => 
+                    <Table.Row key={i}>
+                      <Table.Cell>
+                        #{i + 1} (ID: {game.game_id})
+                        <br/>
+                        Player 1: {game.player1_username}
+                        <br/>
+                        Player 2: {game.player2_username}
+                        <br/>RoomId: {game.room_id}
+                      </Table.Cell>
+                      <Table.Cell>
+                        Gold: {game.p1_gold}
+                        <br/>
+                        Wood: {game.p1_wood}
+                        <br/>
+                        Metal: {game.p1_metal}
+                      </Table.Cell>
+
+                      <Table.Cell style={{textAlign: 'center'}}>
+                        {game.p1_total_units}
+                      </Table.Cell>
+
+                      <Table.Cell>
+                        Gold: {game.p2_gold}
+                        <br/>
+                        Wood: {game.p2_wood}
+                        <br/>
+                        Metal: {game.p2_metal}
+                      </Table.Cell>
+
+                      <Table.Cell style={{textAlign: 'center'}}>
+                        {game.p2_total_units}
+                      </Table.Cell>
+
+                      <Table.Cell>{game.current_player}</Table.Cell>
+
+                      <Table.Cell>
+                        <Button size='tiny' color='blue'
+                          onClick={() => {
+                            this.retrieveGame(game.room_id, game.game_index);
+                          }}
+                        >Load Game</Button>
+                        <br/>
+                        <Button size='tiny' color='red' style={{marginTop: '2%'}}
+                          onClick={ () => {this.show(i, game.game_id)} }
+                        >Delete Game</Button>
+                        <Confirm
+                          header='Confirm Delete'
+                          content="Are you sure you want to delete this game? There's no turning back!"
+                          cancelButton='Nevermind'
+                          confirmButton="Let's do it!"
+                          open={this.state.open}
+                          onCancel={this.handleCancel}
+                          onConfirm={ () => {
+                            this.handleConfirm(this.state.gameId);
+                          }}
+                        />
+                      </Table.Cell>
+
+                    </Table.Row>
                   )}
-                </ol>
+                </Table.Body>
+              </Table>
               : <div>You currently have no existing games!</div>
             }
           </Modal.Description>
@@ -51,8 +200,14 @@ class LoadGame extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-
+    socket: state.state.socket,
+    loggedInUser: state.state.loggedInUser,
+    room: state.state.room
   }
 }
 
-export default connect(mapStateToProps, null)(LoadGame);
+const mapDispatchToProps = (dispatch) => {
+  return bindActionCreators({ setRoom }, dispatch);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(LoadGame))

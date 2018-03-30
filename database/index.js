@@ -747,7 +747,7 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
       //   .where(knex.raw(`${gameId[0].game_id} = game_id AND '${playerTwoHex.hex_index}' = hex_index`))
       //   .update('player', playerTwo[0].user_id)
   
-      console.log('\ncompleted updating HEX user id for player2\n')
+      // console.log('\ncompleted updating HEX user id for player2\n')
 
     } else if (currentPlayer === 'player1') {
       playerOne = await getUserId(username, 'player1'); // returns an object
@@ -761,7 +761,7 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
       //   .where(knex.raw(`${gameId[0].game_id} = game_id AND '${playerOneHex.hex_index}' = hex_index`))
       //   .update('player', playerOne[0].user_id)
       
-      console.log('\ncompleted updating HEX user id for player1\n')
+      // console.log('\ncompleted updating HEX user id for player1\n')
     }
   }
 }
@@ -777,19 +777,41 @@ const getUsernames = async () => {
 
 /////////////////////// Gets user's existing games ///////////////////////
 const retrieveUserGames = async (username, currentPlayer) => {
-  console.log('\n///// inside retrieving user games function in database...\n');
   let user = await getUserId(username, currentPlayer);
   if (currentPlayer == 'player2' && username !== 'anonymous') {
-    return await knex('games')
-      .select()
-      .where(knex.raw(`${user[0].user_id} = player2`))
+    // return await knex('games')
+    //   .select()
+    //   .where(knex.raw(`${user[0].user_id} = player2`))
+
+    return await knex.column(knex.raw(`games.*, users.username as 'player2_username'`)).select()
+      .from(knex.raw('games, users'))
+      .where(knex.raw(`${user[0].user_id} = games.player2 AND LOWER('${username}') = LOWER(users.username)`))
+
+    // return await knex('games')
+    //   .select(knex.raw(`games.*, users.username as player1_username`))
+    //   .leftOuterJoin('users', user[0].user_id, 'games.player2')
+    //   .where(knex.raw(`${user[0].user_id} = games.player2`))
+
+    // return await knex.select('*')
+    //   .from(knex.raw(`users, games`))
+    //   .where(knex.raw(`${user[0].user_id} = games.player2 AND LOWER('${username}') = LOWER(users.username)`))
   }
   if (currentPlayer == 'player1' && username !== 'anonymous') {
-    return await knex('games')
-      .select()
-      .where(knex.raw(`${user[0].user_id} = player1`))
+    // return await knex('games')
+    //   .select()
+    //   .where(knex.raw(`${user[0].user_id} = player1`))
+    return await knex.column(knex.raw(`games.*, users.username as 'player1_username'`)).select()
+      .from(knex.raw('games, users'))
+      .where(knex.raw(`${user[0].user_id} = games.player1 AND LOWER('${username}') = LOWER(users.username)`))
+    // return await knex('games')
+    //   .select(knex.raw(`games.*, users.username as player2_username`))
+    //   .leftOuterJoin('users', user[0].user_id, 'games.player2')
+    //   .where(knex.raw(`${user[0].user_id} = games.player1`))
+    
+    // return await knex.select('*')
+    //   .from(knex.raw(`users, games`))
+    //   .where(knex.raw(`${user[0].user_id} = games.player1`))
   }
-  console.log('\nCOMPLETED retrieving user games function in database... /////\n')
 }
 
 module.exports = {
