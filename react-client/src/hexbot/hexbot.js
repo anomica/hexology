@@ -220,13 +220,28 @@ const hexbot = (state = store.getState().state) => {
     }
   }
 
-  for (let botHex in possibleMoves) {
-    for (let move in possibleMoves[botHex]) {
-      let value = heuristic(possibleMoves[botHex][move]);
-      if (!moveValues.hasOwnProperty(botHex)) {
-        moveValues[botHex] = {};
+  evaluateMoves();
+
+  function evaluateMoves() {
+    for (let botHex in possibleMoves) {
+      for (let move in possibleMoves[botHex]) {
+        let value = heuristic(possibleMoves[botHex][move]);
+        if (!moveValues.hasOwnProperty(botHex)) {
+          moveValues[botHex] = {};
+        }
+        moveValues[botHex][move] = value;
       }
-      moveValues[botHex][move] = value;
+    }
+    evaluateSecondaryMoves();
+  }
+
+  function evaluateSecondaryMoves() {
+    for (let botHex in possibleNextTurnMoves) {
+      for (let thisTurnMove in possibleNextTurnMoves[botHex]) {
+        for (let move in possibleNextTurnMoves[botHex][thisTurnMove]) {
+
+        }
+      }
     }
   }
 
