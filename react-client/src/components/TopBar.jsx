@@ -20,6 +20,7 @@ class TopBar extends React.Component {
     }
 
     this.saveGame = this.saveGame.bind(this);
+    this.sendEmailToResume = this.sendEmailToResume.bind(this);
   }
 
   saveGame() {
@@ -40,13 +41,29 @@ class TopBar extends React.Component {
     this.props.history.push('/');
   }
 
-
   sendEmail() {
-    this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' })
+    this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' });
     this.props.socket.emit('sendEmail', {
       username: this.props.loggedInUser,
       email: this.state.email,
       message: this.state.message,
+      room: this.props.room
+    })
+    setTimeout(() => this.setState({ modalOpen: false }), 2000);
+  }
+
+  sendEmailToResume() {
+    this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' });
+    
+    let messageDefault;
+    messageDefault = this.state.message ? this.state.message : "Yo, let's finish our awesome game of Hexology!"
+
+    // console.log('---------\nsending email to resume the game dude:\n', `username: ${this.props.loggedInUser}, email: ${this.props.location.state.otherPlayerInfo.email}, message: ${messageDefault}, room: ${this.props.room}`);
+
+    this.props.socket.emit('sendEmail', {
+      username: this.props.loggedInUser,
+      email: this.props.location.state.otherPlayerInfo.email,
+      message: messageDefault,
       room: this.props.room
     })
     setTimeout(() => this.setState({ modalOpen: false }), 2000);
@@ -89,6 +106,20 @@ class TopBar extends React.Component {
             </Segment>
           )
         }
+        {this.props.location.state.gameLoad && !this.state.inviteSent // if the game has been loaded by player
+          ? <Segment>Invite <strong>{this.props.location.state.otherPlayerInfo.username}</strong> to resume this game!
+              <Button
+                size={'tiny'}
+                color={'blue'}
+                compact
+                style={{marginLeft: '20px'}}
+                onClick={() => this.setState({ modalOpen: true })}
+                >
+                Click Here
+              </Button>
+            </Segment>
+          : null
+        }
         <Segment.Group horizontal>
           {this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
             <Segment>
@@ -126,35 +157,71 @@ class TopBar extends React.Component {
             </Segment>
           }
         </Segment.Group>
-        <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
-          <Modal.Header>Please write the recipient's emails below, along with any message you would like to send.</Modal.Header>
-          <Modal.Content>
-            <Modal.Description>
-              <Form size={'large'} key={'small'}>
-                <Form.Group widths='equal'>
-                  <Form.Input
-                    fluid
-                    required
-                    name={'email'}
-                    value={this.state.email}
-                    onChange={this.handleChange.bind(this)}
-                    label='Email'
-                    placeholder='example@gmail.com' />
-                  <Form.TextArea
-                    onChange={this.handleChange.bind(this)}
-                    label='Message'
-                    name={'message'}
-                    value={this.state.message}
-                    placeholder='Please join me for an awesome game of Hexology!' />
-                </Form.Group>
-              </Form>
-            </Modal.Description>
-          </Modal.Content>
-          <Divider/>
-          <Modal.Actions>
-            <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
-          </Modal.Actions>
-        </Modal>
+        
+          {this.props.location.state.otherPlayerInfo
+            ? <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({
+                modalOpen: false,
+                email: this.props.location.state.otherPlayerInfo.email
+              })}>
+                <Modal.Header>Send an email to {this.props.location.state.otherPlayerInfo.username} to resume this game!</Modal.Header>
+                <Modal.Content>
+                  <Modal.Description>
+                    <Form size={'large'} key={'small'}>
+                      <Form.Group widths='equal'>
+                        <Form.Input
+                          fluid
+                          required
+                          name={'email'}
+                          value={this.props.location.state.otherPlayerInfo.email}
+                          onChange={this.handleChange.bind(this)}
+                          label='Email'
+                          />
+                        <Form.TextArea
+                          onChange={this.handleChange.bind(this)}
+                          label='Message'
+                          name={'message'}
+                          value={this.state.message}
+                          placeholder="Yo, let's finish our awesome game of Hexology!" />
+                      </Form.Group>
+                    </Form>
+                  </Modal.Description>
+                </Modal.Content>
+                <Divider/>
+                <Modal.Actions>
+                  <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>
+                </Modal.Actions>
+              </Modal>
+
+            : <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
+                <Modal.Header>Please write the recipient's emails below, along with any message you would like to send.</Modal.Header>
+                <Modal.Content>
+                  <Modal.Description>
+                    <Form size={'large'} key={'small'}>
+                      <Form.Group widths='equal'>
+                        <Form.Input
+                          fluid
+                          required
+                          name={'email'}
+                          value={this.state.email}
+                          onChange={this.handleChange.bind(this)}
+                          label='Email'
+                          placeholder='example@gmail.com' />
+                        <Form.TextArea
+                          onChange={this.handleChange.bind(this)}
+                          label='Message'
+                          name={'message'}
+                          value={this.state.message}
+                          placeholder='Please join me for an awesome game of Hexology!' />
+                      </Form.Group>
+                    </Form>
+                  </Modal.Description>
+                </Modal.Content>
+                <Divider/>
+                <Modal.Actions>
+                  <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
+                </Modal.Actions>
+              </Modal>
+          }
       </Segment>
     )
   }

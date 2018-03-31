@@ -409,7 +409,7 @@ class Board extends React.Component {
               <SidebarLeft />
             </Grid.Column>
             <Grid.Column width={16}>
-              <TopBar />
+              <TopBar otherPlayer={this.props.location.state}/>
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>

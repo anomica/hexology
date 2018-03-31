@@ -829,6 +829,23 @@ const updateRoomNum = async (gameIndex, newRoom) => {
     .update('room_id', Number(roomNum))
 }
 
+/////////////////////// Get the other user's info (email and what not) ///////////////////////
+const getOtherUserStuff = async (gameIndex, username) => { // username is of the current user
+  console.log(`\ngetOtherUserStuff = gameIndex (${gameIndex}), username (${username})\n`);
+  let user = await getUserId(username);
+  let game = await getGameByGameIndex(gameIndex);
+
+  if (user[0].user_id === game[0].player1) { // if current player is player1
+    return knex.column(knex.raw(`users.user_id, users.username, users.email`)) // get player2's info
+      .from(knex.raw(`games, users`))
+      .where(knex.raw(`games.game_index = '${gameIndex}' AND games.player2 = users.user_id`))
+  } else if (user[0].user_id === game[0].player2) { // if current player is player2
+    return knex.column(knex.raw(`users.user_id, users.username, users.email`)) // get player1's info
+      .from(knex.raw(`games, users`))
+      .where(knex.raw(`games.game_index = '${gameIndex}' AND games.player1 = users.user_id`))
+  }
+}
+
 /////////////////////// Gets user's existing games ///////////////////////
 const retrieveUserGames = async (username) => {
   let userAsPlayerOne = await getUserId(username, 'player1');
@@ -886,5 +903,6 @@ module.exports = {
   getGameByGameIndex,
   switchPlayers,
   updateRoomNum,
-  getUserPlayer
+  getUserPlayer,
+  getOtherUserStuff
 };

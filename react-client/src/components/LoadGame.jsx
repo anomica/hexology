@@ -60,14 +60,15 @@ class LoadGame extends React.Component {
       oldRoom: '*' + roomId,
       socketId: socket.id,
       username: this.props.loggedInUser,
-      gameIndex: gameIndex
+      gameIndex: gameIndex,
     });
 
     socket.on('updateRoom', data => {
       this.props.history.push({
         pathname: `/game/room?${data.room}`,
         state: {
-          // game: data.game
+          gameLoad: true,
+          otherPlayerInfo: data.otherPlayerInfo
         }
       });
     })
@@ -197,6 +198,7 @@ const mapStateToProps = (state) => {
     socket: state.state.socket,
     loggedInUser: state.state.loggedInUser,
     room: state.state.room,
+    currentPlayer: state.state.currentPlayer,
     userPlayer: state.state.userPlayer
   }
 }

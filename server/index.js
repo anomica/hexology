@@ -379,24 +379,21 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('loadGame', async (data) => {
+    console.log('\nDATA IN LOAD GAME IN THE SERVER:\n', data)
     let oldRoom = data.oldRoom;
     let gameIndex = data.gameIndex;
     let socketID = data.socketId;
+    let username = data.username;
     let userPlayer = data.userPlayer;
-    let username = data.username
-
     let newRoom = `*${roomNum}`;
     room = newRoom;
-
-    loadSelectedGame(gameIndex, oldRoom, socketID, newRoom, username, userPlayer);
-
+    loadSelectedGame(gameIndex, oldRoom, socketID, newRoom, username);
+    let otherPlayer = await db.getOtherUserStuff(gameIndex, username);
     socket.join(newRoom); // create a new room
-
-    socket.emit('updateRoom', { room: newRoom });
-    // io.sockets.adapter.rooms[newRoom].player1 = d.username;
-
-    // io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
-
+    socket.emit('updateRoom', {
+      room: newRoom,
+      otherPlayerInfo: otherPlayer[0]
+    });
     socket.broadcast.emit('newRoom', { 
       roomName: room, 
       room: io.sockets.adapter.rooms[newRoom]
@@ -510,8 +507,8 @@ const updateUserGamesList = async (username, gameId, socketId) => {
   })
 }
 
-const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username, userPlayer) => {
-  console.log(`LOAD SELECTED GAME: gameIndex ${gameIndex}, oldRoom (${oldRoom}), socketId (${socketId}), newRoom (${newRoom}), username (${username}), userPlayer (${userPlayer})`);
+const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username) => {
+  console.log(`LOAD SELECTED GAME: gameIndex ${gameIndex}, oldRoom (${oldRoom}), socketId (${socketId}), newRoom (${newRoom}), username (${username})`);
 
   let gameBoard = await db.getGameBoard(oldRoom, gameIndex); // gets hexes from db
   let game = await db.getGame(oldRoom, gameIndex); // in order to get current player from db
