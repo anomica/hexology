@@ -32,7 +32,8 @@ const DefaultState = {
   spectator: false,
   hexbot: false,
   warningModalOpen: false,
-  forfeitModalOpen: false
+  forfeitModalOpen: false,
+  deployTroopsModal: false
 }
 
 export default DefaultState;

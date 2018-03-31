@@ -4,7 +4,7 @@ import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
 import { Container, List, Item, Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
-import { exitGame, setRoom, deleteRoom, resetBoard } from '../../src/actions/actions.js';
+import { deployTroopsModal, exitGame, setRoom, deleteRoom, resetBoard } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
 
 class TopBar extends React.Component {
@@ -83,7 +83,10 @@ class TopBar extends React.Component {
               </Header>
              </List.Item>   */}
               <List.Item style={styles.list}>
-                <List.Header>{this.props.spectator ? 'Player One Resources' : 'Your Resources'}</List.Header>
+                <List.Header>
+                  {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
+                   <UnitShop></UnitShop> : 'Your Bank:'}
+                </List.Header>
 
                 <List horizontal>
                   <List.Item >
@@ -114,7 +117,6 @@ class TopBar extends React.Component {
 
             </List.Item>
             <List.Item style={styles.list}> 
-            <List.Header>{this.props.spectator ? 'Player One Units' : 'Your Units'}</List.Header>
 
               <List horizontal>
                 <List.Header>{this.props.spectator ? 'Player One Units' : 'Your Units'}</List.Header>
@@ -144,20 +146,17 @@ class TopBar extends React.Component {
                 </List.Item>
                 <List.Item>
                   <List.Content>
-                    {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
-                      <UnitShop></UnitShop> : null}
+                    {this.props.boardState && this.props.userPlayer === this.props.currentPlayer ? 
+                      <Button color='black' onClick={this.props.deployTroopsModal.bind(this, true)} >Deploy Troops</Button> :
+                      null}
                   </List.Content>
                 </List.Item>  
-                <List.Item>
-                  <List.Content>
-                
-                  </List.Content>  
-                </List.Item>
               </List>
 
             </List.Item>
           </List>
           <Header floated='right'>
+          {this.props.boardState ? <div></div> : <div>Waiting for player 2 to join...</div>}
             {this.props.boardState ? null :
               (this.state.inviteSent ? <Segment>Invite sent to {this.state.email}</Segment> :
                 <Segment>Want to play with a friend?
@@ -308,7 +307,7 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ exitGame, setRoom, deleteRoom, resetBoard }, dispatch);
+  return bindActionCreators({ deployTroopsModal, exitGame, setRoom, deleteRoom, resetBoard }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TopBar));

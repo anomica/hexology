@@ -474,14 +474,11 @@ class Board extends React.Component {
                       <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
                     </Modal.Actions>
                   </Modal>
-                </div>
+                </div> 
               </Grid.Column>
               <Grid.Column width={2}>
                 <ChatWindow/>
-                {this.props.currentPlayer === this.props.userPlayer ?
-                  <UnitBank />
-                  : <div></div>
-              }
+                <UnitBank />
             </Grid.Column>
           </Grid.Row>
         </Grid>

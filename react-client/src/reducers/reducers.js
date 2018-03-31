@@ -239,6 +239,12 @@ const reducers = (state = defaultState, action) => {
         ...state,
         forfeitModalOpen: action.payload
       }
+    case 'SHOW-DEPLOYTROOPS-MODAL':
+      console.log('action.payload', action.payload)
+      return {
+        ...state,
+        deployTroopsModal: action.payload
+      }
 
   }
 }

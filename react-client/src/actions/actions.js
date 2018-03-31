@@ -266,3 +266,10 @@ export const forfeitOpen = isTrue => (
     payload: isTrue
   }
 )
+
+export const deployTroopsModal = isTrue => (
+  {
+    type: 'SHOW-DEPLOYTROOPS-MODAL',
+    payload: isTrue
+  }
+)
