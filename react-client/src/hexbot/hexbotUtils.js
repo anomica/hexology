@@ -1,4 +1,4 @@
-export const evaluateCombat = (botHex, playerHex) => {
+export const evaluateCombat = (botHex, playerHex, botUnits, playerUnits) => {
   let bSwordsmen = botHex.swordsmen, bArchers = botHex.archers, bKnights = botHex.knights;
   let pSwordsmen = playerHex.swordsmen, pArchers = playerHex.archers, pKnights = playerHex.knights;
   let bArmySize = bSwordsmen + bArchers + bKnights, pArmySize = pSwordsmen + pArchers + pKnights;
@@ -42,6 +42,8 @@ export const evaluateCombat = (botHex, playerHex) => {
 
       bArmySize--;
       pArmySize--;
+      botUnits--;
+      playerUnits--;
     }
   } else if (pArmySize > bArmySize) {
     while (bArmySize > 0) {
@@ -62,22 +64,40 @@ export const evaluateCombat = (botHex, playerHex) => {
 
       pArmySize--;
       bArmySize--;
+      botUnits--;
+      playerUnits--;
     }
   }
+
+  let gameOver = checkForWin(botUnits, playerUnits);
 
   if (bArmySize === pArmySize) {
     return {
       tie: true,
       swordDiff: bSwordsmen - pSwordsmen,
       archerDiff: bArchers - pArchers,
-      knightDiff: bKnights - pKnights
+      knightDiff: bKnights - pKnights,
+      gameOver: gameOver ? gameOver : null
     };
   } else {
     return {
       armyDiff: bArmySize - pArmySize,
       swordDiff: bSwordsmen - pSwordsmen,
       archerDiff: bArchers - pArchers,
-      knightDiff: bKnights - pKnights
+      knightDiff: bKnights - pKnights,
+      gameOver: gameOver ? gameOver : null
     }
+  }
+}
+
+export const checkForWin = (botUnits, playerUnits) => {
+  if (botUnits <= 0 && playerUnits <= 0) {
+    return 'tie';
+  }
+  if (botUnits <= 0) {
+    return 'lose';
+  }
+  if (playerUnits <= 0) {
+    return 'win';
   }
 }

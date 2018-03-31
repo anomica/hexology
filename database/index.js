@@ -114,7 +114,7 @@ const getGameBoard = async (room, gameIndex) => {
 
 /////////////////////// Update origin hex & new hex when player moves ///////////////////////
 const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOrigin) => {
-  console.log('\nupdateDbHexes function in db:\n', '\n\noriginalOrigin:\n', originalOrigin, '\n\nnewOrigin:\n', newOrigin, '\n\ncurrentPlayer: ',currentPlayer, '\n\nUpdatedOrigin:\n', updatedOrigin)
+  // console.log('\nupdateDbHexes function in db:\n', '\n\noriginalOrigin:\n', originalOrigin, '\n\nnewOrigin:\n', newOrigin, '\n\ncurrentPlayer: ',currentPlayer, '\n\nUpdatedOrigin:\n', updatedOrigin)
   let playerId = await currentPlayer[currentPlayer.length - 1];
   // Updates original hex
   if (updatedOrigin.swordsmen === 0 && updatedOrigin.archers === 0 && updatedOrigin.knights === 0) { // if all units were moved, remove player as owner & remove units from hex
@@ -198,7 +198,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
         .then(data => {
           removeHasWood(dbHex[0].hex_index); // removes resource from hex
         })
-    }  
+    }
   }
   // console.log('wood updated in db')
 
@@ -218,7 +218,7 @@ const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOr
         .then(data => {
           removeHasMetal(dbHex[0].hex_index); // removes resource from hex
         })
-    }  
+    }
   }
   // console.log('metal updated in db')
 }
@@ -240,7 +240,7 @@ const updateHexOwner = async (hexIndex, player) => { // update hex owner (on a m
       .update({
         hex_owner: null,
         player: null
-      }) 
+      })
   }
 }
 
@@ -671,7 +671,7 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
         .increment('losses', 1) // increase losses
     }
   }
-  
+
   let gameId = await getGameId(room, gameIndex)
 
   await deleteHex(gameId[0].game_id); // first delete the hexes
@@ -754,12 +754,12 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
       // await knex('hex') //TODO: UNCOMMENT THIS LATER
       //   .where(knex.raw(`${gameId[0].game_id} = game_id AND '${playerTwoHex.hex_index}' = hex_index`))
       //   .update('player', playerTwo[0].user_id)
-  
+
       // console.log('\ncompleted updating HEX user id for player2\n')
 
     } else if (currentPlayer === 'player1') {
       playerOne = await getUserId(username, 'player1'); // returns an object
-  
+
       await knex('games')
         .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
         .update('player1', playerOne[0].user_id)
@@ -768,7 +768,7 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
       // await knex('hex') // update hex player to user id //TODO: UNCOMMENT THIS LATER
       //   .where(knex.raw(`${gameId[0].game_id} = game_id AND '${playerOneHex.hex_index}' = hex_index`))
       //   .update('player', playerOne[0].user_id)
-      
+
       // console.log('\ncompleted updating HEX user id for player1\n')
     }
   }
@@ -815,7 +815,7 @@ const retrieveUserGames = async (username, currentPlayer) => {
     //   .select(knex.raw(`games.*, users.username as player2_username`))
     //   .leftOuterJoin('users', user[0].user_id, 'games.player2')
     //   .where(knex.raw(`${user[0].user_id} = games.player1`))
-    
+
     // return await knex.select('*')
     //   .from(knex.raw(`users, games`))
     //   .where(knex.raw(`${user[0].user_id} = games.player1`))

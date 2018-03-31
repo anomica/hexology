@@ -308,8 +308,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     socket.join(newRoom); // create a new room
     io.sockets.adapter.rooms[newRoom].player1 = request.username;
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
-    gameType === 'public' && socket.broadcast.emit('newRoom', { 
-      roomName: newRoom, 
+    gameType === 'public' && socket.broadcast.emit('newRoom', {
+      roomName: newRoom,
       room: io.sockets.adapter.rooms[newRoom],
       player1: request.username
      });
@@ -350,7 +350,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       playerOneResources: games[gameIndex].playerOneResources,
       playerTwoResources: games[gameIndex].playerTwoResources
     }
-    
+
     /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
     await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
     /////////////////////////////////////////////////////////////////////////////////////////////
@@ -607,9 +607,11 @@ const moveUnits = async (data, socket) => {
           const newGameBoard = {
             board: board,
             gameIndex: gameIndex,
-            room: room
+            room: room,
+            playerOneResources: games[gameIndex].playerOneResources,
+            playerTwoResources: games[gameIndex].playerTwoResources
           }
-          
+
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
           // let playerOne = // need to get username to get user id from db
           // let playerTwo = // need to get username to get user id from db
@@ -666,6 +668,11 @@ const moveUnits = async (data, socket) => {
 
         if (result.gameOver) {  // // if the game is over & attacker wins, need to change hexes and send back board
           // console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GAME IS OVER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n')
+          if (result.gameOver === 'player1') { // if player1 won
+            await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
+          } else if (result.gameOver === 'player2') { // if player2 won
+            await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
+          }
 
           if (result.gameOver === 'player1' && currentPlayer === 'player1' ||
           result.gameOver === 'player2' && currentPlayer === 'player2') {
@@ -673,17 +680,11 @@ const moveUnits = async (data, socket) => {
             // console.log('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\nresult.gameOver -> WINNER: ', result.gameOver);
 
             // console.log('\ncurrentPlayer: ', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-
-  
+            io.to(socketId).emit('winGame'); // the attacker gets a personal win message
+            socket.to(room).emit('loseGame'); // while the rest of the room (defender) gets lose message
           } else {
-
-            if (result.gameOver === 'player1') { // if player1 won
-              await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
-            } else if (result.gameOver === 'player2') { // if player2 won
-              await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
-            }
-            io.to(socketId).emit('loseGame', result.gameOver);
-            socket.to(room).emit('winGame', result.gameOver);
+            io.to(socketId).emit('loseGame', result.gameOver); // the attacker gets a personal lose message
+            socket.to(room).emit('winGame', result.gameOver); // the attacker gets a personal lose message
           }
 
           const board = await gameInit(5, 4); // init board for new game
@@ -709,7 +710,9 @@ const moveUnits = async (data, socket) => {
           const newGameBoard = {
             board: board,
             gameIndex: gameIndex,
-            room: room
+            room: room,
+            playerOneResources: games[gameIndex].playerOneResources,
+            playerTwoResources: games[gameIndex].playerTwoResources
           }
 
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
@@ -2241,7 +2244,7 @@ app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../react-client/dist', 'index.html'));
 });
 
-// io.listen(process.env.PORT || 8080);
+// io.listen(process.env.PORT || 3000);
 const PORT = 8080;
 const HOST = '0.0.0.0';
 server.listen(process.env.PORT || 8080, function () {

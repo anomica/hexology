@@ -31,7 +31,7 @@ const hexbot = (state = store.getState().state) => {
   let playerTotalUnits = state.playerOneTotalUnits, botTotalUnits = state.playerTwoTotalUnits;
   let playerResources = state.playerOneResources, botResources = state.playerTwoResources;
   let playerUnitBank = state.playerOneUnitBank, botUnitBank = state.playerTwoUnitBank;
-  let possibleMoves = {}, possibleNextTurnMoves = {};
+  let possibleMoves = {}, possibleNextTurnMoves = {}, moveValues = {};
   let bestMove = [0, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move to, second is heuristic of move
 
 
@@ -205,6 +205,21 @@ const hexbot = (state = store.getState().state) => {
     }
   }
 
+  // for (let botHex in possibleMoves) {
+  //   for (let move in possibleMoves[botHex]) {
+  //     let value = heuristic(move);
+  //     if (!moveValues.hasOwnProperty(botHex)) {
+  //       moveValues[botHex] = {};
+  //     }
+  //     moveValues[botHex][move] = value;
+  //   }
+  // }
+  //
+  // function heuristic(target) {
+  //   let value = 0;
+  //   target.combatWin
+  // }
+
   function evaluateCombatAfterPurchase(combat, combatIndex, resources, botHex, boardState) {
     let tempBoardState = _.cloneDeep(boardState);
     botHex = tempBoardState[botHex];
@@ -279,14 +294,10 @@ const hexbot = (state = store.getState().state) => {
     }
     return { path: path, tie: tie, cost: cheapest }
   }
-  // console.log(possibleMoves);
-  // console.log(possibleNextTurnMoves);
+
+  console.log(possibleMoves);
 
   let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
-
-  const heuristic = (units, resources, bank, hexes) => {
-    let value = units + (resources / 2) + (botBank / 3) + (hexes.length / 4);
-  }
 }
 
 export default hexbot;

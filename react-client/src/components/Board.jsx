@@ -18,6 +18,9 @@ import UnitBank from './UnitBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
 import hexbot from '../hexbot/hexbot.js';
 import TimeoutModals from './TimeoutModals.jsx';
+import $ from 'jquery';
+
+let interval;
 
 class Board extends React.Component {
   constructor(props) {
@@ -40,7 +43,6 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-    let interval;
     (async () => {
       let socket = this.props.socket;
       if (this.props.location.state.type) {
@@ -170,6 +172,7 @@ class Board extends React.Component {
         setTimeout(() => this.resetCombatModal(), 5001);
       });
       socket.on('combatLoss', (data) => {
+        let combatMessage;
         this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
           combatMessage = `${data} is victorious!` :
           combatMessage = 'Your armies have been bested.';
@@ -222,6 +225,13 @@ class Board extends React.Component {
         }, 2500);
       })
     })();
+  }
+
+  componentWillUnmount() {
+    this.setState({
+      timer: null
+    });
+    clearInterval(interval);
   }
 
   resetCombatModal() {
@@ -357,7 +367,7 @@ class Board extends React.Component {
   }
 
   nextTurn() { // after move completes,
-    this.props.boardState ? hexbot() : null;
+    this.props.boardState && this.props.hexbot ? hexbot() : null;
     let currentPlayer = this.props.currentPlayer;
     currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1'; // toggle player from player 1 to player 2 or vice versa
     this.props.switchPlayer(currentPlayer);
