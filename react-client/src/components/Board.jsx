@@ -66,7 +66,28 @@ class Board extends React.Component {
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
+
+      // socket.on('loadGameBoard', data => {
+      //   console.log('inside load game board yo', data);
+      //   this.props.drawBoard(data.game); // inits the board from last saved state
+      //   this.props.setGameIndex(data.game.gameIndex); // sets original game index
+      //   this.props.selectHex({}); // initialize selected hex
+      //   this.props.highlightNeighbors([]); // and neighbors
+      //   this.props.setRoom(data.game.room); // sets the room
+
+      //   let playerOneResources = data.game.playerOneResources.gold + data.game.playerOneResources.metal + data.game.playerOneResources.wood;
+      //   let playerTwoResources = data.game.playerTwoResources.gold + data.game.playerTwoResources.metal + data.game.playerTwoResources.wood;
+      //   this.props.updateUnitCounts(playerOneResources, playerOneResources); // retrieves players resource counts
+
+      //   this.props.updateBank(data.game.playerOneUnitBank, data.game.playerTwoUnitBank); // retrieves players units in the bank
+        
+      //   this.props.setUserPlayer(`player${data.game.userPlayer}`); // sets the current user
+      //   this.props.switchPlayer(`player${data.game.currentPlayer}`); // sets the current player's turn / TODO: needs to be correct player
+      //   console.log('this.props inside -- LOAD -- board:', this.props)
+      // })
+
       socket.on('gameCreated', data => {
+        console.log('game created data: ', data)
         this.props.drawBoard(data); // if the server sends an object, it means that the player is player 2
         this.props.setGameIndex(data.gameIndex); // if so, set game index
         this.props.selectHex({}); // initialize selected hex
@@ -80,12 +101,14 @@ class Board extends React.Component {
           gameIndex: data.gameIndex,
           room: data.room
         })
+        console.log('this props inside board created: ', this.props);
         interval = setInterval(() => {
           this.setState({
             timer: this.state.timer += 1
           })
         }, 1000)
       });
+      
       socket.on('move', (move) => { // when socket receives result of move request,
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
         if (move.tie) {
@@ -114,7 +137,7 @@ class Board extends React.Component {
             }, 1000)
             
         })
-        console.log(this.state.timer);
+        // console.log(this.state.timer);
       });
 
       setInterval(async () => {

@@ -483,28 +483,57 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom) => {
   let gameBoard = await db.getGameBoard(oldRoom, gameIndex); // gets hexes from db
   let game = await db.getGame(oldRoom, gameIndex); // in order to get current player from db
   let currentGame = {
+    board: [],
+    gameIndex: gameIndex,
+    playerOneResources: {
+      gold: game[0].p1_gold,
+      metal: game[0].p1_metal,
+      wood: game[0].p1_wood
+    },
+    playerTwoResources: {
+      gold: game[0].p2_gold,
+      metal: game[0].p2_metal,
+      wood: game[0].p2_wood
+    },
+    room: oldRoom,
+    socketId: socketId,
+    newRoom: newRoom,
+    playerOneUnitBank: {
+      swordsmen: game[0].p1_swordsmen_bank,
+      archers: game[0].p1_archers_bank,
+      knights: game[0].p1_knights_bank,
+    },
+    playerTwoUnitBank: {
+      swordsmen: game[0].p2_swordsmen_bank,
+      archers: game[0].p2_archers_bank,
+      knights: game[0].p2_knights_bank,
+    },
     currentPlayer: game[0].current_player, // TODO: need to update this in db to get current player
     userPlayer: 1, // TODO: should be each user (as 'player1' or 'player2') / need to get the user player
-    board: []
   };
   gameBoard.map( hex => {
-    let hexPlayer;
-    hexPlayer = hex.player ? ('player' + hex.player) : null;
+    let hexPlayer = null;
+    // hexPlayer = hex.player ? ('player' + hex.player) : null;
+    hexOwner = hex.hex_owner ? ('player' + hex.hex_owner) : null;
     currentGame.board.push({
       swordsmen: hex.swordsmen,
       archers: hex.archers,
       knights: hex.knights,
       coordinates: [hex.coordinate_0, hex.coordinate_1, hex.coordinate_2],
       index: hex.hex_index,
-      player: hexPlayer
+      player: hexOwner,
+      hasGold: hex.has_gold,
+      hasWood: hex.has_wood,
+      hasMetal: hex.has_metal
     })
   });
-  await io.to(socketId).emit('gameBoard', {
+  await io.to(socketId).emit('loadGameBoard', {
     game: currentGame
   });
 }
 
 const moveUnits = async (data, socket) => {
+  console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nmoveUnits:\n', data);
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
   let updatedOrigin = await data.updatedOrigin; // new origin object as sent by user
   let originIndex = await data.originIndex; // with its index,
@@ -529,22 +558,23 @@ const moveUnits = async (data, socket) => {
   let masterTarCs = [masterTarget[0].coordinate_0, masterTarget[0].coordinate_1, masterTarget[0].coordinate_2]; // coordinates of those masters
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  console.log('\n----------- #1 -----------\n')
   let origCs = await updatedOrigin.coordinates; // as well as coordinates of the ones sent by user
   let tarCs = await updatedTarget.coordinates;
   let currentPlayer = await data.currentPlayer; // player whose turn it is
   let socketId = await data.socketId; // socket to send back response if necessary
 
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, room, gameIndex); // assess legality of move
-
+  console.log('\n----------- #2 -----------\n')
   if (legal) { // if legal move,
     //////////////////////////// IF USING GAME OBJECT ON SERVER ////////////////////////////
     // let collision = await checkForCollision(originIndex, targetIndex, gameIndex, room); // check for collision
     ////////////////////////////////////////////////////////////////////////////////////////
-
+    console.log('\n----------- #3 -----------\n')
     //////////////////////////////////// IF USING DATABASE ////////////////////////////////
     let collision = await checkForCollision(updatedOrigin.index, updatedTarget.index, gameIndex, room); // check for collision
     ////////////////////////////////////////////////////////////////////////////////////////
-
+    console.log('\n----------- #4 -----------\n')
     if (collision) {
       if (collision === 'friendly') { // if collision and collision is friendly,
         // console.log('\n.....friendly collision....\n')
@@ -561,11 +591,11 @@ const moveUnits = async (data, socket) => {
         }
 
         // console.log('\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\nMOVE ON FRIENDLY COLLISION:\n', move, '\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\n')
-
+        
         /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
         await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
         /////////////////////////////////////////////////////////////////////////////////////////////
-
+        
         await io.to(room).emit('move', move); // then send back okay to move units
 
       } else { // if collision & combat time
@@ -638,6 +668,7 @@ const moveUnits = async (data, socket) => {
           await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room);
 
           let newMove = {
+            room: room,
             updatedOrigin: {
               coordinates: [result.updatedOrigin.coordinate_0, result.updatedOrigin.coordinate_1, result.updatedOrigin.coordinate_2],
               index: result.updatedOrigin.hex_index,
@@ -663,20 +694,13 @@ const moveUnits = async (data, socket) => {
           io.to(room).emit('move', newMove);
           return;
         }
-
         if (result.gameOver) {  // // if the game is over & attacker wins, need to change hexes and send back board
           // console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GAME IS OVER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n')
-
           if (result.gameOver === 'player1' && currentPlayer === 'player1' ||
           result.gameOver === 'player2' && currentPlayer === 'player2') {
-
             // console.log('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\nresult.gameOver -> WINNER: ', result.gameOver);
-
             // console.log('\ncurrentPlayer: ', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-
-  
           } else {
-
             if (result.gameOver === 'player1') { // if player1 won
               await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
             } else if (result.gameOver === 'player2') { // if player2 won
@@ -756,6 +780,7 @@ const moveUnits = async (data, socket) => {
           await updateHexes(originIndex, result.updatedOrigin, targetIndex, result.updatedTarget, gameIndex, currentPlayer, room); // if move is to unoccupied hex, execute move
 
           let move = {
+            room: room,
             updatedOrigin: {
               coordinates: [result.updatedOrigin.coordinate_0, result.updatedOrigin.coordinate_1, result.updatedOrigin.coordinate_2],
               index: result.updatedOrigin.hex_index,
@@ -805,19 +830,30 @@ const moveUnits = async (data, socket) => {
       }
 
     } else { // if move is to unoccupied hex, execute move
+      console.log('\n----------- #5 -----------\n')
       await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room);
+      let p1Resources = await db.getResources(room, gameIndex, 'player1'); 
+      let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
       let move = {
+        room: room,
         originIndex: originIndex,
         updatedOrigin: updatedOrigin,
         targetIndex: targetIndex,
         updatedTarget: updatedTarget,
-        playerOneResources: games[gameIndex].playerOneResources,
-        playerTwoResources: games[gameIndex].playerTwoResources
-      };
+        // playerOneResources: games[gameIndex].playerOneResources, // when using games object
+        // playerTwoResources: games[gameIndex].playerTwoResources // when using games object
+        playerOneResources: p1Resources[0].p1_gold + p1Resources[0].p1_metal + p1Resources[0].p1_wood,
+        playerTwoResources: p2Resources[0].p2_gold + p2Resources[0].p2_metal + p2Resources[0].p2_wood
 
+      };
+      console.log('\nmove after #5\n', move)
+      console.log('\n----------- #6 -----------\n')
       /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
       await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
       /////////////////////////////////////////////////////////////////////////////////////////////
+
+      // await db.switchPlayers(gameIndex, currentPlayer);
 
       await io.to(room).emit('move', move);
     }

@@ -66,15 +66,21 @@ class LoadGame extends React.Component {
 
   async retrieveGame(roomId, gameIndex) {
     let socket = await this.props.socket;
+    console.log('\nsocket in load game: ', socket,'\n');
     socket.emit('loadGame', {
       oldRoom: '*' + roomId,
       socketId: socket.id,
       username: this.props.loggedInUser,
       gameIndex: gameIndex
     });
-    socket.on('gameBoard', data => {
-      this.goToGame(data.game, '*' + roomId);
-    })
+
+    this.props.history.push({
+      pathname: `/game/room?${'*' + roomId}`,
+      state: {
+        // game: data.game
+      }
+    });
+  
   }
 
   componentDidMount() {
