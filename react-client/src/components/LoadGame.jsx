@@ -20,7 +20,6 @@ class LoadGame extends React.Component {
     this.handleConfirm = this.handleConfirm.bind(this);
     this.handleCancel = this.handleCancel.bind(this);
     this.show = this.show.bind(this);
-    this.goToGame = this.goToGame.bind(this);
   }
 
   show(index, gameId) {
@@ -55,18 +54,8 @@ class LoadGame extends React.Component {
     })
   }
 
-  goToGame(game, roomId) {
-    this.props.history.push({
-      pathname: `/game/room?${roomId}`,
-      state: {
-        game: game
-      }
-    });
-  }
-
   async retrieveGame(roomId, gameIndex) {
     let socket = await this.props.socket;
-    console.log('\nsocket in load game: ', socket,'\n');
     socket.emit('loadGame', {
       oldRoom: '*' + roomId,
       socketId: socket.id,
@@ -74,13 +63,15 @@ class LoadGame extends React.Component {
       gameIndex: gameIndex
     });
 
-    this.props.history.push({
-      pathname: `/game/room?${'*' + roomId}`,
-      state: {
-        // game: data.game
-      }
-    });
-  
+    socket.on('updateRoom', data => {
+      this.props.history.push({
+        pathname: `/game/room?${data.room}`,
+        state: {
+          // game: data.game
+        }
+      });
+    })
+    this.props.close();
   }
 
   componentDidMount() {
@@ -128,10 +119,17 @@ class LoadGame extends React.Component {
                       <Table.Cell>
                         #{i + 1} (ID: {game.game_id})
                         <br/>
-                        Player 1: {game.player1_username}
-                        <br/>
-                        Player 2: {game.player2_username}
-                        <br/>RoomId: {game.room_id}
+                        {this.props.loggedInUser === game.player1_username
+                          ? <div>
+                              <div><strong>Player 1: {game.player1_username} (You!) </strong></div>
+                              <div>Player 2: {game.player2_username}</div>
+                            </div>
+                          : <div>
+                              <div>Player 1: {game.player1_username}</div>
+                              <div><strong>Player 2: {game.player2_username} (You!)</strong></div>
+                            </div>
+                        }
+                        Room ID: {game.room_id}
                       </Table.Cell>
                       <Table.Cell>
                         Gold: {game.p1_gold}
@@ -195,11 +193,11 @@ class LoadGame extends React.Component {
 }
 
 const mapStateToProps = (state) => {
-  console.log('state', state)
   return {
     socket: state.state.socket,
     loggedInUser: state.state.loggedInUser,
-    room: state.state.room
+    room: state.state.room,
+    userPlayer: state.state.userPlayer
   }
 }
 

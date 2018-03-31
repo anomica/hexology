@@ -313,7 +313,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       room: io.sockets.adapter.rooms[newRoom],
       player1: request.username
      });
-    roomNum++; // increment room count to assign new ro
+    roomNum++; // increment room count to assign new room
   });
 
   socket.on('joinGame', async (data) => {
@@ -380,14 +380,34 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('loadGame', async (data) => {
     let oldRoom = data.oldRoom;
-    let newRoom = data.newRoom;
     let gameIndex = data.gameIndex;
     let socketID = data.socketId;
-    loadSelectedGame(gameIndex, oldRoom, socketID, newRoom);
+    let userPlayer = data.userPlayer;
+    let username = data.username
+
+    let newRoom = `*${roomNum}`;
+    room = newRoom;
+
+    loadSelectedGame(gameIndex, oldRoom, socketID, newRoom, username, userPlayer);
+
+    socket.join(newRoom); // create a new room
+
+    socket.emit('updateRoom', { room: newRoom });
+    // io.sockets.adapter.rooms[newRoom].player1 = d.username;
+
+    // io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
+
+    socket.broadcast.emit('newRoom', { 
+      roomName: room, 
+      room: io.sockets.adapter.rooms[newRoom]
+      // player1: request.username
+     });
+    roomNum++; // increment room count to assign new room
   });
 
-  socket.on('move', data => { // move listener
-    moveUnits(data, socket); // pass move data and socket to function to assess move
+  socket.on('move', async (data) => { // move listener
+    await moveUnits(data, socket); // pass move data and socket to function to assess move
+    await db.switchPlayers(data.gameIndex, data.currentPlayer);
   });
 
   socket.on('buy', data => {
@@ -462,27 +482,42 @@ const assignLoggedInUser = async (username, player, gameIndex, room) => { // nee
 }
 
 const fetchUserGames = async (username, socketId) => {
-  let games = await db.retrieveUserGames(username, 'player1');
-  let gamesAsPlayerTwo = await db.retrieveUserGames(username, 'player2');
-  games = games.concat(gamesAsPlayerTwo);
+  let userGames = await db.retrieveUserGames(username);  
+  let user = await db.getUserId(username);
+
+  userGames.map( async (game, i) => {
+    if (game.player1 === user[0].user_id) { // if user id = player1
+      // let playerTwo = await db.findUserById(userGames[i].player2);
+      userGames[i].player1_username = username;
+      userGames[i].player2_username = `(ID: ${game.player2})`;
+    } else if (game.player2 === user[0].user_id) { // if user id = player2
+      // let playerOne = await db.findUserById(userGames[i].player1);
+      userGames[i].player1_username = `(ID: ${game.player1})`;
+      userGames[i].player2_username = username;
+    }
+  })
+  // console.log(userGames)
   await io.to(socketId).emit('getUserGames', {
-    games: games
+    games: userGames
   })
 }
 
 const updateUserGamesList = async (username, gameId, socketId) => {
-  await db.deleteGames(gameId);
-  let updatedGames = await db.retrieveUserGames(username, 'player1');
-  let gamesAsPlayerTwo = await db.retrieveUserGames(username, 'player2');
-  updatedGames = updatedGames.concat(gamesAsPlayerTwo);
+  await db.deleteGames(gameId); // first delete the game/hexes
+  let updatedGames = await db.retrieveUserGames(username); // then get the updated list of games
   await io.to(socketId).emit('updateUserGamesList', {
     games: updatedGames
   })
 }
 
-const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom) => {
+const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username, userPlayer) => {
+  console.log(`LOAD SELECTED GAME: gameIndex ${gameIndex}, oldRoom (${oldRoom}), socketId (${socketId}), newRoom (${newRoom}), username (${username}), userPlayer (${userPlayer})`);
+
   let gameBoard = await db.getGameBoard(oldRoom, gameIndex); // gets hexes from db
   let game = await db.getGame(oldRoom, gameIndex); // in order to get current player from db
+  await db.updateRoomNum(gameIndex, newRoom);
+  userPlayer = await db.getUserPlayer(gameIndex, username);
+
   let currentGame = {
     board: [],
     gameIndex: gameIndex,
@@ -496,9 +531,8 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom) => {
       metal: game[0].p2_metal,
       wood: game[0].p2_wood
     },
-    room: oldRoom,
+    room: newRoom,
     socketId: socketId,
-    newRoom: newRoom,
     playerOneUnitBank: {
       swordsmen: game[0].p1_swordsmen_bank,
       archers: game[0].p1_archers_bank,
@@ -509,8 +543,10 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom) => {
       archers: game[0].p2_archers_bank,
       knights: game[0].p2_knights_bank,
     },
-    currentPlayer: game[0].current_player, // TODO: need to update this in db to get current player
-    userPlayer: 1, // TODO: should be each user (as 'player1' or 'player2') / need to get the user player
+    playerOneTotalUnits: game[0].p1_total_units,
+    playerTwoTotalUnits: game[0].p2_total_units,
+    currentPlayer: 'player' + game[0].current_player,
+    userPlayer: userPlayer, // TODO: should be whoever the user is logged in as (as 'player1' or 'player2')
   };
   gameBoard.map( hex => {
     let hexPlayer = null;
@@ -528,7 +564,8 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom) => {
       hasMetal: hex.has_metal
     })
   });
-  await io.to(socketId).emit('loadGameBoard', {
+
+  await io.to(newRoom).emit('loadGameBoard', {
     game: currentGame
   });
 }
@@ -832,7 +869,7 @@ const moveUnits = async (data, socket) => {
 
     } else { // if move is to unoccupied hex, execute move
       console.log('\n----------- #5 -----------\n')
-      await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room);
+      // await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room);
       let p1Resources = await db.getResources(room, gameIndex, 'player1'); 
       let p2Resources = await db.getResources(room, gameIndex, 'player2');
 
@@ -844,8 +881,18 @@ const moveUnits = async (data, socket) => {
         updatedTarget: updatedTarget,
         // playerOneResources: games[gameIndex].playerOneResources, // when using games object
         // playerTwoResources: games[gameIndex].playerTwoResources // when using games object
-        playerOneResources: p1Resources[0].p1_gold + p1Resources[0].p1_metal + p1Resources[0].p1_wood,
-        playerTwoResources: p2Resources[0].p2_gold + p2Resources[0].p2_metal + p2Resources[0].p2_wood
+        playerOneResources: {
+          gold: p1Resources[0].p1_gold,
+          metal: p1Resources[0].p1_metal,
+          wood: p1Resources[0].p1_wood
+        },
+        playerTwoResources: {
+          gold: p2Resources[0].p2_gold,
+          metal: p2Resources[0].p2_metal,
+          wood: p2Resources[0].p2_wood
+        }
+        // playerOneResources: (p1Resources[0].p1_gold + p1Resources[0].p1_metal + p1Resources[0].p1_wood),
+        // playerTwoResources: (p2Resources[0].p2_gold + p2Resources[0].p2_metal + p2Resources[0].p2_wood)
 
       };
       console.log('\nmove after #5\n', move)
@@ -1797,10 +1844,8 @@ const deleteOldGames = async () => {
 setInterval(deleteOldGames, 86400000);
 
 const buyUnits = async (type, player, gameIndex, socketId, room) => {
-  // ********* need to add stuff in here for updating unitBanks for each player *********
-
   ///////////////////////////////////// IF USING DATABASE ///////////////////////////////////////
-  // console.log(`\n-----------------------------> BUY UNITS: \ntype (${type}), player (${player}), gameIndex (${gameIndex}), socketId (${socketId}), room (${room})\n`);
+  console.log(`\n-----------------------------> BUY UNITS: \ntype (${type}), player (${player}), gameIndex (${gameIndex}), socketId (${socketId}), room (${room})\n`);
   let game = await db.getGameBoard(room, gameIndex);
 
   let currentPlayerResources = await db.getResources(room, gameIndex, player); // returns an object
@@ -1846,8 +1891,8 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
-        games[gameIndex].playerOneResources.gold -= 10;
-        games[gameIndex].playerOneResources.metal -= 10;
+        // games[gameIndex].playerOneResources.gold -= 10; // uncomment if using game object
+        // games[gameIndex].playerOneResources.metal -= 10; // uncomment if using game object
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {
@@ -1906,8 +1951,8 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
-        games[gameIndex].playerTwoResources.gold -= 10;
-        games[gameIndex].playerTwoResources.metal -= 10;
+        // games[gameIndex].playerTwoResources.gold -= 10; // uncomment if using game object
+        // games[gameIndex].playerTwoResources.metal -= 10; // uncomment if using game object
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {
@@ -1972,8 +2017,8 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
-        games[gameIndex].playerOneResources.gold -= 10;
-        games[gameIndex].playerOneResources.wood -= 20;
+        // games[gameIndex].playerOneResources.gold -= 10; // uncomment if using game object
+        // games[gameIndex].playerOneResources.wood -= 20; // uncomment if using game object
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {
@@ -2037,8 +2082,8 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
-        games[gameIndex].playerTwoResources.gold -= 10;
-        games[gameIndex].playerTwoResources.wood -= 20;
+        // games[gameIndex].playerTwoResources.gold -= 10; // uncomment if using game object
+        // games[gameIndex].playerTwoResources.wood -= 20; // uncomment if using game object
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {
@@ -2106,9 +2151,9 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
-        games[gameIndex].playerOneResources.gold -= 20;
-        games[gameIndex].playerOneResources.wood -= 20;
-        games[gameIndex].playerOneResources.metal -= 20;
+        // games[gameIndex].playerOneResources.gold -= 20; // uncomment if using game object
+        // games[gameIndex].playerOneResources.wood -= 20; // uncomment if using game object
+        // games[gameIndex].playerOneResources.metal -= 20; // uncomment if using game object
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {
@@ -2166,9 +2211,9 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
           }
         });
 
-        games[gameIndex].playerTwoResources.gold -= 20;
-        games[gameIndex].playerTwoResources.wood -= 20;
-        games[gameIndex].playerTwoResources.metal -= 20;
+        // games[gameIndex].playerTwoResources.gold -= 20; // uncomment if using game object
+        // games[gameIndex].playerTwoResources.wood -= 20; // uncomment if using game object
+        // games[gameIndex].playerTwoResources.metal -= 20; // uncomment if using game object
 
         await io.to(room).emit('updateResources', {
           playerOneResources: {

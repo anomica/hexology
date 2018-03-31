@@ -146,6 +146,7 @@ class SidebarLeft extends React.Component {
                 onClick={() => {
                   this.setState({ loadGameModal: !this.state.loadGameModal });
                 }}
+                disabled={this.state.disabled}
               >
                 <Icon name='gamepad' />
                 Load Game
@@ -167,7 +168,7 @@ class SidebarLeft extends React.Component {
                 >
                 <Signup />
                 <Icon name='user plus' />
-                Signup
+                Sign Up
               </Menu.Item> :
               <Menu.Item
                 name='welcome'

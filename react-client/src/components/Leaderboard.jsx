@@ -56,7 +56,7 @@ class Leaderboard extends React.Component {
         </Table.Header>
 
         <Table.Body>
-          {this.state.users.slice(0, 5).map( (user, key) => (
+          {this.state.users.map( (user, key) => (
             <Table.Row key={key}>
               <Table.Cell style={{textAlign: 'center'}}>
                 {key + 1}

@@ -53,7 +53,7 @@ class Board extends React.Component {
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
-          socket = await socketIOClient('http://127.0.0.1:3000');
+          socket = await socketIOClient('http://127.0.0.1:8080');
           this.props.setSocket(socket);
         }
         socket.emit('joinGame', {
@@ -67,27 +67,26 @@ class Board extends React.Component {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
 
-      // socket.on('loadGameBoard', data => {
-      //   console.log('inside load game board yo', data);
-      //   this.props.drawBoard(data.game); // inits the board from last saved state
-      //   this.props.setGameIndex(data.game.gameIndex); // sets original game index
-      //   this.props.selectHex({}); // initialize selected hex
-      //   this.props.highlightNeighbors([]); // and neighbors
-      //   this.props.setRoom(data.game.room); // sets the room
+      socket.on('loadGameBoard', data => {
+        console.log('\n---------------------------------------------\nLOAD BOARD DATA:\n', data);
 
-      //   let playerOneResources = data.game.playerOneResources.gold + data.game.playerOneResources.metal + data.game.playerOneResources.wood;
-      //   let playerTwoResources = data.game.playerTwoResources.gold + data.game.playerTwoResources.metal + data.game.playerTwoResources.wood;
-      //   this.props.updateUnitCounts(playerOneResources, playerOneResources); // retrieves players resource counts
+        this.props.drawBoard(data.game); // inits the board from last saved state
+        this.props.setGameIndex(data.game.gameIndex); // sets original game index
+        this.props.selectHex({}); // initialize selected hex
+        this.props.highlightNeighbors([]); // and neighbors
+        this.props.setRoom(data.game.room); // sets the room
 
-      //   this.props.updateBank(data.game.playerOneUnitBank, data.game.playerTwoUnitBank); // retrieves players units in the bank
+        this.props.updateUnitCounts(data.game.playerOneTotalUnits, data.game.playerTwoTotalUnits); // retrieves players resource counts
+        this.props.updateBank(data.game.playerOneUnitBank, data.game.playerTwoUnitBank); // retrieves players units in the bank
         
-      //   this.props.setUserPlayer(`player${data.game.userPlayer}`); // sets the current user
-      //   this.props.switchPlayer(`player${data.game.currentPlayer}`); // sets the current player's turn / TODO: needs to be correct player
-      //   console.log('this.props inside -- LOAD -- board:', this.props)
-      // })
+        this.props.setUserPlayer(`${data.game.userPlayer}`); // sets the current user
+        this.props.switchPlayer(`${data.game.currentPlayer}`); // sets the current player's turn
+
+        console.log('\n+++++++++++++++++++++++++++++++++++++++++\nLOAD BOARD --> THIS.PROPS:\n', this.props);
+      });
 
       socket.on('gameCreated', data => {
-        console.log('game created data: ', data)
+        console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nGAME CREATED DATA:\n', data)
         this.props.drawBoard(data); // if the server sends an object, it means that the player is player 2
         this.props.setGameIndex(data.gameIndex); // if so, set game index
         this.props.selectHex({}); // initialize selected hex
@@ -100,8 +99,10 @@ class Board extends React.Component {
           player: this.props.userPlayer,
           gameIndex: data.gameIndex,
           room: data.room
-        })
-        console.log('this props inside board created: ', this.props);
+        });
+
+        console.log('#################################################\nGAME CREATED --> THIS.PROPS:\n', this.props);
+
         interval = setInterval(() => {
           this.setState({
             timer: this.state.timer += 1
@@ -110,6 +111,7 @@ class Board extends React.Component {
       });
       
       socket.on('move', (move) => { // when socket receives result of move request,
+        console.log('MOVE INSIDE SOCKET: ', move)
         this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
         if (move.tie) {
           this.setState({
