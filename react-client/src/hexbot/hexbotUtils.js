@@ -3,6 +3,7 @@ export const evaluateCombat = (botHex, playerHex, botUnits, playerUnits) => {
   let pSwordsmen = playerHex.swordsmen, pArchers = playerHex.archers, pKnights = playerHex.knights;
   let bArmySize = bSwordsmen + bArchers + bKnights, pArmySize = pSwordsmen + pArchers + pKnights;
 
+  console.log('yoooo', botUnits, playerUnits);
   bKnights && pArchers ? bKnights -= pArchers : null; // first, archers pick off knights from afar
   pKnights && bArchers ? pKnights -= bArchers : null;
 
@@ -91,6 +92,7 @@ export const evaluateCombat = (botHex, playerHex, botUnits, playerUnits) => {
 }
 
 export const checkForWin = (botUnits, playerUnits) => {
+  console.log('aaaaaaaaaaaaa', botUnits, playerUnits);
   if (botUnits <= 0 && playerUnits <= 0) {
     return 'tie';
   }

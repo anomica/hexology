@@ -32,7 +32,7 @@ const hexbot = (state = store.getState().state) => {
   let playerResources = state.playerOneResources, botResources = state.playerTwoResources;
   let playerUnitBank = state.playerOneUnitBank, botUnitBank = state.playerTwoUnitBank;
   let possibleMoves = {}, possibleNextTurnMoves = {}, moveValues = {};
-  let bestMove = [0, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move to, second is heuristic of move
+  let bestMove = [null, null, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move to, second is hex to move to, third is heuristic of move
 
 
   let turnCounter = 2;
@@ -108,7 +108,7 @@ const hexbot = (state = store.getState().state) => {
   if (Object.keys(adjacentEnemies).length !== 0) { // check all adjacent enemies
     for (let botHex in adjacentEnemies) {
       adjacentEnemies[botHex].threats.forEach(threat => {
-        let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
+        let outcome = evaluateCombat(boardState[botHex], boardState[threat], botTotalUnits, playerTotalUnits);
         adjacentEnemies[botHex][threat] = outcome; // collect result of that combat in adjacent enemies object
       })
       delete adjacentEnemies[botHex].threats;
@@ -119,7 +119,7 @@ const hexbot = (state = store.getState().state) => {
     for (let botHex in secondaryEnemies) {
       for (let neighbor in secondaryEnemies[botHex]) {
         secondaryEnemies[botHex][neighbor].threats.forEach(threat => {
-          let outcome = evaluateCombat(boardState[botHex], boardState[threat]);
+          let outcome = evaluateCombat(boardState[botHex], boardState[threat], botTotalUnits, playerTotalUnits);
           secondaryEnemies[botHex][neighbor][threat] = outcome;
         })
         delete secondaryEnemies[botHex][neighbor].threats;
@@ -131,31 +131,38 @@ const hexbot = (state = store.getState().state) => {
     for (let botHex in adjacentEnemies) {
       for (let combatIndex in adjacentEnemies[botHex]) { // simulate each combat
         if (adjacentEnemies[botHex][combatIndex].tie || adjacentEnemies[botHex][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
-          let newOutcome = evaluateCombatAfterPurchase(adjacentEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState); // determine if a purchase the bot can make would change outcome
+          let newOutcome = evaluateCombatAfterPurchase(adjacentEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState, botTotalUnits, playerTotalUnits); // determine if a purchase the bot can make would change outcome
           if (newOutcome.path && !newOutcome.tie) { // if a purchase could lead to a win,
             possibleMoves[botHex][combatIndex] = {
               ...possibleMoves[botHex][combatIndex],
               purchase: newOutcome.path,
               cost: newOutcome.cost,
-              winCombat: true
+              winCombat: true,
+              armyDiff: newOutcome.armyDiff,
+              gameOver: newOutcome.gameOver
             }
           } else if (newOutcome.tie) { // if a purchase could lead to a tie,
             possibleMoves[botHex][combatIndex] = {
               ...possibleMoves[botHex][combatIndex],
               purchase: newOutcome.path,
               cost: newOutcome.cost,
-              tie: true
+              tie: true,
+              armyDiff: newOutcome.armyDiff,
+              gameOver: newOutcome.gameOver
             }
           } else { // if a purchase cannot lead to a win,
             possibleMoves[botHex][combatIndex] = {
               ...possibleMoves[botHex][combatIndex],
-              loseCombat: true
+              loseCombat: true,
+              armyDiff: newOutcome.armyDiff,
+              gameOver: newOutcome.gameOver
             }
           }
         } else { // if an attack will win outright
           possibleMoves[botHex][combatIndex] = {
             ...possibleMoves[botHex][combatIndex],
-            winCombat: true
+            winCombat: true,
+            gameOver: newOutcome.gameOver
           }
         }
       }
@@ -167,13 +174,15 @@ const hexbot = (state = store.getState().state) => {
       for (let neighbor in secondaryEnemies[botHex]) {
         for (let combatIndex in secondaryEnemies[botHex][neighbor]) { // simulate each combat
           if (secondaryEnemies[botHex][neighbor][combatIndex].tie || secondaryEnemies[botHex][neighbor][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
-            let newOutcome = evaluateCombatAfterPurchase(secondaryEnemies[botHex][neighbor][combatIndex], combatIndex, botResources, botHex, boardState); // determine if a purchase the bot can make would change outcome
+            let newOutcome = evaluateCombatAfterPurchase(secondaryEnemies[botHex][neighbor][combatIndex], combatIndex, botResources, botHex, boardState, botTotalUnits, playerTotalUnits); // determine if a purchase the bot can make would change outcome
             if (newOutcome.path && !newOutcome.tie) { // if a purchase could lead to a win,
               possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
                 purchase: newOutcome.path,
                 cost: newOutcome.cost,
                 winCombat: true,
-                nextTurn: true
+                nextTurn: true,
+                armyDiff: newOutcome.armyDiff,
+                gameOver: newOutcome.gameOver
               }
             } else if (newOutcome.tie) { // if a purchase could lead to a tie,
               possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
@@ -181,14 +190,18 @@ const hexbot = (state = store.getState().state) => {
                   purchase: newOutcome.path,
                   cost: newOutcome.cost,
                   tie: true,
-                  nextTurn: true
+                  nextTurn: true,
+                  armyDiff: newOutcome.armyDiff,
+                  gameOver: newOutcome.gameOver
                 }
               }
             } else { // if a purchase cannot lead to a win,
               possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
                 [combatIndex]: {
                   loseCombat: true,
-                  nextTurn: true
+                  nextTurn: true,
+                  armyDiff: newOutcome.armyDiff,
+                  gameOver: newOutcome.gameOver
                 }
               }
             }
@@ -196,7 +209,9 @@ const hexbot = (state = store.getState().state) => {
             possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
               [combatIndex]: {
                 winCombat: true,
-                nextTurn: true
+                nextTurn: true,
+                armyDiff: newOutcome.armyDiff,
+                gameOver: newOutcome.gameOver
               }
             }
           }
@@ -205,22 +220,33 @@ const hexbot = (state = store.getState().state) => {
     }
   }
 
-  // for (let botHex in possibleMoves) {
-  //   for (let move in possibleMoves[botHex]) {
-  //     let value = heuristic(move);
-  //     if (!moveValues.hasOwnProperty(botHex)) {
-  //       moveValues[botHex] = {};
-  //     }
-  //     moveValues[botHex][move] = value;
-  //   }
-  // }
-  //
-  // function heuristic(target) {
-  //   let value = 0;
-  //   target.combatWin
-  // }
+  for (let botHex in possibleMoves) {
+    for (let move in possibleMoves[botHex]) {
+      let value = heuristic(possibleMoves[botHex][move]);
+      if (!moveValues.hasOwnProperty(botHex)) {
+        moveValues[botHex] = {};
+      }
+      moveValues[botHex][move] = value;
+    }
+  }
 
-  function evaluateCombatAfterPurchase(combat, combatIndex, resources, botHex, boardState) {
+  function heuristic(target) {
+    let value = 0;
+
+    if (target.gameOver === 'win') return Number.POSITIVE_INFINITY;
+    if (target.gameOver === 'lose') return Number.NEGATIVE_INFINITY;
+    if (target.gameOver === 'tie') return 0;
+
+    if (target.winCombat) value += 75 - target.cost + (target.ArmyDiff ? target.armyDiff : null);
+    if (target.loseCombat) value -= 75 - (target.ArmyDiff ? target.armyDiff : null);
+    if (target.gold) value += 15;
+    if (target.wood) value += 15;
+    if (target.metal) value += 15;
+
+    return value;
+  }
+
+  function evaluateCombatAfterPurchase(combat, combatIndex, resources, botHex, boardState, botTotalUnits, playerTotalUnits) {
     let tempBoardState = _.cloneDeep(boardState);
     botHex = tempBoardState[botHex];
     let combatHex = tempBoardState[combatIndex];
@@ -229,73 +255,97 @@ const hexbot = (state = store.getState().state) => {
     let cheapest = Number.POSITIVE_INFINITY;
     let path = false;
     let tie = false;
+    let armyDiff = 0, loseCombat, winCombat, gameOver;
 
-    victoryPossibleThisTurn(botHex, combatHex, resources.gold, resources.wood, resources.metal, [], 0);
-    !path && victoryPossibleThisTurn(botHex, combatHex, resources.gold, resources.wood, resources.metal, [], 0, true);
+    victoryPossibleThisTurn(botHex, combatHex, resources.gold, resources.wood, resources.metal, [], 0, false, botTotalUnits, playerTotalUnits);
+    !path && victoryPossibleThisTurn(botHex, combatHex, resources.gold, resources.wood, resources.metal, [], 0, true, botTotalUnits, playerTotalUnits);
 
-    function victoryPossibleThisTurn(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag) {
+    function victoryPossibleThisTurn(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag, botTotalUnits, playerTotalUnits) {
       if (gold >= 10 && metal >= 10) {
-        buySwordsmen(botHex, combatHex, gold - 10, wood, metal - 10, purchases.concat('swordsmen'), resourceCost + 20, tieFlag)
+        buySwordsmen(botHex, combatHex, gold - 10, wood, metal - 10, purchases.concat('swordsmen'), resourceCost + 20, tieFlag, botTotalUnits + 10, playerTotalUnits)
       }
       if (gold >= 10 && wood >= 20) {
-        buyArchers(botHex, combatHex, gold - 10, wood - 20, metal, purchases.concat('archers'), resourceCost + 30, tieFlag)
+        buyArchers(botHex, combatHex, gold - 10, wood - 20, metal, purchases.concat('archers'), resourceCost + 30, tieFlag, botTotalUnits + 10, playerTotalUnits)
       }
       if (gold >= 20 && wood >= 20 && metal >= 20) {
-        buyKnights(botHex, combatHex, gold - 20, wood - 20, metal - 20, purchases.concat('knights'), resourceCost + 60, tieFlag)
+        buyKnights(botHex, combatHex, gold - 20, wood - 20, metal - 20, purchases.concat('knights'), resourceCost + 60, tieFlag, botTotalUnits + 10, playerTotalUnits)
       }
     }
 
-    function buySwordsmen(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag) {
+    function buySwordsmen(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag, botTotalUnits, playerTotalUnits) {
       let botHexCopy = _.cloneDeep(botHex);
       botHexCopy.swordsmen += 10;
 
-      let outcome = evaluateCombat(botHexCopy, combatHex);
+      let outcome = evaluateCombat(botHexCopy, combatHex, botTotalUnits, playerTotalUnits);
       if (tieFlag ? outcome.tie : outcome.armyDiff > 0 && !outcome.tie) {
         if (resourceCost < cheapest) {
           cheapest = resourceCost;
           path = purchases;
           tieFlag ? tie = true : null;
+          armyDiff = outcome.armyDiff;
+          outcome.winCombat ? winCombat = true : null;
+          outcome.loseCombat ? loseCombat = true : null;
+          outcome.gameOver ? gameOver = outcome.gameOver : null;
         }
       } else {
-        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag);
+        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag, botTotalUnits, playerTotalUnits);
       }
     }
 
-    function buyArchers(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag) {
+    function buyArchers(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag, botTotalUnits, playerTotalUnits) {
       let botHexCopy = _.cloneDeep(botHex);
       botHexCopy.archers += 10;
 
-      let outcome = evaluateCombat(botHexCopy, combatHex);
+      let outcome = evaluateCombat(botHexCopy, combatHex, botTotalUnits, playerTotalUnits);
       if (tieFlag ? outcome.tie : outcome.armyDiff > 0 && !outcome.tie) {
         if (resourceCost < cheapest) {
           cheapest = resourceCost;
           path = purchases;
           tieFlag ? tie = true : null;
+          outcome.winCombat ? winCombat = true : null;
+          outcome.loseCombat ? loseCombat = true : null;
+          outcome.gameOver ? gameOver = outcome.gameOver : null;
         }
       } else {
-        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag);
+        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag, botTotalUnits, playerTotalUnits);
       }
     }
 
-    function buyKnights(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag) {
+    function buyKnights(botHex, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag, botTotalUnits, playerTotalUnits) {
       let botHexCopy = _.cloneDeep(botHex);
       botHexCopy.knights += 10;
 
-      let outcome = evaluateCombat(botHexCopy, combatHex);
+      let outcome = evaluateCombat(botHexCopy, combatHex, botTotalUnits, playerTotalUnits);
       if (tieFlag ? outcome.tie : outcome.armyDiff > 0 && !outcome.tie) {
         if (resourceCost < cheapest) {
           cheapest = resourceCost;
           path = purchases;
           tieFlag ? tie = true : null;
+          outcome.winCombat ? winCombat = true : null;
+          outcome.loseCombat ? loseCombat = true : null;
+          outcome.gameOver ? gameOver = outcome.gameOver : null;
         }
       } else {
-        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag);
+        victoryPossibleThisTurn(botHexCopy, combatHex, gold, wood, metal, purchases, resourceCost, tieFlag, botTotalUnits, playerTotalUnits);
       }
     }
-    return { path: path, tie: tie, cost: cheapest }
+
+    if (cheapest <= Number.POSITIVE_INFINITY) {
+      return {
+        path: path,
+        tie: tie,
+        cost: cheapest,
+        armyDiff: armyDiff,
+        winCombat: winCombat,
+        loseCombat: loseCombat,
+        gameOver: gameOver
+      }
+    } else {
+      return false;
+    }
   }
 
-  console.log(possibleMoves);
+  console.log(moveValues);
 
   let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
 }
