@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Modal, Input, Card, Icon, Button, Transition, Header, Popup, Image, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
+import { List, Modal, Input, Card, Icon, Button, Transition, Header, Popup, Image, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
 import { updateBank, deployUnits } from '../../src/actions/actions.js';
 
 class UnitBank extends React.Component {
@@ -64,7 +64,35 @@ class UnitBank extends React.Component {
     if (this.props.userPlayer === this.props.currentPlayer) {
       return (
         <div>
-          <Card>
+          {this.props.room.length === 2 ? 
+            <List>
+              <List.Header>{this.props.userPlayer === 'player1' ? `Player 2's Bank:` : `Player 1's Bank':`}</List.Header>
+              <List.Item>
+                <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
+                <List.Content>
+                  <List.Header>
+                    {this.props.userPlayer === 'player1' ? this.props.playerTwoUnitBank.swordsmen : this.props.playerOneUnitBank.swordsmen}
+                  </List.Header>
+                </List.Content>
+              </List.Item>
+              <List.Item>
+                <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
+                <List.Content>
+                  <List.Header>
+                    {this.props.userPlayer === 'player1' ? this.props.playerTwoUnitBank.archers : this.props.playerOneUnitBank.archers}
+                  </List.Header>
+                </List.Content>
+              </List.Item>
+              <List.Item>
+                <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
+                <List.Content>
+                  <List.Header>
+                    {this.props.userPlayer === 'player1' ? this.props.playerTwoUnitBank.knights : this.props.playerOneUnitBank.knights}
+                  </List.Header>
+                </List.Content>
+              </List.Item>
+            </List> : <div></div>}
+          {/* <Card>
             <Card.Header>Your Unit Reserve</Card.Header>
             <Card.Content>
               <Label color='blue' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Swordsmen')}>
@@ -99,7 +127,7 @@ class UnitBank extends React.Component {
               : ' ' + this.props.playerTwoUnitBank.knights}
             </Card.Description>
             </Card.Content>
-          </Card>
+          </Card> */}
           <Modal open={this.state.open} size={'mini'}>
             <Modal.Header>
               Choose Quanity {' ' + this.state.unitBeingDeployed}

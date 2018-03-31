@@ -379,11 +379,13 @@ class Board extends React.Component {
       <div>
         <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
         <Grid>
+   
+          <Grid.Column width={2}>
+            <SidebarLeft />
+          </Grid.Column>     
+    
           <Grid.Row>
-            <Grid.Column width={2}>
-              <SidebarLeft />
-            </Grid.Column>
-            <Grid.Column width={16}>
+            <Grid.Column width={16} style={{float: 'left'}}>
               <TopBar />
             </Grid.Column>
           </Grid.Row>
