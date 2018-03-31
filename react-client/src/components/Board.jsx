@@ -18,7 +18,6 @@ import UnitBank from './UnitBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
 import hexbot from '../hexbot/hexbot.js';
 import TimeoutModals from './TimeoutModals.jsx';
-import $ from 'jquery';
 
 let interval;
 
@@ -367,7 +366,6 @@ class Board extends React.Component {
   }
 
   nextTurn() { // after move completes,
-    this.props.boardState && this.props.hexbot ? hexbot() : null;
     let currentPlayer = this.props.currentPlayer;
     currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1'; // toggle player from player 1 to player 2 or vice versa
     this.props.switchPlayer(currentPlayer);
@@ -382,6 +380,9 @@ class Board extends React.Component {
         }
       }
     })
+    if (this.props.hexbot && this.props.currentPlayer === 'player2') {
+      hexbot();
+    }
   }
 
   render() {

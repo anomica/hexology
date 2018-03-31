@@ -54,11 +54,18 @@ class SidebarLeft extends React.Component {
     (async () => {
       let username = await this.props.loggedInUser;
       if (username) {
-        this.state.hexbot && this.props.setHexbot(true);
-        this.props.socket.emit('newGame', { 
-          gameType: this.state.gameType,
-          username: this.props.loggedInUser
-         });
+        if (this.state.hexbot) {
+          this.props.setHexbot(true);
+          this.props.socket.emit('botGame', {
+            username: this.props.setLoggedInUser || 'anonymous',
+            type: 'private'
+          })
+        } else {
+          this.props.socket.emit('newGame', {
+            gameType: this.state.gameType,
+            username: this.props.loggedInUser
+          });
+        }
         this.props.socket.on('newGame', data => {
           this.props.setRoom(data.room);
           this.props.history.push({
@@ -92,7 +99,7 @@ class SidebarLeft extends React.Component {
   handleChange(e, { name, value }) {
     this.setState({ [name]: value });
   }
-  
+
   showLoadGames() {
     if (this.state.loadGameModal) {
       return (

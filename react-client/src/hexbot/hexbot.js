@@ -1,5 +1,6 @@
 import { store } from '../store/index.js';
 import { evaluateCombat } from './hexbotUtils.js';
+import { botMove, botPurchase } from './hexbotActions.js';
 import _ from 'lodash';
 
 const boardRelationships = {
@@ -32,8 +33,9 @@ const hexbot = (state = store.getState().state) => {
   let playerResources = state.playerOneResources, botResources = state.playerTwoResources;
   let playerUnitBank = state.playerOneUnitBank, botUnitBank = state.playerTwoUnitBank;
   let possibleMoves = {}, possibleNextTurnMoves = {}, moveValues = {};
-  let bestMove = [null, null, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move to, second is hex to move to, third is heuristic of move
-
+  let bestMove = [null, null, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move from, second is hex to move to, third is heuristic of move
+  let intermediateMove = [null, null, Number.NEGATIVE_INFINITY]; // also need to track intermediate move to decide on purchase
+  let purchase = [];
 
   let turnCounter = 2;
   let botHexes = [], playerHexes = [], adjacentEnemies = {}, secondaryEnemies = {}, adjacentResources = {}, secondaryResources = {}; // collect all adjacent and secondary adjacent threats and resources
@@ -162,7 +164,7 @@ const hexbot = (state = store.getState().state) => {
           possibleMoves[botHex][combatIndex] = {
             ...possibleMoves[botHex][combatIndex],
             winCombat: true,
-            gameOver: newOutcome.gameOver
+            gameOver: adjacentEnemies[botHex][combatIndex].gameOver
           }
         }
       }
@@ -225,39 +227,64 @@ const hexbot = (state = store.getState().state) => {
   function evaluateMoves() {
     for (let botHex in possibleMoves) {
       for (let move in possibleMoves[botHex]) {
-        let value = heuristic(possibleMoves[botHex][move]);
+        let value = heuristic(botHex, possibleMoves[botHex][move], move, true);
         if (!moveValues.hasOwnProperty(botHex)) {
           moveValues[botHex] = {};
         }
         moveValues[botHex][move] = value;
       }
     }
-    evaluateSecondaryMoves();
   }
 
-  function evaluateSecondaryMoves() {
-    for (let botHex in possibleNextTurnMoves) {
-      for (let thisTurnMove in possibleNextTurnMoves[botHex]) {
-        for (let move in possibleNextTurnMoves[botHex][thisTurnMove]) {
-
-        }
-      }
-    }
-  }
-
-  function heuristic(target) {
+  function heuristic(botHex, target, targetId, flag) {
     let value = 0;
 
-    if (target.gameOver === 'win') return Number.POSITIVE_INFINITY;
-    if (target.gameOver === 'lose') return Number.NEGATIVE_INFINITY;
-    if (target.gameOver === 'tie') return 0;
+    if (target.gameOver === 'win') {
+      if (flag) {
+        return Number.POSITIVE_INFINITY;
+      } else {
+        value += 100;
+      }
+    }
+    if (target.gameOver === 'lose') {
+      if (flag) {
+        return Number.NEGATIVE_INFINITY;
+      } else {
+        value -= 100;
+      }
+    }
+    if (target.gameOver === 'tie') {
+      if (flag) {
+        return 0;
+      } else {
+        value -= 30;
+      }
+    }
 
     if (target.winCombat) value += 75 - target.cost + (target.ArmyDiff ? target.armyDiff : null);
     if (target.loseCombat) value -= 75 - (target.ArmyDiff ? target.armyDiff : null);
     if (target.gold) value += 15;
     if (target.wood) value += 15;
     if (target.metal) value += 15;
+    if (target.purchase && !purchase) {
+      purchase = target.purchase;
+    }
 
+    if (flag) value += evaluateSecondaryMoves(botHex, targetId);
+
+    return value;
+  }
+
+  function evaluateSecondaryMoves(botHex, targetId) {
+    let value = 0;
+    let target = possibleNextTurnMoves[botHex][targetId];
+    for (let nextMove in target) {
+      let intermediateValue = heuristic(null, target[nextMove], null, null);
+      value += intermediateValue;
+      if (intermediateValue > intermediateMove[2]) {
+        intermediateMove = [targetId, nextMove, intermediateValue];
+      }
+    }
     return value;
   }
 
@@ -360,7 +387,80 @@ const hexbot = (state = store.getState().state) => {
     }
   }
 
-  console.log(moveValues);
+  for (let hex in moveValues) {
+    for (let move in moveValues[hex]) {
+      if (moveValues[hex][move] > bestMove[2]) {
+        bestMove = [hex, move, moveValues[hex][move]];
+      }
+    }
+  }
+
+  let origin = boardState[bestMove[0]];
+  let target = boardState[bestMove[1]];
+
+  let updatedOrigin = {
+    ...origin,
+    swordsmen: 0,
+    archers: 0,
+    knights: 0,
+    player: null
+  }
+
+  let updatedTarget = {
+    ...target,
+    swordsmen: origin.swordsmen,
+    archers: origin.archers,
+    knights: origin.knights,
+    player: 'player2'
+  }
+
+  console.log(possibleNextTurnMoves, bestMove, intermediateMove[1])
+  if (possibleMoves[bestMove[0]][bestMove[1]].purchase) {
+    purchase = possibleMoves[bestMove[0]][bestMove[1]].purchase;
+    botEnactPurchase(purchase);
+  } else if (possibleNextTurnMoves[bestMove[0]][bestMove[1]][intermediateMove[1]].purchase) {
+    purchase = possibleNextTurnMoves[bestMove[0]][bestMove[1]][intermediateMove[1]].purchase;
+    botEnactPurchase(purchase);
+  } else if (purchase) {
+    botEnactPurchase(purchase);
+  }
+
+  function botEnactPurchase(purchase) {
+    purchase.forEach(unit => {
+      if (unit === 'swordsmen') {
+        botResources.gold -= 10;
+        botResources.metal -= 10;
+        updatedTarget.swordsmen += 10;
+      } else if (unit === 'archers') {
+        botResources.gold -= 10;
+        botResources.wood -= 20;
+        updatedTarget.archers += 10;
+      } else if (unit === 'knights') {
+        botResources.gold -= 20;
+        botResources.wood -= 20;
+        botResources.metal -= 20;
+        updatedTarget.knights += 10;
+      }
+      botTotalUnits += 10;
+    })
+    store.dispatch(botPurchase(botResources));
+  }
+
+  socket.emit('botMove', {
+    updatedOrigin: updatedOrigin,
+    originIndex: bestMove[0],
+    updatedTarget: updatedTarget,
+    targetIndex: bestMove[1],
+    gameIndex: gameIndex,
+    room: room,
+    currentPlayer: 'player2',
+    socketId: socket.id,
+    resources: purchase.length ? botResources : null,
+    purchase: purchase,
+    botTotalUnits: botTotalUnits
+  });
+
+  store.dispatch(botMove(updatedOrigin, bestMove[0], updatedTarget, bestMove[1]));
 
   let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
 }
