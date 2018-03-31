@@ -309,7 +309,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.sockets.adapter.rooms[newRoom].player1 = request.username;
     io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
     gameType === 'public' && socket.broadcast.emit('newRoom', { 
-      roomName: newRoom, 
+      roomName: room, 
       room: io.sockets.adapter.rooms[newRoom],
       player1: request.username
      });
@@ -323,7 +323,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     room = data.room;
     io.sockets.adapter.rooms[room].player2 = data.username;
     socket.broadcast.emit('updateRoom', {
-      room: data.room,
+      roomName: room,
+      room: io.sockets.adapter.rooms[room]
     })
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
@@ -2277,11 +2278,11 @@ app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../react-client/dist', 'index.html'));
 });
 
-// io.listen(process.env.PORT || 3000);
+// io.listen(process.env.PORT || 8080);
 const PORT = 8080;
 const HOST = '0.0.0.0';
-server.listen(process.env.PORT || 3000, function () {
-  console.log('listening on port 3000!');
+server.listen(process.env.PORT || 8080, function () {
+  console.log('listening on port 8080!');
 });
 
 // Game State starters

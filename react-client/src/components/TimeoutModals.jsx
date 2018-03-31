@@ -5,8 +5,6 @@ import { Modal, Icon } from 'semantic-ui-react';
 import { warningOpen, forfeitOpen } from '../../src/actions/actions.js';
 
 const TimeoutModals = (props) => {
-  console.log('props.warningOpen:', props.warningModalOpen);
-  console.log('props.forfeitOpen:', props.forfeitModalOpen);
   if (props.warningOpen !== undefined && props.forfeitOpen !== undefined) {
     return (
       <div>
