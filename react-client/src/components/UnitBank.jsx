@@ -135,7 +135,7 @@ class UnitBank extends React.Component {
               </List.Content>
             </List.Item>
           </List> : <div></div>}
-        <Modal open={this.props.deployTroopsModal !== undefined ? this.props.deployTroopsModal : false} size={'mini'}>
+        <Modal open={this.props.deployTroopsModal === false || this.props.deployTroopsModal === true ? this.props.deployTroopsModal : false} size={'mini'}>
           <Modal.Header>
             Choose unit type and quantity
           </Modal.Header>
