@@ -123,22 +123,22 @@ class Board extends React.Component {
         })
       });
 
-      // setInterval(async () => {
-      //   if (this.state.timer === 30) {
-      //     if (this.props.userPlayer === this.props.currentPlayer) {
-      //       this.props.warningOpen(true);
-      //       setTimeout(() => this.props.warningOpen(false), 3000);
-      //     }
-      //   } else if (this.state.timer > 45) {
-      //     this.props.forfeitOpen(true);
-      //     setTimeout(() => this.props.forfeitOpen(false), 3000);
-      //     await this.nextTurn();
-      //     await this.setState({
-      //       timer: 0
-      //     })
-      //
-      //   }
-      // }, 1000)
+      setInterval(async () => {
+        if (this.state.timer === 90) {
+          if (this.props.userPlayer === this.props.currentPlayer) {
+            this.props.warningOpen(true);
+            setTimeout(() => this.props.warningOpen(false), 3000);
+          }
+        } else if (this.state.timer > 120) {
+          this.props.forfeitOpen(true);
+          setTimeout(() => this.props.forfeitOpen(false), 3000);
+          await this.nextTurn();
+          await this.setState({
+            timer: 0
+          })
+
+        }
+      }, 1000)
 
       socket.on('watchGame', data => {
         this.props.setSpectator(this.props.loggedInUser);

@@ -22,9 +22,7 @@ export const setRoom = (room) => (
 export const newRoom = (room) => (
   {
     type: 'NEW-ROOM',
-    payload: {
-      [room.roomName]: room.room
-    }
+    payload: room
   }
 )
 
@@ -32,7 +30,8 @@ export const updateRoom = (room) => (
   {
     type: 'UPDATE-ROOM',
     payload: {
-      [room.roomName]: room.room
+      roomName: room.roomName,
+      room: room.room
     }
   }
 )

@@ -21,6 +21,7 @@ const RoomsList = props => {
       }
     })
   }
+
   const refreshRooms = async () => {
     let socket = await props.socket;
     if (socket) {
@@ -38,37 +39,39 @@ const RoomsList = props => {
   }
 
   refreshRooms();
+  
+  return (
 
-  if (props.rooms) {
-    return (
+    <Feed style={{textAlign: 'center', width: '45%', marginLeft: '20%', marginTop: 0, paddingTop: '20px'}}>
+      <h1>Welcome to Hexology</h1>
 
-      <Feed style={{textAlign: 'center', width: '45%', marginLeft: '20%', marginTop: 0, paddingTop: '20px'}}>
-        <h1>Welcome to Hexology</h1>
+      <Leaderboard />
 
-        <Leaderboard/>
+      <h3>Currently Open Rooms: </h3>
 
-        <h3>Currently Open Rooms: </h3>
-        {Object.keys(props.rooms).map((roomName, id) => {
-          let room = props.rooms[roomName];
-          return (
-            <Feed key={id}>
-              <Feed.Content>
-                <Feed.Label>New Game</Feed.Label>
-                <Feed.Meta>Player1: {' ' + room.player1}</Feed.Meta>
-                <Feed.Meta>Player2: {room.player2 ? ' ' + room.player2 : ' not yet assigned'}</Feed.Meta>
-              </Feed.Content>
-              {room.length === 1?
-                <Button onClick={() => joinGame(roomName)} color="green">Join Game</Button> :
-                <Button color="red" onClick={() => joinGame(roomName, 'spectator', props.rooms[roomName].gameIndex)}>Game Full - Watch Game</Button>
-              }
-            </Feed>
-          )
-        })}
-      </Feed>
-    )
-  } else {
-    return <Segment>No available games. Start your own!</Segment>;
-  }
+      {props.rooms && Object.keys(props.rooms).length ?
+        Object.keys(props.rooms).map((roomName, id) => {
+        let room = props.rooms[roomName];
+        console.log('room:', room);
+        return (
+          <Feed key={id}>
+            <Feed.Content>
+              <Feed.Label>New Game</Feed.Label>
+              <Feed.Meta>Player1: {' ' + room.player1}</Feed.Meta>
+              <Feed.Meta>Player2: {room.player2 ? ' ' + room.player2 : ' not yet assigned'}</Feed.Meta>
+            </Feed.Content>
+            {room.length === 1 ?
+              <Button onClick={() => joinGame(roomName)} color="green">Join Game</Button> :
+              <Button color="red" onClick={() => joinGame(roomName, 'spectator', props.rooms[roomName].gameIndex)}>Game Full - Watch Game</Button>
+            }
+          </Feed>
+        )
+
+      })
+      : <div>No games currently Open. Start a new one!</div>}
+    </Feed>
+  )
+
 }
 
 
