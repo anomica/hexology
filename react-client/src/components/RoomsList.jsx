@@ -42,14 +42,15 @@ const RoomsList = props => {
   }
 
   refreshRooms();
-    return (
-      
-      <Feed style={{ textAlign: 'center', width: '45%', marginLeft: '20%', marginTop: 0, paddingTop: '20px' }}>
-        <h1>Welcome to Hexology</h1>
+  
+  return (
 
-        <Leaderboard />
+    <Feed style={{textAlign: 'center', width: '45%', marginLeft: '20%', marginTop: 0, paddingTop: '20px'}}>
+      <h1>Welcome to Hexology</h1>
 
-        <h3>Currently Open Rooms: </h3>
+      <Leaderboard />
+
+      <h3>Currently Open Rooms: </h3>
 
         {props.rooms && Object.keys(props.rooms).length ?
           Object.keys(props.rooms).map((roomName, id) => {

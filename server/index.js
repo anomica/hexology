@@ -237,7 +237,7 @@ app.get('/rooms', (req, res) => {
       }
     }
   }
-  res.status(200).json(io.sockets.adapter.rooms);
+  res.status(200).json(rooms);
 });
 
 let roomNum = 0;
@@ -307,6 +307,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     room = newRoom;
     let gameType = request.gameType;
     await socket.join(newRoom); // create a new room
+    io.sockets.adapter.rooms[newRoom].type = gameType;
     io.sockets.adapter.rooms[newRoom].player1 = request.username;
     io.sockets.adapter.rooms[newRoom].player1Wins = user[0].wins;
     io.sockets.adapter.rooms[newRoom].player1Losses = user[0].losses;
@@ -379,13 +380,55 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       playerOneResources: games[gameIndex].playerOneResources,
       playerTwoResources: games[gameIndex].playerTwoResources
     }
-    
+
     /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
     await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     await io.to(data.room).emit('gameCreated', newGameBoard); // send game board to user
   });
+
+  socket.on('botGame', async data => {
+    let room = `*${roomNum}`;
+    let gameType = 'private';
+    socket.join(room); // create a new room
+    io.sockets.adapter.rooms[room].player1 = data.username;
+    roomNum++;
+    const board = await gameInit(5, 4);
+    let gameIndex = uuidv4();
+    io.sockets.adapter.rooms[room].player2 = 'hexbot';
+    games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
+      board: board, // set board,
+      playerOneResources: { // p1 resources,
+        gold: 10,
+        wood: 10,
+        metal: 10
+      },
+      playerTwoResources: { // and p2 resources
+        gold: 10,
+        wood: 10,
+        metal: 10
+      },
+      playerOneTotalUnits: 10,
+      playerTwoTotalUnits: 10,
+      room: room,
+      index: gameIndex
+    };
+
+    const newGameBoard = {
+      board: board,
+      gameIndex: gameIndex,
+      room: room,
+      playerOneResources: games[gameIndex].playerOneResources,
+      playerTwoResources: games[gameIndex].playerTwoResources
+    }
+
+    /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
+    await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    await io.to(room).emit('newGame', { room: room });
+    await io.to(room).emit('gameCreated', newGameBoard); // send game board to user
+  })
 
   socket.on('watchGame', data => {
     socket.join(data.room);
@@ -435,6 +478,16 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   socket.on('move', async (data) => { // move listener
     await moveUnits(data, socket); // pass move data and socket to function to assess move
     await db.switchPlayers(data.gameIndex, data.currentPlayer);
+  });
+
+  socket.on('botMove', data => {
+    if (data.resources) {
+      data.purchase.forEach(type => {
+        buyUnits(type, 'player2', data.gameIndex, data.socketId, data.room);
+        deployUnitsOnHex(data.originIndex, data.gameIndex, type, 10, data.room, data.updatedOrigin.index, 'player2')
+      });
+    }
+    moveUnits(data, socket, true);
   });
 
   socket.on('buy', data => {
@@ -597,8 +650,7 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username)
   });
 }
 
-const moveUnits = async (data, socket) => {
-  // console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nmoveUnits:\n', data);
+const moveUnits = async (data, socket, hexbot) => {
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
   let updatedOrigin = await data.updatedOrigin; // new origin object as sent by user
   let originIndex = await data.originIndex; // with its index,
@@ -626,6 +678,7 @@ const moveUnits = async (data, socket) => {
   let origCs = await updatedOrigin.coordinates; // as well as coordinates of the ones sent by user
   let tarCs = await updatedTarget.coordinates;
   let currentPlayer = await data.currentPlayer; // player whose turn it is
+  if (hexbot) currentPlayer = 'player2';
   let socketId = await data.socketId; // socket to send back response if necessary
 
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, room, gameIndex); // assess legality of move
@@ -678,7 +731,6 @@ const moveUnits = async (data, socket) => {
           const board = await gameInit(5, 4);
           let gameIndex = uuidv4();
 
-          //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
           games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
             board: board, // set board,
             playerOneResources: { // p1 resources,
@@ -698,9 +750,11 @@ const moveUnits = async (data, socket) => {
           const newGameBoard = {
             board: board,
             gameIndex: gameIndex,
-            room: room
+            room: room,
+            playerOneResources: games[gameIndex].playerOneResources,
+            playerTwoResources: games[gameIndex].playerTwoResources
           }
-          
+
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
           // let playerOne = // need to get username to get user id from db
           // let playerTwo = // need to get username to get user id from db
@@ -757,18 +811,23 @@ const moveUnits = async (data, socket) => {
         }
         if (result.gameOver) {  // // if the game is over & attacker wins, need to change hexes and send back board
           // console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GAME IS OVER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n')
+          if (result.gameOver === 'player1') { // if player1 won
+            await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
+          } else if (result.gameOver === 'player2') { // if player2 won
+            await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
+          }
+
           if (result.gameOver === 'player1' && currentPlayer === 'player1' ||
-          result.gameOver === 'player2' && currentPlayer === 'player2') {
-            // console.log('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\nresult.gameOver -> WINNER: ', result.gameOver);
-            // console.log('\ncurrentPlayer: ', currentPlayer, '\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
+          (result.gameOver === 'player2' && currentPlayer === 'player2' && !hexbot)) {
+            io.to(socketId).emit('winGame'); // the attacker gets a personal win message
+            socket.to(room).emit('loseGame'); // while the rest of the room (defender) gets lose message
           } else {
-            if (result.gameOver === 'player1') { // if player1 won
-              await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
-            } else if (result.gameOver === 'player2') { // if player2 won
-              await db.gameComplete(result.gameIndex, room, 'player2', 'player1');
+            if (!hexbot) {
+              io.to(socketId).emit('loseGame', result.gameOver); // the attacker gets a personal lose message
+              socket.to(room).emit('winGame', result.gameOver); // the attacker gets a personal lose message
+            } else {
+              io.to(socketId).emit('loseGame', result.gameOver);
             }
-            io.to(socketId).emit('loseGame', result.gameOver);
-            socket.to(room).emit('winGame', result.gameOver);
           }
 
           const board = await gameInit(5, 4); // init board for new game
@@ -794,7 +853,9 @@ const moveUnits = async (data, socket) => {
           const newGameBoard = {
             board: board,
             gameIndex: gameIndex,
-            room: room
+            room: room,
+            playerOneResources: games[gameIndex].playerOneResources,
+            playerTwoResources: games[gameIndex].playerTwoResources
           }
 
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
@@ -1272,7 +1333,6 @@ const updateHexes = async (originIndex, updatedOrigin, targetIndex, updatedTarge
 
 /////////////////////////////////////////// IF USING DATABASE ///////////////////////////////////////////
 const deployUnitsOnHex = async (hexArrayIndex, gameIndex, unit, quantity, room, hexLongIndex, currentPlayer) => { // updates a single hex with deployed troops from bank
-
   // console.log('\ninside deploy units on hex function\n')
   // console.log(`hexArrayIndex (${hexArrayIndex}), gameIndex (${gameIndex}), unit (${unit}), quantity (${quantity}), room (${room}), hexLongIndex(${hexLongIndex}), currentPlayer (${currentPlayer})`)
 
@@ -2343,7 +2403,7 @@ app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../react-client/dist', 'index.html'));
 });
 
-// io.listen(process.env.PORT || 8080);
+// io.listen(process.env.PORT || 3000);
 const PORT = 8080;
 const HOST = '0.0.0.0';
 server.listen(process.env.PORT || 8080, function () {

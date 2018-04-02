@@ -140,7 +140,6 @@ const switchPlayers = async (gameIndex, currentPlayer) => {
 }
 
 /////////////////////// Update origin hex & new hex when player moves ///////////////////////
-//masterOrigin, updatedTarget, currentPlayer, updatedOrigin
 const updateDbHexes = async (masterOrigin, updatedTarget, currentPlayer, updatedOrigin) => {
   // console.log('\nupdateDbHexes function in db:\n', '\n\nmasterOrigin:\n', masterOrigin, '\n\nupdatedTarget:\n', updatedTarget, '\n\ncurrentPlayer: ',currentPlayer, '\n\nUpdatedOrigin:\n', updatedOrigin)
   let playerId = await currentPlayer[currentPlayer.length - 1]; //TODO: this should be either 'player1' or 'player2'
@@ -227,7 +226,7 @@ const updateDbHexes = async (masterOrigin, updatedTarget, currentPlayer, updated
         .then(data => {
           removeHasWood(dbHex[0].hex_index); // removes resource from hex
         })
-    }  
+    }
   }
   // console.log('wood updated in db')
 
@@ -247,7 +246,7 @@ const updateDbHexes = async (masterOrigin, updatedTarget, currentPlayer, updated
         .then(data => {
           removeHasMetal(dbHex[0].hex_index); // removes resource from hex
         })
-    }  
+    }
   }
   // console.log('metal updated in db')
 }
@@ -270,7 +269,7 @@ const updateHexOwner = async (hexIndex, player) => { // update hex owner (on a m
       .update({
         hex_owner: null,
         player: null
-      }) 
+      })
   }
 }
 
@@ -790,12 +789,12 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
       // await knex('hex') //TODO: UNCOMMENT THIS LATER
       //   .where(knex.raw(`${gameId[0].game_id} = game_id AND '${playerTwoHex.hex_index}' = hex_index`))
       //   .update('player', playerTwo[0].user_id)
-  
+
       // console.log('\ncompleted updating HEX user id for player2\n')
 
     } else if (currentPlayer === 'player1') {
       playerOne = await getUserId(username, 'player1'); // returns an object
-  
+
       await knex('games')
         .where(knex.raw(`'${gameIndex}' = game_index AND ${roomNum} = room_id`))
         .update('player1', playerOne[0].user_id)
@@ -804,7 +803,7 @@ const setGamePlayers = async (username, currentPlayer, gameIndex, room) => {
       // await knex('hex') // update hex player to user id //TODO: UNCOMMENT THIS LATER
       //   .where(knex.raw(`${gameId[0].game_id} = game_id AND '${playerOneHex.hex_index}' = hex_index`))
       //   .update('player', playerOne[0].user_id)
-      
+
       // console.log('\ncompleted updating HEX user id for player1\n')
     }
   }
