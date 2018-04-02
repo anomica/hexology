@@ -2245,8 +2245,8 @@ app.get('/*', (req, res) => {
 // io.listen(process.env.PORT || 8080);
 const PORT = 8080;
 const HOST = '0.0.0.0';
-server.listen(process.env.PORT || 3000, function () {
-  console.log('listening on port 8080!');
+server.listen(process.env.PORT || 80, function () {
+  console.log('listening on port 80!');
 });
 
 // Game State starters
