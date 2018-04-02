@@ -12,6 +12,6 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-EXPOSE 80
+EXPOSE 80:3000
 
 CMD npm start && webpack
