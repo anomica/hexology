@@ -6,7 +6,7 @@ import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Descrip
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
 import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
-         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard } from '../../src/actions/actions.js';
+         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard, setPlayerOne, setPlayerTwo } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -81,6 +81,12 @@ class Board extends React.Component {
         
         this.props.setUserPlayer(`${data.game.userPlayer}`); // sets the current user
         this.props.switchPlayer(`${data.game.currentPlayer}`); // sets the current player's turn
+
+        // if (data.game.userPlayer === 'player1') {
+        //   this.props.setPlayerOne(this.props.loggedInUser);
+        // } else if (data.game.userPlayer === 'player2') {
+        //   this.props.setPlayerTwo(this.props.loggedInUser);
+        // }
 
         console.log('\n+++++++++++++++++++++++++++++++++++++++++\nLOAD BOARD --> THIS.PROPS:\n', this.props);
       });
@@ -562,7 +568,7 @@ const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
-    setGameIndex, resetBoard }, dispatch);
+    setGameIndex, resetBoard, setPlayerOne, setPlayerTwo }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);

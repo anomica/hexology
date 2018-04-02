@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
-import { newRoom, deleteRoom } from '../../src/actions/actions.js';
+// import { newRoom, deleteRoom } from '../../src/actions/actions.js';
 
 class Leaderboard extends React.Component {
   constructor(props) {
@@ -71,7 +71,10 @@ class Leaderboard extends React.Component {
                       <br/>
                       Losses: {user.losses}
                       <p/>
-                      <Button>Challenge</Button>
+                      {this.props.loggedInUser !== 'anonymous'
+                        ? <Button color='blue' key='blue'>Challenge</Button>
+                        : null
+                      }
                     </Modal.Description>
                   </Modal.Content>
                 </Modal>
@@ -97,11 +100,12 @@ class Leaderboard extends React.Component {
 
 const mapStateToProps = state => {
   return {
+    loggedInUser: state.state.loggedInUser
   }
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ newRoom, deleteRoom }, dispatch);
+  return bindActionCreators({ }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Leaderboard));

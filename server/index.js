@@ -370,8 +370,25 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     assignLoggedInUser(data.username, data.player, data.gameIndex, data.room);
   });
 
-  socket.on('getUserGames', data => {
-    fetchUserGames(data.username, data.socketId);
+  socket.on('getUserGames', async (data) => {
+    let userGames = await db.retrieveUserGames(data.username);  
+    // let user = await db.getUserId(username);
+    // userGames.map( async (game, i) => {
+    //   if (game.player1 === user[0].user_id) { // if user id = player1
+    //     // let playerTwo = await db.findUserById(userGames[i].player2);
+    //     userGames[i].player1_username = username;
+    //     userGames[i].player2_username = ;
+    //   } else if (game.player2 === user[0].user_id) { // if user id = player2
+    //     // let playerOne = await db.findUserById(userGames[i].player1);
+    //     userGames[i].player1_username = `(ID: ${game.player1})`;
+    //     userGames[i].player2_username = username;
+    //   }
+    // })
+    // console.log('\nusergames:\n', userGames)
+    await io.to(data.socketId).emit('getUserGames', {
+      games: userGames
+    })
+    // fetchUserGames(data.username, data.socketId);
   });
 
   socket.on('updateUserGamesList', data => {
@@ -480,20 +497,19 @@ const assignLoggedInUser = async (username, player, gameIndex, room) => { // nee
 
 const fetchUserGames = async (username, socketId) => {
   let userGames = await db.retrieveUserGames(username);  
-  let user = await db.getUserId(username);
-
-  userGames.map( async (game, i) => {
-    if (game.player1 === user[0].user_id) { // if user id = player1
-      // let playerTwo = await db.findUserById(userGames[i].player2);
-      userGames[i].player1_username = username;
-      userGames[i].player2_username = `(ID: ${game.player2})`;
-    } else if (game.player2 === user[0].user_id) { // if user id = player2
-      // let playerOne = await db.findUserById(userGames[i].player1);
-      userGames[i].player1_username = `(ID: ${game.player1})`;
-      userGames[i].player2_username = username;
-    }
-  })
-  // console.log(userGames)
+  // let user = await db.getUserId(username);
+  // userGames.map( async (game, i) => {
+  //   if (game.player1 === user[0].user_id) { // if user id = player1
+  //     // let playerTwo = await db.findUserById(userGames[i].player2);
+  //     userGames[i].player1_username = username;
+  //     userGames[i].player2_username = ;
+  //   } else if (game.player2 === user[0].user_id) { // if user id = player2
+  //     // let playerOne = await db.findUserById(userGames[i].player1);
+  //     userGames[i].player1_username = `(ID: ${game.player1})`;
+  //     userGames[i].player2_username = username;
+  //   }
+  // })
+  // console.log('\nusergames:\n', userGames)
   await io.to(socketId).emit('getUserGames', {
     games: userGames
   })
@@ -563,7 +579,8 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username)
   });
 
   await io.to(newRoom).emit('loadGameBoard', {
-    game: currentGame
+    game: currentGame,
+    username: username
   });
 }
 

@@ -51,7 +51,7 @@ const RoomsList = props => {
         {props.rooms && Object.keys(props.rooms).length ?
           Object.keys(props.rooms).map((roomName, id) => {
           let room = props.rooms[roomName];
-          console.log('room:', room);
+          // console.log('room:', room);
           return (
             <Feed key={id}>
               <Feed.Content>

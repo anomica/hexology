@@ -266,3 +266,17 @@ export const forfeitOpen = isTrue => (
     payload: isTrue
   }
 )
+
+export const setPlayerOne = username => (
+  {
+    type: 'SET-PLAYER-ONE',
+    payload: username
+  }
+)
+
+export const setPlayerTwo = username => (
+  {
+    type: 'SET-PLAYER-TWO',
+    payload: username
+  }
+)

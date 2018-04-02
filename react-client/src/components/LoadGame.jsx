@@ -76,6 +76,7 @@ class LoadGame extends React.Component {
   }
 
   componentDidMount() {
+    console.log('this.props in load game: ', this.props)
     let socket = this.props.socket;
     socket.emit('getUserGames', {
       username: this.props.loggedInUser,
@@ -122,12 +123,12 @@ class LoadGame extends React.Component {
                         <br/>
                         {this.props.loggedInUser === game.player1_username
                           ? <div>
-                              <div><strong>Player 1: {game.player1_username} (You!) </strong></div>
+                              <div><strong>Player 1: {game.player1_username}</strong></div>
                               <div>Player 2: {game.player2_username}</div>
                             </div>
                           : <div>
                               <div>Player 1: {game.player1_username}</div>
-                              <div><strong>Player 2: {game.player2_username} (You!)</strong></div>
+                              <div><strong>Player 2: {game.player2_username}</strong></div>
                             </div>
                         }
                         Room ID: {game.room_id}
@@ -140,9 +141,7 @@ class LoadGame extends React.Component {
                         Metal: {game.p1_metal}
                       </Table.Cell>
 
-                      <Table.Cell style={{textAlign: 'center'}}>
-                        {game.p1_total_units}
-                      </Table.Cell>
+                      <Table.Cell style={{textAlign: 'center'}}>{game.p1_total_units}</Table.Cell>
 
                       <Table.Cell>
                         Gold: {game.p2_gold}
@@ -152,11 +151,9 @@ class LoadGame extends React.Component {
                         Metal: {game.p2_metal}
                       </Table.Cell>
 
-                      <Table.Cell style={{textAlign: 'center'}}>
-                        {game.p2_total_units}
-                      </Table.Cell>
+                      <Table.Cell style={{textAlign: 'center'}}>{game.p2_total_units}</Table.Cell>
 
-                      <Table.Cell>{game.current_player}</Table.Cell>
+                      <Table.Cell>Player {game.current_player}</Table.Cell>
 
                       <Table.Cell>
                         <Button size='tiny' color='blue'
@@ -194,10 +191,12 @@ class LoadGame extends React.Component {
 }
 
 const mapStateToProps = (state) => {
+  console.log('map state to props in load game: ', state.state);
   return {
     socket: state.state.socket,
     loggedInUser: state.state.loggedInUser,
     room: state.state.room,
+    rooms: state.state.rooms,
     currentPlayer: state.state.currentPlayer,
     userPlayer: state.state.userPlayer
   }

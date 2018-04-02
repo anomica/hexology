@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
+import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm } from 'semantic-ui-react';
 import { exitGame, setRoom, deleteRoom, resetBoard } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
 
@@ -13,6 +13,7 @@ class TopBar extends React.Component {
 
     this.state = {
       modalOpen: false,
+      confirmOpen: false,
       email: '',
       message: '',
       inviteSent: false,
@@ -21,11 +22,26 @@ class TopBar extends React.Component {
 
     this.saveGame = this.saveGame.bind(this);
     this.sendEmailToResume = this.sendEmailToResume.bind(this);
+    this.confirm = this.confirm.bind(this);
+    this.handleCancel = this.handleCancel.bind(this);
+    this.handleConfirm = this.handleConfirm.bind(this);
   }
 
   saveGame() {
     // console.log('inside save game')
     // console.log('this props', this.props)
+  }
+
+  confirm() {
+    this.setState({ confirmOpen: true });
+  }
+  handleConfirm() {
+    this.exitGame();
+    this.setState({ confirmOpen: false });
+  }
+
+  handleCancel() {
+    this.setState({ confirmOpen: false });
   }
 
   exitGame() {
@@ -54,12 +70,8 @@ class TopBar extends React.Component {
 
   sendEmailToResume() {
     this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' });
-    
     let messageDefault;
     messageDefault = this.state.message ? this.state.message : "Yo, let's finish our awesome game of Hexology!"
-
-    // console.log('---------\nsending email to resume the game dude:\n', `username: ${this.props.loggedInUser}, email: ${this.props.location.state.otherPlayerInfo.email}, message: ${messageDefault}, room: ${this.props.room}`);
-
     this.props.socket.emit('sendEmail', {
       username: this.props.loggedInUser,
       email: this.props.location.state.otherPlayerInfo.email,
@@ -85,10 +97,18 @@ class TopBar extends React.Component {
               onClick={this.saveGame}
             >Save Game</Button> : null
           }
-
           <Button
-            onClick={this.exitGame.bind(this)}
-          >Exit Game</Button>
+            onClick={this.confirm}
+            >Exit Game</Button>
+            <Confirm
+              header='Exit Game?'
+              content="Are you sure you want to exit this game?"
+              cancelButton='Cancel'
+              confirmButton="Yes"
+              open={this.state.confirmOpen}
+              onCancel={this.handleCancel}
+              onConfirm={this.handleConfirm}
+            />
         </div>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
         {this.props.boardState ? null :
@@ -193,7 +213,7 @@ class TopBar extends React.Component {
               </Modal>
 
             : <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
-                <Modal.Header>Please write the recipient's emails below, along with any message you would like to send.</Modal.Header>
+                <Modal.Header>Please write the recipient's email below, along with any message you would like to send.</Modal.Header>
                 <Modal.Content>
                   <Modal.Description>
                     <Form size={'large'} key={'small'}>
