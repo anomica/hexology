@@ -34,7 +34,7 @@ const hexbot = (state = store.getState().state) => {
   let playerUnitBank = state.playerOneUnitBank, botUnitBank = state.playerTwoUnitBank;
   let possibleMoves = {}, possibleNextTurnMoves = {}, moveValues = {};
   let bestMove = [null, null, Number.NEGATIVE_INFINITY]; // first number denotes index of hex to move from, second is hex to move to, third is heuristic of move
-  let intermediateMove = [null, null, Number.NEGATIVE_INFINITY]; // also need to track intermediate move to decide on purchase
+  let worstSecondaryThreat = [null, null, null, Number.NEGATIVE_INFINITY]; // also need to track worst secondary threa to move to decide on purchase
   let purchase = [];
 
   let turnCounter = 2;
@@ -134,7 +134,7 @@ const hexbot = (state = store.getState().state) => {
       for (let combatIndex in adjacentEnemies[botHex]) { // simulate each combat
         if (adjacentEnemies[botHex][combatIndex].tie || adjacentEnemies[botHex][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
           let newOutcome = evaluateCombatAfterPurchase(adjacentEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState, botTotalUnits, playerTotalUnits); // determine if a purchase the bot can make would change outcome
-          if (newOutcome.path && !newOutcome.tie) { // if a purchase could lead to a win,
+          if (newOutcome.path && !newOutcome.tie && !newOutcome.combatWin && newOutcome.gameOver !== 'win') { // if a purchase could lead to a win,
             possibleMoves[botHex][combatIndex] = {
               ...possibleMoves[botHex][combatIndex],
               purchase: newOutcome.path,
@@ -188,33 +188,27 @@ const hexbot = (state = store.getState().state) => {
               }
             } else if (newOutcome.tie) { // if a purchase could lead to a tie,
               possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
-                [combatIndex]: {
-                  purchase: newOutcome.path,
-                  cost: newOutcome.cost,
-                  tie: true,
-                  nextTurn: true,
-                  armyDiff: newOutcome.armyDiff,
-                  gameOver: newOutcome.gameOver
-                }
-              }
-            } else { // if a purchase cannot lead to a win,
-              possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
-                [combatIndex]: {
-                  loseCombat: true,
-                  nextTurn: true,
-                  armyDiff: newOutcome.armyDiff,
-                  gameOver: newOutcome.gameOver
-                }
-              }
-            }
-          } else { // if an attack will win outright
-            possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
-              [combatIndex]: {
-                winCombat: true,
+                purchase: newOutcome.path,
+                cost: newOutcome.cost,
+                tie: true,
                 nextTurn: true,
                 armyDiff: newOutcome.armyDiff,
                 gameOver: newOutcome.gameOver
               }
+            } else { // if a purchase cannot lead to a win,
+              possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
+                loseCombat: true,
+                nextTurn: true,
+                armyDiff: newOutcome.armyDiff,
+                gameOver: newOutcome.gameOver
+              }
+            }
+          } else { // if an attack will win outright
+            possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
+              winCombat: true,
+              nextTurn: true,
+              armyDiff: secondaryEnemies[botHex][neighbor][combatIndex].armyDiff,
+              gameOver: secondaryEnemies[botHex][neighbor][combatIndex].gameOver
             }
           }
         }
@@ -255,14 +249,15 @@ const hexbot = (state = store.getState().state) => {
     }
     if (target.gameOver === 'tie') {
       if (flag) {
-        return 0;
+        return 20;
       } else {
         value -= 30;
       }
     }
 
-    if (target.winCombat) value += 75 - target.cost + (target.ArmyDiff ? target.armyDiff : null);
-    if (target.loseCombat) value -= 75 - (target.ArmyDiff ? target.armyDiff : null);
+    if (target.winCombat) value += 75 - (target.cost ? target.cost : null) + (target.ArmyDiff ? target.armyDiff : null);
+    if (target.loseCombat) value -= 75 - (target.cost ? target.cost : null) - (target.ArmyDiff ? target.armyDiff : null);
+    if (target.tie) value += 15;
     if (target.gold) value += 15;
     if (target.wood) value += 15;
     if (target.metal) value += 15;
@@ -281,9 +276,6 @@ const hexbot = (state = store.getState().state) => {
     for (let nextMove in target) {
       let intermediateValue = heuristic(null, target[nextMove], null, null);
       value += intermediateValue;
-      if (intermediateValue > intermediateMove[2]) {
-        intermediateMove = [targetId, nextMove, intermediateValue];
-      }
     }
     return value;
   }
@@ -387,6 +379,17 @@ const hexbot = (state = store.getState().state) => {
     }
   }
 
+  function worstSecondaryThreatCheck() {
+    let secondaryMoves = possibleNextTurnMoves[bestMove[0]][bestMove[1]];
+    for (let possibleThreat in secondaryMoves) {
+      let value = heuristic(null, secondaryMoves[possibleThreat], null, null);
+      if (secondaryMoves[possibleThreat].purchase) value += 30;
+      if (value > worstSecondaryThreat[3]) {
+        worstSecondaryThreat = [bestMove[0], bestMove[1], possibleThreat, value];
+      }
+    }
+  }
+
   for (let hex in moveValues) {
     for (let move in moveValues[hex]) {
       if (moveValues[hex][move] > bestMove[2]) {
@@ -414,12 +417,12 @@ const hexbot = (state = store.getState().state) => {
     player: 'player2'
   }
 
-  console.log(possibleNextTurnMoves, bestMove, intermediateMove[1])
+  worstSecondaryThreatCheck();
   if (possibleMoves[bestMove[0]][bestMove[1]].purchase) {
     purchase = possibleMoves[bestMove[0]][bestMove[1]].purchase;
     botEnactPurchase(purchase);
-  } else if (possibleNextTurnMoves[bestMove[0]][bestMove[1]][intermediateMove[1]].purchase) {
-    purchase = possibleNextTurnMoves[bestMove[0]][bestMove[1]][intermediateMove[1]].purchase;
+  } else if (possibleNextTurnMoves[bestMove[0]][bestMove[1]][worstSecondaryThreat[2]].purchase) {
+    purchase = possibleNextTurnMoves[bestMove[0]][bestMove[1]][worstSecondaryThreat[2]].purchase;
     botEnactPurchase(purchase);
   } else if (purchase) {
     botEnactPurchase(purchase);
@@ -443,7 +446,6 @@ const hexbot = (state = store.getState().state) => {
       }
       botTotalUnits += 10;
     })
-    store.dispatch(botPurchase(botResources));
   }
 
   socket.emit('botMove', {
@@ -460,9 +462,7 @@ const hexbot = (state = store.getState().state) => {
     botTotalUnits: botTotalUnits
   });
 
-  store.dispatch(botMove(updatedOrigin, bestMove[0], updatedTarget, bestMove[1]));
-
-  let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
+  // let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
 }
 
 export default hexbot;

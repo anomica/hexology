@@ -9,10 +9,3 @@ export const botMove = (origin, originIndex, target, targetIndex) => (
     }
   }
 )
-
-export const botPurchase = (botResources) => (
-  {
-    type: 'BOT-PURCHASE',
-    payload: botResources
-  }
-)

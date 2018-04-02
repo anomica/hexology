@@ -6,7 +6,7 @@ import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Descrip
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
 import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
-         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard } from '../../src/actions/actions.js';
+         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard, botMove } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -37,7 +37,8 @@ class Board extends React.Component {
       tempArchers: 0,
       tempKnights: 0,
       timer:0,
-      turnsForfeited: 0
+      turnsForfeited: 0,
+      hexbotModalOpen: false,
     }
   }
 
@@ -88,7 +89,12 @@ class Board extends React.Component {
         }, 1000)
       });
       socket.on('move', (move) => { // when socket receives result of move request,
-        this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
+        if (this.props.hexbot && this.props.currentPlayer === 'player2') {
+          this.hexbotIsThinking();
+          setTimeout(() => this.props.botMove(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex), 2000);
+        } else {
+          this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
+        }
         if (move.tie) {
           this.setState({
             combatModalOpen: true,
@@ -157,7 +163,7 @@ class Board extends React.Component {
         this.props.knights(this.props.currentPlayer);
       });
       socket.on('troopsDeployed', data => {
-        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+        this.props.addUnitsToHex(data.hex, data.hexIndex, data.currentPlayer);
       })
       socket.on('combatWin', (data) => {
         let combatMessage;
@@ -381,8 +387,19 @@ class Board extends React.Component {
       }
     })
     if (this.props.hexbot && this.props.currentPlayer === 'player2') {
-      hexbot();
+      this.state.combatModalOpen ? setTimeout(() => hexbot(), 5000) : hexbot();
     }
+  }
+
+  hexbotIsThinking() {
+    this.setState({
+      hexbotModalOpen: true,
+    });
+    setTimeout(() => {
+      this.setState({
+        hexbotModalOpen: false
+      })
+    }, 2000);
   }
 
   render() {
@@ -507,6 +524,19 @@ class Board extends React.Component {
             </Modal.Actions>
           </Modal>
         </Transition>
+        <Transition animation={'fade up'} duration={'1500'} visible={this.state.hexbotModalOpen}>
+          <Modal open={this.state.hexbotModalOpen} size={'small'} style={{ textAlign: 'center' }}>
+            <Modal.Header>
+              <Image style={{maxHeight: '200px', display: 'inline'}} src={'https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'} />
+              Hexbot is thinking...
+            </Modal.Header>
+            <Modal.Content>
+              <Segment>
+                <Image style={{maxHeight: '400px', margin: 'auto'}} src={'http://www.netanimations.net/large%20gears.gif'}/>
+              </Segment>
+            </Modal.Content>
+          </Modal>
+        </Transition>
         <Transition animation={'fade up'} duration={'3500'} visible={this.state.disconnectModalOpen}>
           <Modal open={this.state.disconnectModalOpen} size={'small'} style={{ textAlign: 'center' }}>
             <Modal.Header>Your opponent has left the room.</Modal.Header>
@@ -548,7 +578,7 @@ const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
-    setGameIndex, resetBoard }, dispatch);
+    setGameIndex, resetBoard, botMove }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);

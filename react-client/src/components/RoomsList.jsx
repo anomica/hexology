@@ -8,17 +8,17 @@ import Leaderboard from './Leaderboard.jsx';
 import { login, updateRoom, newRoom, deleteRoom } from '../../src/actions/actions.js';
 
 const RoomsList = props => {
-  
+
   const joinGame = async (room, type, index) => {
     type ? props.login('spectator') : null;
     props.history.push({
-    pathname: `/game/room?${room}`,
-    state: {
-      detail: room,
-      extra: 'join',
-      type: type ? type : null,
-      gameIndex: index ? index : null
-    }
+      pathname: `/game/room?${room}`,
+      state: {
+        detail: room,
+        extra: 'join',
+        type: type ? type : null,
+        gameIndex: index ? index : null
+      }
     })
   }
   const refreshRooms = async () => {
@@ -41,7 +41,7 @@ const RoomsList = props => {
 
   if (props.rooms) {
     return (
-      
+
       <Feed style={{textAlign: 'center', width: '45%', marginLeft: '20%', marginTop: 0, paddingTop: '20px'}}>
         <h1>Welcome to Hexology</h1>
 
