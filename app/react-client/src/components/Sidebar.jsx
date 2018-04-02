@@ -27,7 +27,7 @@ class SidebarLeft extends React.Component {
       rules: false,
       logoutModal: false,
       loadGameModal: false,
-      disabled: window.location.href.indexOf('game') === -1 ? false : true,
+      disabled: window.location.href.indexOf('/game/room?') === -1 ? false : true,
       hexbot: false
     }
 
