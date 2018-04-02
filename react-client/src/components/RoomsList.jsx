@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Segment, Image, Feed, Label, Button } from 'semantic-ui-react';
+import { Segment, Image, Feed, Label, Button, Modal, Header } from 'semantic-ui-react';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
 import Leaderboard from './Leaderboard.jsx';
@@ -26,6 +26,9 @@ const RoomsList = props => {
     let socket = await props.socket;
     if (socket) {
       socket.on('newRoom', (room) => {
+        room.room.player1Wins = room.player1Wins;
+        room.room.player1Losses = room.player1Losses;
+        room.room.player1Email = room.player1Email;
         room.room.player1 = room.player1;
         props.newRoom(room);
       })
@@ -51,13 +54,52 @@ const RoomsList = props => {
         {props.rooms && Object.keys(props.rooms).length ?
           Object.keys(props.rooms).map((roomName, id) => {
           let room = props.rooms[roomName];
-          // console.log('room:', room);
           return (
             <Feed key={id}>
               <Feed.Content>
                 <Feed.Label>New Game</Feed.Label>
-                <Feed.Meta>Player1: {' ' + room.player1}</Feed.Meta>
-                <Feed.Meta>Player2: {room.player2 ? ' ' + room.player2 : ' not yet assigned'}</Feed.Meta>
+                <Feed.Meta>
+                  Player 1:
+                  { room.player1 !== 'anonymous'
+                    ? <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}>{' ' + room.player1}</Header>}>
+                      <Modal.Header>Profile: {' ' + room.player1}</Modal.Header>
+                      <Modal.Content>
+                        <Modal.Description>
+                          Rank: TBD
+                          <br/>
+                          Wins: {' ' + room.player1Wins}
+                          <br/>
+                          Losses: {' ' + room.player1Losses}
+                          <p/>
+                          <Button>Email {' ' + room.player1Email}</Button>
+                        </Modal.Description>
+                      </Modal.Content>
+                    </Modal>
+                    : <span>{' ' + room.player1}</span>
+                  }
+                  </Feed.Meta>
+                <Feed.Meta>
+                  Player 2:
+                  { room.player2
+                    ? room.player2 !== 'anonymous'
+                      ? <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}>{' ' + room.player2}</Header>}>
+                        <Modal.Header>Profile: {' ' + room.player2}</Modal.Header>
+                        <Modal.Content>
+                          <Modal.Description>
+                            Rank: TBD
+                            <br/>
+                            Wins: {' ' + room.player2Wins}
+                            <br/>
+                            Losses: {' ' + room.player2Losses}
+                            <p/>
+                            <Button>Email {' ' + room.player2Email}</Button>
+                          </Modal.Description>
+                        </Modal.Content>
+                      </Modal>
+                      : <span>{' ' + room.player2}</span>
+                    : ' Not yet assigned'
+                  }
+                </Feed.Meta>
               </Feed.Content>
               {room.length === 1 ?
                 <Button onClick={() => joinGame(roomName)} color="green">Join Game</Button> :
@@ -70,9 +112,7 @@ const RoomsList = props => {
         : <div>No games currently Open. Start a new one!</div>}
       </Feed>
     )
-  
 }
-
 
 const mapStateToProps = state => {
   return {

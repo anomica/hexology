@@ -817,7 +817,6 @@ const getUsernames = async () => {
     .whereNot(knex.raw(`username = 'anonymous'`))
     .andWhere(knex.raw(`wins > 0`))
     .orderByRaw(`wins DESC`)
-    .limit(5)
 }
 
 /////////////////////// Changes the room number for a loaded game in the db ///////////////////////
@@ -830,7 +829,7 @@ const updateRoomNum = async (gameIndex, newRoom) => {
 
 /////////////////////// Get the other user's info (email and what not) ///////////////////////
 const getOtherUserStuff = async (gameIndex, username) => { // username = current user
-  console.log(`\ngetOtherUserStuff = gameIndex (${gameIndex}), username (${username})\n`);
+  // console.log(`\ngetOtherUserStuff = gameIndex (${gameIndex}), username (${username})\n`);
   let user = await getUserId(username);
   let game = await getGameByGameIndex(gameIndex);
 

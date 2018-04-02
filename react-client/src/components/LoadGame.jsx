@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import axios from 'axios';
-import { Button, Header, Image, Modal, Icon, List, Table, Confirm } from 'semantic-ui-react';
+import { Button, Header, Image, Modal, Icon, List, Table, Confirm, Transition, Loader } from 'semantic-ui-react';
 import socketIOClient from 'socket.io-client';
 import { withRouter} from 'react-router';
 import { setRoom } from '../../src/actions/actions.js';
@@ -15,6 +15,7 @@ class LoadGame extends React.Component {
       open: false,
       index: null,
       gameId: null,
+      loader: false
     }
     this.retrieveGame = this.retrieveGame.bind(this);
     this.handleConfirm = this.handleConfirm.bind(this);
@@ -36,14 +37,16 @@ class LoadGame extends React.Component {
       username: this.props.loggedInUser,
       gameId: gameId,
       socketId: this.props.socket.id
-    })
+    });
 
     socket.on('updateUserGamesList', (data) => {
       this.setState({
-        games: data.games,
-        open: false
+        games: data.games
       });
-    })
+    });
+    this.setState({ loader: true, open: false })
+
+    setTimeout(() => this.setState({ loader: false }), 2000);
   }
 
   handleCancel() {
@@ -76,7 +79,6 @@ class LoadGame extends React.Component {
   }
 
   componentDidMount() {
-    console.log('this.props in load game: ', this.props)
     let socket = this.props.socket;
     socket.emit('getUserGames', {
       username: this.props.loggedInUser,
@@ -89,11 +91,13 @@ class LoadGame extends React.Component {
 
   render() {
     return (
+      
       <Modal
         open={this.props.open}
         onClose={this.props.close}
         closeIcon
       >
+        <Loader disabled={this.state.loader} />
         <Modal.Header>My Current Games</Modal.Header>
         <Modal.Content image scrolling>
           <Modal.Description>
@@ -165,17 +169,20 @@ class LoadGame extends React.Component {
                         <Button size='tiny' color='red' style={{marginTop: '2%'}}
                           onClick={ () => {this.show(i, game.game_id)} }
                         >Delete Game</Button>
-                        <Confirm
-                          header='Confirm Delete'
-                          content="Are you sure you want to delete this game? There's no turning back!"
-                          cancelButton='Nevermind'
-                          confirmButton="Let's do it!"
-                          open={this.state.open}
-                          onCancel={this.handleCancel}
-                          onConfirm={ () => {
-                            this.handleConfirm(this.state.gameId);
-                          }}
-                        />
+
+                        <Transition animation={'jiggle'} duration={'1000'} visible={this.state.open}>
+                          <Confirm
+                            header='Confirm Delete'
+                            content="Are you sure you want to delete this game? There's no turning back!"
+                            cancelButton='Nevermind'
+                            confirmButton="Let's do it!"
+                            open={this.state.open}
+                            onCancel={this.handleCancel}
+                            onConfirm={ () => {
+                              this.handleConfirm(this.state.gameId);
+                            }}
+                          />
+                        </Transition>
                       </Table.Cell>
                     </Table.Row>
                   )}
@@ -191,7 +198,6 @@ class LoadGame extends React.Component {
 }
 
 const mapStateToProps = (state) => {
-  console.log('map state to props in load game: ', state.state);
   return {
     socket: state.state.socket,
     loggedInUser: state.state.loggedInUser,

@@ -301,31 +301,59 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     emailHandler.sendEmail(username, email, room, message);
   });
 
-  socket.on('newGame', request => {
+  socket.on('newGame', async (request) => {
+    let user = await db.getUserId(request.username);
     let newRoom = `*${roomNum}`;
     room = newRoom;
     let gameType = request.gameType;
-    socket.join(newRoom); // create a new room
+    await socket.join(newRoom); // create a new room
     io.sockets.adapter.rooms[newRoom].player1 = request.username;
-    io.to(newRoom).emit('newGame', { room: newRoom }); // and send back a string to initialize for player 1
-    gameType === 'public' && socket.broadcast.emit('newRoom', { 
+    io.sockets.adapter.rooms[newRoom].player1Wins = user[0].wins;
+    io.sockets.adapter.rooms[newRoom].player1Losses = user[0].losses;
+    io.sockets.adapter.rooms[newRoom].player1Email = user[0].email;
+
+    await io.to(newRoom).emit('newGame', {
+      room: newRoom, 
+      player1Wins: user[0].wins,
+      player1Losses: user[0].losses,
+      player1Email: user[0].email
+    }); // and send back a string to initialize for player 1
+
+    gameType === 'public' && await socket.broadcast.emit('newRoom', { 
       roomName: room, 
       room: io.sockets.adapter.rooms[newRoom],
-      player1: request.username
+      player1: request.username,
+      player1Wins: user[0].wins,
+      player1Losses: user[0].losses,
+      player1Email: user[0].email
      });
+
     roomNum++; // increment room count to assign new room
   });
 
   socket.on('joinGame', async (data) => {
+    let userInfoPlayer2 = await db.getUserId(data.username);
     await socket.join(data.room);
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
     room = data.room;
+
+    let userInfoPlayer1 = await db.getUserId(io.sockets.adapter.rooms[room].player1);
+
+    io.sockets.adapter.rooms[room].player1Wins = userInfoPlayer1[0].wins;
+    io.sockets.adapter.rooms[room].player1Losses = userInfoPlayer1[0].losses;
+    io.sockets.adapter.rooms[room].player1Email = userInfoPlayer1[0].email;
+
     io.sockets.adapter.rooms[room].player2 = data.username;
+    io.sockets.adapter.rooms[room].player2Wins = userInfoPlayer2[0].wins;
+    io.sockets.adapter.rooms[room].player2Losses = userInfoPlayer2[0].losses;
+    io.sockets.adapter.rooms[room].player2Email = userInfoPlayer2[0].email;
+
     socket.broadcast.emit('updateRoom', {
       roomName: room,
       room: io.sockets.adapter.rooms[room]
-    })
+    });
+
     games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
       board: board, // set board,
       playerOneResources: { // p1 resources,
@@ -372,23 +400,9 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('getUserGames', async (data) => {
     let userGames = await db.retrieveUserGames(data.username);  
-    // let user = await db.getUserId(username);
-    // userGames.map( async (game, i) => {
-    //   if (game.player1 === user[0].user_id) { // if user id = player1
-    //     // let playerTwo = await db.findUserById(userGames[i].player2);
-    //     userGames[i].player1_username = username;
-    //     userGames[i].player2_username = ;
-    //   } else if (game.player2 === user[0].user_id) { // if user id = player2
-    //     // let playerOne = await db.findUserById(userGames[i].player1);
-    //     userGames[i].player1_username = `(ID: ${game.player1})`;
-    //     userGames[i].player2_username = username;
-    //   }
-    // })
-    // console.log('\nusergames:\n', userGames)
     await io.to(data.socketId).emit('getUserGames', {
       games: userGames
     })
-    // fetchUserGames(data.username, data.socketId);
   });
 
   socket.on('updateUserGamesList', data => {
@@ -396,7 +410,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('loadGame', async (data) => {
-    console.log('\nDATA IN LOAD GAME IN THE SERVER:\n', data)
     let oldRoom = data.oldRoom;
     let gameIndex = data.gameIndex;
     let socketID = data.socketId;
@@ -524,7 +537,7 @@ const updateUserGamesList = async (username, gameId, socketId) => {
 }
 
 const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username) => {
-  console.log(`LOAD SELECTED GAME: gameIndex ${gameIndex}, oldRoom (${oldRoom}), socketId (${socketId}), newRoom (${newRoom}), username (${username})`);
+   // console.log(`LOAD SELECTED GAME: gameIndex ${gameIndex}, oldRoom (${oldRoom}), socketId (${socketId}), newRoom (${newRoom}), username (${username})`);
 
   let gameBoard = await db.getGameBoard(oldRoom, gameIndex); // gets hexes from db
   let game = await db.getGame(oldRoom, gameIndex); // in order to get current player from db
@@ -585,7 +598,7 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username)
 }
 
 const moveUnits = async (data, socket) => {
-  console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nmoveUnits:\n', data);
+  // console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nmoveUnits:\n', data);
   // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
   let updatedOrigin = await data.updatedOrigin; // new origin object as sent by user
   let originIndex = await data.originIndex; // with its index,
@@ -610,23 +623,19 @@ const moveUnits = async (data, socket) => {
   let masterTarCs = [masterTarget[0].coordinate_0, masterTarget[0].coordinate_1, masterTarget[0].coordinate_2]; // coordinates of those masters
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  console.log('\n----------- #1 -----------\n')
   let origCs = await updatedOrigin.coordinates; // as well as coordinates of the ones sent by user
   let tarCs = await updatedTarget.coordinates;
   let currentPlayer = await data.currentPlayer; // player whose turn it is
   let socketId = await data.socketId; // socket to send back response if necessary
 
   let legal = await checkLegalMove(masterOrigCs, origCs, updatedOrigin, masterTarCs, tarCs, updatedTarget, masterOrigin, masterTarget, room, gameIndex); // assess legality of move
-  console.log('\n----------- #2 -----------\n')
   if (legal) { // if legal move,
     //////////////////////////// IF USING GAME OBJECT ON SERVER ////////////////////////////
     // let collision = await checkForCollision(originIndex, targetIndex, gameIndex, room); // check for collision
     ////////////////////////////////////////////////////////////////////////////////////////
-    console.log('\n----------- #3 -----------\n')
     //////////////////////////////////// IF USING DATABASE ////////////////////////////////
     let collision = await checkForCollision(updatedOrigin.index, updatedTarget.index, gameIndex, room); // check for collision
     ////////////////////////////////////////////////////////////////////////////////////////
-    console.log('\n----------- #4 -----------\n')
     if (collision) {
       if (collision === 'friendly') { // if collision and collision is friendly,
         // console.log('\n.....friendly collision....\n')
@@ -882,7 +891,6 @@ const moveUnits = async (data, socket) => {
       }
 
     } else { // if move is to unoccupied hex, execute move
-      console.log('\n----------- #5 -----------\n')
       // await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room);
       let p1Resources = await db.getResources(room, gameIndex, 'player1'); 
       let p2Resources = await db.getResources(room, gameIndex, 'player2');
@@ -909,8 +917,6 @@ const moveUnits = async (data, socket) => {
         // playerTwoResources: (p2Resources[0].p2_gold + p2Resources[0].p2_metal + p2Resources[0].p2_wood)
 
       };
-      console.log('\nmove after #5\n', move)
-      console.log('\n----------- #6 -----------\n')
       /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
       await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
       /////////////////////////////////////////////////////////////////////////////////////////////
@@ -1844,11 +1850,11 @@ const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room) => {
 }
 
 const deleteOldGames = async () => {
-  console.log('\nchecking for old games...\n')
+  // console.log('\nchecking for old games...\n')
   let oldGames = await db.getOldGames();
-  console.log('\nold games in the db:\n', oldGames)
+  // console.log('\nold games in the db:\n', oldGames)
   for (let i = 0; i < oldGames.length; i++) {
-    console.log('old game id: ', oldGames[i].game_id)
+    // console.log('old game id: ', oldGames[i].game_id)
     // await db.deleteHex(oldGames[i].game_id); // first mark hexes to delete
     await db.deleteGames(oldGames[i].game_id); // then delete the game
   }
@@ -1859,7 +1865,7 @@ setInterval(deleteOldGames, 86400000);
 
 const buyUnits = async (type, player, gameIndex, socketId, room) => {
   ///////////////////////////////////// IF USING DATABASE ///////////////////////////////////////
-  console.log(`\n-----------------------------> BUY UNITS: \ntype (${type}), player (${player}), gameIndex (${gameIndex}), socketId (${socketId}), room (${room})\n`);
+  // console.log(`\n-----------------------------> BUY UNITS: \ntype (${type}), player (${player}), gameIndex (${gameIndex}), socketId (${socketId}), room (${room})\n`);
   let game = await db.getGameBoard(room, gameIndex);
 
   let currentPlayerResources = await db.getResources(room, gameIndex, player); // returns an object

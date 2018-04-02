@@ -5,7 +5,6 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
-// import { newRoom, deleteRoom } from '../../src/actions/actions.js';
 
 class Leaderboard extends React.Component {
   constructor(props) {
@@ -57,7 +56,7 @@ class Leaderboard extends React.Component {
         </Table.Header>
 
         <Table.Body>
-          {this.state.users.map( (user, key) => (
+          {this.state.users.slice(0, 5).map( (user, key) => (
             <Table.Row key={key}>
               <Table.Cell style={{textAlign: 'center'}}>
                 {key + 1}
@@ -67,6 +66,8 @@ class Leaderboard extends React.Component {
                   <Modal.Header>Profile: {user.username}</Modal.Header>
                   <Modal.Content>
                     <Modal.Description>
+                      Rank: {key + 1}
+                      <br/>
                       Wins: {user.wins}
                       <br/>
                       Losses: {user.losses}
