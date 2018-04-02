@@ -29,7 +29,7 @@ class Main extends React.Component {
     //     console.log('error from signup:', err);
     //   })
     (async () => {
-      let socket = await socketIOClient('http://127.0.0.1:3000');
+      let socket = await socketIOClient('http://127.0.0.1:8080');
       this.props.setSocket(socket);
     })();
 
@@ -47,7 +47,7 @@ class Main extends React.Component {
     axios.get('/rooms')
       .then(rooms => {
         for (let room in rooms.data) {
-          if (room[0] !== '*') {
+          if (room[0] !== '*' || rooms.data[room].player2 === 'hexbot') {
             delete rooms.data[room]
           }
         }
