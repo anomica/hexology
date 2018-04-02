@@ -251,7 +251,7 @@ const selectRoom = () => {
     openRooms.forEach((room, i) => {
       if (!lowest) {
         lowest = Number(room);
-        index = i
+        index = i;
       } else {
         if (Number(room) < lowest) {
           lowest = Number(room);
@@ -2243,9 +2243,8 @@ app.get('/*', (req, res) => {
 });
 
 // io.listen(process.env.PORT || 8080);
-const PORT = 8080;
-const HOST = '0.0.0.0';
-server.listen(process.env.PORT || 80, function () {
+dock
+server.listen(process.env.PORT || 3000, function () {
   console.log('listening on port 80!');
 });
 
