@@ -9,7 +9,7 @@ services:
     environment:
      - DATABASE_HOST=database-hexology
   hexo:
-    build: gloverac/hexoweb:latest
+    image: gloverac/hexoweb:latest
     ports:
      - "3000:3000"
     depends_on:
