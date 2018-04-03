@@ -749,13 +749,26 @@ const moveUnits = async (data, socket, hexbot) => {
 
         await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room); // update hexes without combat occuring
 
+        let p1Resources = await db.getResources(room, gameIndex, 'player1');
+        let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
         let move = {
           updatedOrigin: updatedOrigin,
           originIndex: originIndex,
           targetIndex: targetIndex,
           updatedTarget: updatedTarget,
-          playerOneResources: games[gameIndex].playerOneResources,
-          playerTwoResources: games[gameIndex].playerTwoResources
+          // playerOneResources: games[gameIndex].playerOneResources,
+          // playerTwoResources: games[gameIndex].playerTwoResources
+          playerOneResources: {
+            gold: p1Resources[0].p1_gold,
+            metal: p1Resources[0].p1_metal,
+            wood: p1Resources[0].p1_wood
+          },
+          playerTwoResources: {
+            gold: p2Resources[0].p2_gold,
+            metal: p2Resources[0].p2_metal,
+            wood: p2Resources[0].p2_wood
+          }
         }
 
         // console.log('\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\nMOVE ON FRIENDLY COLLISION:\n', move, '\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\n')
@@ -785,6 +798,9 @@ const moveUnits = async (data, socket, hexbot) => {
           const board = await gameInit(5, 4);
           let gameIndex = uuidv4();
 
+          let p1Resources = await db.getResources(room, gameIndex, 'player1');
+          let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
           games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
             board: board, // set board,
             playerOneResources: { // p1 resources,
@@ -805,8 +821,16 @@ const moveUnits = async (data, socket, hexbot) => {
             board: board,
             gameIndex: gameIndex,
             room: room,
-            playerOneResources: games[gameIndex].playerOneResources,
-            playerTwoResources: games[gameIndex].playerTwoResources
+            playerOneResources: {
+              gold: 10,
+              wood: 10,
+              metal: 10
+            },
+            playerTwoResources: { // and p2 resources
+              gold: 10,
+              wood: 10,
+              metal: 10
+            }
           }
 
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
@@ -836,6 +860,9 @@ const moveUnits = async (data, socket, hexbot) => {
 
           await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room);
 
+          let p1Resources = await db.getResources(room, gameIndex, 'player1');
+          let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
           let newMove = {
             room: room,
             updatedOrigin: {
@@ -856,8 +883,16 @@ const moveUnits = async (data, socket, hexbot) => {
             },
             originIndex: originIndex,
             targetIndex: targetIndex,
-            playerOneResources: games[gameIndex].playerOneResources,
-            playerTwoResources: games[gameIndex].playerTwoResources,
+            playerOneResources: {
+              gold: p1Resources[0].p1_gold,
+              metal: p1Resources[0].p1_metal,
+              wood: p1Resources[0].p1_wood
+            },
+            playerTwoResources: {
+              gold: p2Resources[0].p2_gold,
+              metal: p2Resources[0].p2_metal,
+              wood: p2Resources[0].p2_wood
+            },
             tie: true
           }
           io.to(room).emit('move', newMove);
@@ -887,6 +922,9 @@ const moveUnits = async (data, socket, hexbot) => {
           const board = await gameInit(5, 4); // init board for new game
           let gameIndex = uuidv4();
 
+          let p1Resources = await db.getResources(room, gameIndex, 'player1');
+          let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
           //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
           games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
             board: board, // set board,
@@ -908,8 +946,16 @@ const moveUnits = async (data, socket, hexbot) => {
             board: board,
             gameIndex: gameIndex,
             room: room,
-            playerOneResources: games[gameIndex].playerOneResources,
-            playerTwoResources: games[gameIndex].playerTwoResources
+            playerOneResources: {
+              gold: 10,
+              wood: 10,
+              metal: 10
+            },
+            playerTwoResources: { // and p2 resources
+              gold: 10,
+              wood: 10,
+              metal: 10
+            }
           }
 
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
@@ -955,6 +1001,9 @@ const moveUnits = async (data, socket, hexbot) => {
 
           await updateHexes(originIndex, result.updatedOrigin, targetIndex, result.updatedTarget, gameIndex, currentPlayer, room); // if move is to unoccupied hex, execute move
 
+          let p1Resources = await db.getResources(room, gameIndex, 'player1');
+          let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
           let move = {
             room: room,
             updatedOrigin: {
@@ -982,8 +1031,20 @@ const moveUnits = async (data, socket, hexbot) => {
               playerOneTotalUnits: dbP1TotalUnits[0].p1_total_units,
               playerTwoTotalUnits: dbP2TotalUnits[0].p2_total_units,
             },
-            playerOneResources: games[gameIndex].playerOneResources,
-            playerTwoResources: games[gameIndex].playerTwoResources
+
+            playerOneResources: {
+              gold: p1Resources[0].p1_gold,
+              metal: p1Resources[0].p1_metal,
+              wood: p1Resources[0].p1_wood
+            },
+
+            playerTwoResources: {
+              gold: p2Resources[0].p2_gold,
+              metal: p2Resources[0].p2_metal,
+              wood: p2Resources[0].p2_wood
+            }
+            // playerOneResources: games[gameIndex].playerOneResources,
+            // playerTwoResources: games[gameIndex].playerTwoResources
           }
 
           // console.log('\n---------> MOVE WHEN GAME ISNT OVER:\n', move, '\n');
