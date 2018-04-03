@@ -28,6 +28,8 @@ class SidebarLeft extends React.Component {
       profile: false,
       logoutModal: false,
       loadGameModal: false,
+      userWins: null,
+      userLosses: null,
       disabled: window.location.href.indexOf('game') === -1 ? false : true,
       hexbot: false
     }
@@ -36,6 +38,22 @@ class SidebarLeft extends React.Component {
     this.toggleRules = this.toggleRules.bind(this);
     this.showLoadGames = this.showLoadGames.bind(this);
     this.toggleLoadGames = this.toggleLoadGames.bind(this);
+    this.getUserStuff = this.getUserStuff.bind(this);
+  }
+
+  getUserStuff() {
+    let socket = this.props.socket;
+    socket.emit('getUserStuff', {
+      username: this.props.loggedInUser,
+    });
+
+    socket.on('getUserStuff', data => {
+      console.log('data yo: ',data)
+      this.setState({
+        userWins: data.user.wins,
+        userLosses: data.user.losses
+      });
+    })
   }
 
   toggleMenu() { // toggles sidebar
@@ -90,6 +108,7 @@ class SidebarLeft extends React.Component {
       .then(data => {
         this.props.login('anonymous');
         this.setState({ logoutModal: true });
+        this.props.history.push('/');
         setTimeout(() => this.setState({ logoutModal: false }), 2000);
       })
       .catch(err => {
@@ -177,7 +196,9 @@ class SidebarLeft extends React.Component {
                 <Icon name='user plus' />
                 Sign Up
               </Menu.Item> :
-              <Menu.Item name='welcome' style={{cursor: 'pointer'}} onClick={() => { this.setState({ profile: !this.state.profile })}}>
+              <Menu.Item name='welcome' style={{cursor: 'pointer'}} onClick={() => {
+                this.getUserStuff();
+                this.setState({ profile: !this.state.profile })}}>
                 <Icon name='hand victory'/>
                 Welcome, {this.props.loggedInUser}!
                 <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
@@ -186,9 +207,9 @@ class SidebarLeft extends React.Component {
                     <Modal.Description>
                       Rank: TBD
                       <br/>
-                      Wins: TBD
+                      Wins: {this.state.userWins}
                       <br/>
-                      Losses: TBD
+                      Losses: {this.state.userLosses}
                       <p/>
                     </Modal.Description>
                   </Modal.Content>
