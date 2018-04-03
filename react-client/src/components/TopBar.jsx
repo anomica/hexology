@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm } from 'semantic-ui-react';
+import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm, Grid, Transition } from 'semantic-ui-react';
 import { exitGame, setRoom, deleteRoom, resetBoard, setHexbot } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
 
@@ -14,6 +14,7 @@ class TopBar extends React.Component {
     this.state = {
       modalOpen: false,
       confirmOpen: false,
+      saveOpen: false,
       email: '',
       message: '',
       inviteSent: false,
@@ -25,11 +26,15 @@ class TopBar extends React.Component {
     this.confirm = this.confirm.bind(this);
     this.handleCancel = this.handleCancel.bind(this);
     this.handleConfirm = this.handleConfirm.bind(this);
+    this.handleSaveClose = this.handleSaveClose.bind(this);
   }
 
   saveGame() {
-    // console.log('inside save game')
-    // console.log('this props', this.props)
+    this.setState({saveOpen: true});
+  }
+
+  handleSaveClose() {
+    this.setState({ saveOpen: false });
   }
 
   confirm() {
@@ -92,11 +97,20 @@ class TopBar extends React.Component {
         <Header as='h1'>Hexology</Header>
 
         <div style={{right: '10px', top: '20px', position: 'absolute'}}>
-          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
-            <Button
-              style={{marginRight: '5px'}}
-              onClick={this.saveGame}
-            >Save Game</Button> : null
+          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')
+          ? <Modal
+              open={this.state.saveOpen}
+              trigger={
+                <Button 
+                  style={{marginRight: '5px'}}
+                  onClick={this.saveGame}
+                >Save Game</Button>}>
+              <Modal.Content>Game Saved</Modal.Content>
+              <Modal.Actions>
+                <Button positive labelPosition='right' icon='checkmark' onClick={this.handleSaveClose} content='Cool' />
+              </Modal.Actions>
+            </Modal>
+            : null
           }
           <Button
             onClick={this.confirm}
@@ -127,8 +141,10 @@ class TopBar extends React.Component {
             </Segment>
           )
         }
-        {this.props.location.state.gameLoad && !this.state.inviteSent // if the game has been loaded by player
-          ? <Segment>Invite <strong>{this.props.location.state.otherPlayerInfo.username}</strong> to resume this game!
+        {this.props.location.state.gameLoad // if the game has been loaded by player
+          ? (this.state.inviteSent
+            ? <Segment>Invite sent to {this.props.location.state.otherPlayerInfo.email}</Segment>
+            : <Segment>Invite <strong>{this.props.location.state.otherPlayerInfo.username}</strong> to resume this game!
               <Button
                 size={'tiny'}
                 color={'blue'}
@@ -138,7 +154,7 @@ class TopBar extends React.Component {
                 >
                 Click Here
               </Button>
-            </Segment>
+            </Segment>)
           : null
         }
         <Segment.Group horizontal>

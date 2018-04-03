@@ -25,6 +25,7 @@ class SidebarLeft extends React.Component {
       saveGameButton: false,
       gameType: 'public',
       rules: false,
+      profile: false,
       logoutModal: false,
       loadGameModal: false,
       disabled: window.location.href.indexOf('game') === -1 ? false : true,
@@ -37,8 +38,7 @@ class SidebarLeft extends React.Component {
     this.toggleLoadGames = this.toggleLoadGames.bind(this);
   }
 
-  // toggles sidebar
-  toggleMenu() {
+  toggleMenu() { // toggles sidebar
     this.setState({ visible: !this.state.visible });
   }
 
@@ -63,7 +63,8 @@ class SidebarLeft extends React.Component {
         } else {
           this.props.socket.emit('newGame', {
             gameType: this.state.gameType,
-            username: this.props.loggedInUser
+            username: this.props.loggedInUser,
+            socketId: this.props.socket.id
           });
         }
         this.props.socket.on('newGame', data => {
@@ -113,8 +114,7 @@ class SidebarLeft extends React.Component {
   }
 
   render() {
-    // Shows rules modal if rules menu item is clicked
-    const showRules = () => {
+    const showRules = () => { // Shows rules modal if rules menu item is clicked
       if (this.state.rules) {
         return (
           <Rules open={this.state.rules} close={this.toggleRules} />
@@ -177,11 +177,22 @@ class SidebarLeft extends React.Component {
                 <Icon name='user plus' />
                 Sign Up
               </Menu.Item> :
-              <Menu.Item
-                name='welcome'
-              >
-              <Icon name='hand victory'/>
-              Welcome, {this.props.loggedInUser}!
+              <Menu.Item name='welcome' style={{cursor: 'pointer'}} onClick={() => { this.setState({ profile: !this.state.profile })}}>
+                <Icon name='hand victory'/>
+                Welcome, {this.props.loggedInUser}!
+                <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
+                  <Modal.Header>Profile: {this.props.loggedInUser}</Modal.Header>
+                  <Modal.Content>
+                    <Modal.Description>
+                      Rank: TBD
+                      <br/>
+                      Wins: TBD
+                      <br/>
+                      Losses: TBD
+                      <p/>
+                    </Modal.Description>
+                  </Modal.Content>
+                </Modal>
               </Menu.Item>
             }
 

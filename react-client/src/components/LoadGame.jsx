@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import axios from 'axios';
-import { Button, Header, Image, Modal, Icon, List, Table, Confirm, Transition, Loader } from 'semantic-ui-react';
+import { Button, Header, Image, Modal, Icon, List, Table, Confirm, Transition, Loader, Dimmer } from 'semantic-ui-react';
 import socketIOClient from 'socket.io-client';
 import { withRouter} from 'react-router';
 import { setRoom } from '../../src/actions/actions.js';
@@ -44,9 +44,10 @@ class LoadGame extends React.Component {
         games: data.games
       });
     });
+
     this.setState({ loader: true, open: false })
 
-    setTimeout(() => this.setState({ loader: false }), 2000);
+    setTimeout(() => this.setState({ loader: false }), 3000);
   }
 
   handleCancel() {
@@ -91,13 +92,12 @@ class LoadGame extends React.Component {
 
   render() {
     return (
-      
       <Modal
         open={this.props.open}
         onClose={this.props.close}
         closeIcon
       >
-        <Loader disabled={this.state.loader} />
+        <Loader active={this.state.loader} />
         <Modal.Header>My Current Games</Modal.Header>
         <Modal.Content image scrolling>
           <Modal.Description>
@@ -169,20 +169,17 @@ class LoadGame extends React.Component {
                         <Button size='tiny' color='red' style={{marginTop: '2%'}}
                           onClick={ () => {this.show(i, game.game_id)} }
                         >Delete Game</Button>
-
-                        <Transition animation={'jiggle'} duration={'1000'} visible={this.state.open}>
-                          <Confirm
-                            header='Confirm Delete'
-                            content="Are you sure you want to delete this game? There's no turning back!"
-                            cancelButton='Nevermind'
-                            confirmButton="Let's do it!"
-                            open={this.state.open}
-                            onCancel={this.handleCancel}
-                            onConfirm={ () => {
-                              this.handleConfirm(this.state.gameId);
-                            }}
-                          />
-                        </Transition>
+                        <Confirm
+                          header='Confirm Delete'
+                          content="Are you sure you want to delete this game? There's no turning back!"
+                          cancelButton='Nevermind'
+                          confirmButton="Let's do it!"
+                          open={this.state.open}
+                          onCancel={this.handleCancel}
+                          onConfirm={ () => {
+                            this.handleConfirm(this.state.gameId);
+                          }}
+                        />
                       </Table.Cell>
                     </Table.Row>
                   )}
