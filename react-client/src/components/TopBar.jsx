@@ -153,18 +153,25 @@ class TopBar extends React.Component {
             </Modal>
             : null
           }
-          <Button
-            onClick={this.confirm}
-            >Exit Game</Button>
-            <Confirm
-              header='Save Game?'
-              content="Do you want to save this game?"
-              cancelButton='No'
-              confirmButton="Yes"
-              open={this.state.confirmOpen}
-              onCancel={this.handleDontSave}
-              onConfirm={this.handleSaveOnExit}
-            />
+          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator
+            ? <div>
+                <Button
+                  onClick={this.confirm}
+                >Exit Game</Button>
+                <Confirm
+                  header='Save Game?'
+                  content="Do you want to save this game?"
+                  cancelButton='No'
+                  confirmButton="Yes"
+                  open={this.state.confirmOpen}
+                  onCancel={this.handleDontSave}
+                  onConfirm={this.handleSaveOnExit}
+                />
+              </div>
+            : <Button
+                onClick={this.handleDontSave}
+              >Exit Game</Button>
+          }
         </div>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
         {this.props.boardState ? null :
