@@ -1,7 +1,7 @@
 version: '2'
 services:
   hexo:
-    image: gloverac/hexweb3:latest
+    image: gloverac/hexologyweb:latest
     ports:
      - "80:3000"
     depends_on:

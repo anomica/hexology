@@ -29,7 +29,7 @@ class Main extends React.Component {
     //     console.log('error from signup:', err);
     //   })
     (async () => {
-      let socket = await socketIOClient('0.0.0.0');
+      let socket = await socketIOClient('http://18.232.102.94/3000');
       this.props.setSocket(socket);
     })();
 
