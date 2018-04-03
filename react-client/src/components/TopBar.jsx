@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label } from 'semantic-ui-react';
+import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm, Grid, Transition } from 'semantic-ui-react';
 import { exitGame, setRoom, deleteRoom, resetBoard, setHexbot } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
 
@@ -13,6 +13,8 @@ class TopBar extends React.Component {
 
     this.state = {
       modalOpen: false,
+      confirmOpen: false,
+      saveOpen: false,
       email: '',
       message: '',
       inviteSent: false,
@@ -20,11 +22,31 @@ class TopBar extends React.Component {
     }
 
     this.saveGame = this.saveGame.bind(this);
+    this.sendEmailToResume = this.sendEmailToResume.bind(this);
+    this.confirm = this.confirm.bind(this);
+    this.handleCancel = this.handleCancel.bind(this);
+    this.handleConfirm = this.handleConfirm.bind(this);
+    this.handleSaveClose = this.handleSaveClose.bind(this);
   }
 
   saveGame() {
-    // console.log('inside save game')
-    // console.log('this props', this.props)
+    this.setState({saveOpen: true});
+  }
+
+  handleSaveClose() {
+    this.setState({ saveOpen: false });
+  }
+
+  confirm() {
+    this.setState({ confirmOpen: true });
+  }
+  handleConfirm() {
+    this.exitGame();
+    this.setState({ confirmOpen: false });
+  }
+
+  handleCancel() {
+    this.setState({ confirmOpen: false });
   }
 
   exitGame() {
@@ -41,13 +63,25 @@ class TopBar extends React.Component {
     this.props.history.push('/');
   }
 
-
   sendEmail() {
-    this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' })
+    this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' });
     this.props.socket.emit('sendEmail', {
       username: this.props.loggedInUser,
       email: this.state.email,
       message: this.state.message,
+      room: this.props.room
+    })
+    setTimeout(() => this.setState({ modalOpen: false }), 2000);
+  }
+
+  sendEmailToResume() {
+    this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' });
+    let messageDefault;
+    messageDefault = this.state.message ? this.state.message : "Yo, let's finish our awesome game of Hexology!"
+    this.props.socket.emit('sendEmail', {
+      username: this.props.loggedInUser,
+      email: this.props.location.state.otherPlayerInfo.email,
+      message: messageDefault,
       room: this.props.room
     })
     setTimeout(() => this.setState({ modalOpen: false }), 2000);
@@ -63,16 +97,33 @@ class TopBar extends React.Component {
         <Header as='h1'>Hexology</Header>
 
         <div style={{right: '10px', top: '20px', position: 'absolute'}}>
-          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
-            <Button
-              style={{marginRight: '5px'}}
-              onClick={this.saveGame}
-            >Save Game</Button> : null
+          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')
+          ? <Modal
+              open={this.state.saveOpen}
+              trigger={
+                <Button 
+                  style={{marginRight: '5px'}}
+                  onClick={this.saveGame}
+                >Save Game</Button>}>
+              <Modal.Content>Game Saved</Modal.Content>
+              <Modal.Actions>
+                <Button positive labelPosition='right' icon='checkmark' onClick={this.handleSaveClose} content='Cool' />
+              </Modal.Actions>
+            </Modal>
+            : null
           }
-
           <Button
-            onClick={this.exitGame.bind(this)}
-          >Exit Game</Button>
+            onClick={this.confirm}
+            >Exit Game</Button>
+            <Confirm
+              header='Exit Game?'
+              content="Are you sure you want to exit this game?"
+              cancelButton='Cancel'
+              confirmButton="Yes"
+              open={this.state.confirmOpen}
+              onCancel={this.handleCancel}
+              onConfirm={this.handleConfirm}
+            />
         </div>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
         {this.props.boardState ? null :
@@ -90,6 +141,22 @@ class TopBar extends React.Component {
             </Segment>
           )
         }
+        {this.props.location.state.gameLoad // if the game has been loaded by player
+          ? (this.state.inviteSent
+            ? <Segment>Invite sent to {this.props.location.state.otherPlayerInfo.email}</Segment>
+            : <Segment>Invite <strong>{this.props.location.state.otherPlayerInfo.username}</strong> to resume this game!
+              <Button
+                size={'tiny'}
+                color={'blue'}
+                compact
+                style={{marginLeft: '20px'}}
+                onClick={() => this.setState({ modalOpen: true })}
+                >
+                Click Here
+              </Button>
+            </Segment>)
+          : null
+        }
         <Segment.Group horizontal>
           {this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
             <Segment>
@@ -105,8 +172,7 @@ class TopBar extends React.Component {
             </Segment>
           }
           <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
-            (this.props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') :
-            `Game will begin when both players have joined.`}</strong>
+            (this.props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') : `Game will begin when both players have joined.`}</strong>
           {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
             <UnitShop>Shop</UnitShop> : null
             }
@@ -128,35 +194,71 @@ class TopBar extends React.Component {
             </Segment>
           }
         </Segment.Group>
-        <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
-          <Modal.Header>Please write the recipient's emails below, along with any message you would like to send.</Modal.Header>
-          <Modal.Content>
-            <Modal.Description>
-              <Form size={'large'} key={'small'}>
-                <Form.Group widths='equal'>
-                  <Form.Input
-                    fluid
-                    required
-                    name={'email'}
-                    value={this.state.email}
-                    onChange={this.handleChange.bind(this)}
-                    label='Email'
-                    placeholder='example@gmail.com' />
-                  <Form.TextArea
-                    onChange={this.handleChange.bind(this)}
-                    label='Message'
-                    name={'message'}
-                    value={this.state.message}
-                    placeholder='Please join me for an awesome game of Hexology!' />
-                </Form.Group>
-              </Form>
-            </Modal.Description>
-          </Modal.Content>
-          <Divider/>
-          <Modal.Actions>
-            <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
-          </Modal.Actions>
-        </Modal>
+        
+          {this.props.location.state.otherPlayerInfo
+            ? <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({
+                modalOpen: false,
+                email: this.props.location.state.otherPlayerInfo.email
+              })}>
+                <Modal.Header>Send an email to {this.props.location.state.otherPlayerInfo.username} to resume this game!</Modal.Header>
+                <Modal.Content>
+                  <Modal.Description>
+                    <Form size={'large'} key={'small'}>
+                      <Form.Group widths='equal'>
+                        <Form.Input
+                          fluid
+                          required
+                          name={'email'}
+                          value={this.props.location.state.otherPlayerInfo.email}
+                          onChange={this.handleChange.bind(this)}
+                          label='Email'
+                          />
+                        <Form.TextArea
+                          onChange={this.handleChange.bind(this)}
+                          label='Message'
+                          name={'message'}
+                          value={this.state.message}
+                          placeholder="Yo, let's finish our awesome game of Hexology!" />
+                      </Form.Group>
+                    </Form>
+                  </Modal.Description>
+                </Modal.Content>
+                <Divider/>
+                <Modal.Actions>
+                  <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>
+                </Modal.Actions>
+              </Modal>
+
+            : <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
+                <Modal.Header>Please write the recipient's email below, along with any message you would like to send.</Modal.Header>
+                <Modal.Content>
+                  <Modal.Description>
+                    <Form size={'large'} key={'small'}>
+                      <Form.Group widths='equal'>
+                        <Form.Input
+                          fluid
+                          required
+                          name={'email'}
+                          value={this.state.email}
+                          onChange={this.handleChange.bind(this)}
+                          label='Email'
+                          placeholder='example@gmail.com' />
+                        <Form.TextArea
+                          onChange={this.handleChange.bind(this)}
+                          label='Message'
+                          name={'message'}
+                          value={this.state.message}
+                          placeholder='Please join me for an awesome game of Hexology!' />
+                      </Form.Group>
+                    </Form>
+                  </Modal.Description>
+                </Modal.Content>
+                <Divider/>
+                <Modal.Actions>
+                  <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
+                </Modal.Actions>
+              </Modal>
+          }
       </Segment>
     )
   }

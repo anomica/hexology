@@ -251,7 +251,16 @@ const reducers = (state = defaultState, action) => {
         ...state,
         forfeitModalOpen: action.payload
       }
-
+    case 'SET-PLAYER-ONE':
+      return {
+        ...state,
+        playerOne: action.payload
+      }
+    case 'SET-PLAYER-TWO':
+      return {
+        ...state,
+        playerTwo: action.payload
+      }
   }
 }
 

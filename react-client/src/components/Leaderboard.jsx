@@ -1,11 +1,10 @@
 import React from 'react';
-import { Header, Image, Table, Icon } from 'semantic-ui-react';
+import { Header, Image, Table, Icon, Button, Modal } from 'semantic-ui-react';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
-import { newRoom, deleteRoom } from '../../src/actions/actions.js';
 
 class Leaderboard extends React.Component {
   constructor(props) {
@@ -41,7 +40,7 @@ class Leaderboard extends React.Component {
 
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell colSpan='3' style={{textAlign: 'center'}}>
+            <Table.HeaderCell colSpan='4' style={{textAlign: 'center'}}>
               <h3><Icon name='trophy' />Leaderboard</h3>
             </Table.HeaderCell>
           </Table.Row>
@@ -51,7 +50,8 @@ class Leaderboard extends React.Component {
           <Table.Row>
             <Table.HeaderCell style={{textAlign: 'center'}}>Rank</Table.HeaderCell>
             <Table.HeaderCell style={{textAlign: 'center'}}>User</Table.HeaderCell>
-            <Table.HeaderCell style={{textAlign: 'center'}}>Total Wins</Table.HeaderCell>
+            <Table.HeaderCell style={{textAlign: 'center'}}>Wins</Table.HeaderCell>
+            <Table.HeaderCell style={{textAlign: 'center'}}>Losses</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 
@@ -62,14 +62,33 @@ class Leaderboard extends React.Component {
                 {key + 1}
               </Table.Cell>
               <Table.Cell>
-                <Header as='h4' image>
-                  <Header.Content>
-                    {user.username}
-                  </Header.Content>
-                </Header>
+                <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}>{user.username}</Header>}>
+                  <Modal.Header>Profile: {user.username}</Modal.Header>
+                  <Modal.Content>
+                    <Modal.Description>
+                      Rank: {key + 1}
+                      <br/>
+                      Wins: {user.wins}
+                      <br/>
+                      Losses: {user.losses}
+                      <p/>
+                      {this.props.loggedInUser !== 'anonymous'
+                        ? <Button color='blue' key='blue'>Challenge</Button>
+                        : null
+                      }
+                    </Modal.Description>
+                  </Modal.Content>
+                </Modal>
               </Table.Cell>
               <Table.Cell style={{textAlign: 'center'}}>
                 {user.wins}
+                <br/>
+                ({Math.round((user.wins) / (user.wins + user.losses) * 100)}%)
+              </Table.Cell>
+              <Table.Cell style={{textAlign: 'center'}}>
+                {user.losses}
+                <br />
+                ({Math.round((user.losses) / (user.wins + user.losses) * 100)}%)
               </Table.Cell>
             </Table.Row>
           ))}
@@ -82,11 +101,12 @@ class Leaderboard extends React.Component {
 
 const mapStateToProps = state => {
   return {
+    loggedInUser: state.state.loggedInUser
   }
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ newRoom, deleteRoom }, dispatch);
+  return bindActionCreators({ }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Leaderboard));

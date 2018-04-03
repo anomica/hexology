@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import axios from 'axios';
-import { Button, Header, Image, Modal, Icon, List, Table, Confirm } from 'semantic-ui-react';
+import { Button, Header, Image, Modal, Icon, List, Table, Confirm, Transition, Loader, Dimmer } from 'semantic-ui-react';
 import socketIOClient from 'socket.io-client';
 import { withRouter} from 'react-router';
 import { setRoom } from '../../src/actions/actions.js';
@@ -15,12 +15,12 @@ class LoadGame extends React.Component {
       open: false,
       index: null,
       gameId: null,
+      loader: false
     }
     this.retrieveGame = this.retrieveGame.bind(this);
     this.handleConfirm = this.handleConfirm.bind(this);
     this.handleCancel = this.handleCancel.bind(this);
     this.show = this.show.bind(this);
-    this.goToGame = this.goToGame.bind(this);
   }
 
   show(index, gameId) {
@@ -37,14 +37,17 @@ class LoadGame extends React.Component {
       username: this.props.loggedInUser,
       gameId: gameId,
       socketId: this.props.socket.id
-    })
+    });
 
     socket.on('updateUserGamesList', (data) => {
       this.setState({
-        games: data.games,
-        open: false
+        games: data.games
       });
-    })
+    });
+
+    this.setState({ loader: true, open: false })
+
+    setTimeout(() => this.setState({ loader: false }), 3000);
   }
 
   handleCancel() {
@@ -55,26 +58,25 @@ class LoadGame extends React.Component {
     })
   }
 
-  goToGame(game, roomId) {
-    this.props.history.push({
-      pathname: `/game/room?${roomId}`,
-      state: {
-        game: game
-      }
-    });
-  }
-
   async retrieveGame(roomId, gameIndex) {
     let socket = await this.props.socket;
     socket.emit('loadGame', {
       oldRoom: '*' + roomId,
       socketId: socket.id,
       username: this.props.loggedInUser,
-      gameIndex: gameIndex
+      gameIndex: gameIndex,
     });
-    socket.on('gameBoard', data => {
-      this.goToGame(data.game, '*' + roomId);
+
+    socket.on('updateRoom', data => {
+      this.props.history.push({
+        pathname: `/game/room?${data.room}`,
+        state: {
+          gameLoad: true,
+          otherPlayerInfo: data.otherPlayerInfo
+        }
+      });
     })
+    this.props.close();
   }
 
   componentDidMount() {
@@ -95,6 +97,7 @@ class LoadGame extends React.Component {
         onClose={this.props.close}
         closeIcon
       >
+        <Loader active={this.state.loader} />
         <Modal.Header>My Current Games</Modal.Header>
         <Modal.Content image scrolling>
           <Modal.Description>
@@ -122,10 +125,17 @@ class LoadGame extends React.Component {
                       <Table.Cell>
                         #{i + 1} (ID: {game.game_id})
                         <br/>
-                        Player 1: {game.player1_username}
-                        <br/>
-                        Player 2: {game.player2_username}
-                        <br/>RoomId: {game.room_id}
+                        {this.props.loggedInUser === game.player1_username
+                          ? <div>
+                              <div><strong>Player 1: {game.player1_username}</strong></div>
+                              <div>Player 2: {game.player2_username}</div>
+                            </div>
+                          : <div>
+                              <div>Player 1: {game.player1_username}</div>
+                              <div><strong>Player 2: {game.player2_username}</strong></div>
+                            </div>
+                        }
+                        Room ID: {game.room_id}
                       </Table.Cell>
                       <Table.Cell>
                         Gold: {game.p1_gold}
@@ -135,9 +145,7 @@ class LoadGame extends React.Component {
                         Metal: {game.p1_metal}
                       </Table.Cell>
 
-                      <Table.Cell style={{textAlign: 'center'}}>
-                        {game.p1_total_units}
-                      </Table.Cell>
+                      <Table.Cell style={{textAlign: 'center'}}>{game.p1_total_units}</Table.Cell>
 
                       <Table.Cell>
                         Gold: {game.p2_gold}
@@ -147,11 +155,9 @@ class LoadGame extends React.Component {
                         Metal: {game.p2_metal}
                       </Table.Cell>
 
-                      <Table.Cell style={{textAlign: 'center'}}>
-                        {game.p2_total_units}
-                      </Table.Cell>
+                      <Table.Cell style={{textAlign: 'center'}}>{game.p2_total_units}</Table.Cell>
 
-                      <Table.Cell>{game.current_player}</Table.Cell>
+                      <Table.Cell>Player {game.current_player}</Table.Cell>
 
                       <Table.Cell>
                         <Button size='tiny' color='blue'
@@ -189,11 +195,13 @@ class LoadGame extends React.Component {
 }
 
 const mapStateToProps = (state) => {
-  console.log('state', state)
   return {
     socket: state.state.socket,
     loggedInUser: state.state.loggedInUser,
-    room: state.state.room
+    room: state.state.room,
+    rooms: state.state.rooms,
+    currentPlayer: state.state.currentPlayer,
+    userPlayer: state.state.userPlayer
   }
 }
 

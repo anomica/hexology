@@ -6,7 +6,7 @@ import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Descrip
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
 import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
-         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard, botMove } from '../../src/actions/actions.js';
+         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -68,6 +68,19 @@ class Board extends React.Component {
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
+
+      socket.on('loadGameBoard', data => {
+        this.props.drawBoard(data.game); // inits the board from last saved state
+        this.props.setGameIndex(data.game.gameIndex); // sets original game index
+        this.props.selectHex({}); // initialize selected hex
+        this.props.highlightNeighbors([]); // and neighbors
+        this.props.setRoom(data.game.room); // sets the room
+        this.props.updateUnitCounts(data.game.playerOneTotalUnits, data.game.playerTwoTotalUnits); // retrieves players resource counts
+        this.props.updateBank(data.game.playerOneUnitBank, data.game.playerTwoUnitBank); // retrieves players units in the bank
+        this.props.setUserPlayer(`${data.game.userPlayer}`); // sets the current user
+        this.props.switchPlayer(`${data.game.currentPlayer}`); // sets the current player's turn
+      });
+
       socket.on('gameCreated', data => {
         this.props.drawBoard(data); // if the server sends an object, it means that the player is player 2
         this.props.setGameIndex(data.gameIndex); // if so, set game index
@@ -81,13 +94,14 @@ class Board extends React.Component {
           player: this.props.userPlayer,
           gameIndex: data.gameIndex,
           room: data.room
-        })
+        });
         interval = setInterval(() => {
           this.setState({
             timer: this.state.timer += 1
           })
         }, 1000)
       });
+      
       socket.on('move', (move) => { // when socket receives result of move request,
         if (this.props.hexbot && this.props.currentPlayer === 'player2') {
           this.hexbotIsThinking();
@@ -412,7 +426,7 @@ class Board extends React.Component {
               <SidebarLeft />
             </Grid.Column>
             <Grid.Column width={16}>
-              <TopBar />
+              <TopBar otherPlayer={this.props.location.state}/>
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
@@ -578,7 +592,7 @@ const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
-    setGameIndex, resetBoard, botMove }, dispatch);
+    setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);
