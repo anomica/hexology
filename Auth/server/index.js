@@ -50,9 +50,10 @@ app.post('/login', passport.authenticate('local-login'), (req, res) => {
   res.status(201).json(req.user);
 });
 
-app.post('/logout', isLoggedIn, function (req, res) {
+app.post('/logout', function (req, res) {
+  console.log('in auth logout');
   req.logout();
-  res.clearCookie('connect.sid').status(200).redirect('/');
+  res.status(201).json();
 });
 
 

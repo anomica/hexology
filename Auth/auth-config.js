@@ -38,7 +38,7 @@ module.exports = function (passport) {
     async (req, username, password, cb) => {
       console.log('made it to passport local-signup', username, password);
       console.log('made it to else');
-      const user = await db.addUser(username, req.body.email, hash);
+      const user = await db.addUser(username, req.body.email, password);
       console.log('user:', user);
         if (user === 'User already exists') {
           cb(user, null);

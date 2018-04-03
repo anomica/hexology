@@ -3,8 +3,6 @@ const bodyParser = require('body-parser');
 const url = require('url');
 let path = require('path');
 const db = require('../database/index');
-const passport = require('passport');
-const session = require('express-session');
 const uuidv4 = require('uuid/v4');
 const app = express();
 const http = require("http");
@@ -14,17 +12,10 @@ var cors = require('cors');
 const socketIo = require("socket.io");
 const io = socketIo(server);
 const axios = require('axios');
-require('./auth-config.js')(passport);
 require('events').EventEmitter.prototype._maxListeners = 100;
 // const http = require('http').Server(app);
 // require('../server/config/passport')(passport);
-app.use(session({
-  secret: process.env.SESSION_PASSWORD || 'supersecretsecret',
-  resave: true,
-  saveUninitialized: true
-}));
-app.use(passport.initialize());
-app.use(passport.session());
+
 app.use(express.static(path.join(__dirname, '../react-client/dist')));
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
@@ -52,8 +43,8 @@ app.post('/signup', (req, res) => {
     email: req.body.email
   })
     .then(response => {
-      console.log('response in signup:', response);
-      res.status(201).json(response);
+      console.log('response in signup:', response.data);
+      res.status(201).json(response.data);
     })
     .catch(err => {
       console.log('error signing up:', err);
@@ -66,8 +57,8 @@ app.post('/login', (req, res) => {
     password: req.body.password
   })
     .then(response => {
-      console.log('response in login:', response)
-      res.status(201).json(response);
+      console.log('response in login:', response.data)
+      res.status(201).json(response.data);
     })
     .catch(err => {
       console.log('error logging in:', err);
@@ -75,8 +66,9 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  axios.post(process.env.AUTH_HOST + '/logout', req)
+  axios.post('http://' + process.env.AUTH_HOST + ':8000/logout')
     .then(response => {
+      res.clearCookie('connect.sid').status(200).redirect('/');
       console.log('logged out user');
     })
     .catch(err => {
