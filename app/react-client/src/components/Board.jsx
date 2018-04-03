@@ -53,7 +53,10 @@ class Board extends React.Component {
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
-          socket = await socketIOClient('http://18.232.102.94/3000');
+          let endpoint = '/';
+          console.log('endpoint in board:', endpoint)
+          socket = await socketIOClient(endpoint);
+          console.log('socket in board:', socket);
           this.props.setSocket(socket);
         }
         socket.emit('joinGame', {

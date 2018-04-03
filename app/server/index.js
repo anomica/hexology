@@ -29,6 +29,9 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 app.use(cors())
 
+console.log('server', server);
+console.log('io:', io);
+
 // local Login Strategy
 const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
