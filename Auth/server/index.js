@@ -45,7 +45,7 @@ app.get('/persistUser', (req, res) => {
 //   res.status(201).json(req.user);
 // });
 
-app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
+app.post('/signup', (req, res) => {
   console.log('in auth signup');
   res.status(201).json('credentials validated');
 });
