@@ -793,15 +793,13 @@ const moveUnits = async (data, socket, hexbot) => {
 
         // console.log('\n=================================================================================\nRESULT OF COMBAT:\n', result, '\n=================================================================================\n')
         if (result === 'tie') { // game tie
-          // console.log('\n===================================================== IT WAS A TIE =================================\n')
-          io.to(room).emit('tieGame');
+          // console.log('\n===================================================== IT WAS A TIE =================================\n', 'gameIndex:', gameIndex);
+          await db.forceEndGame(gameIndex); // deletes game from db
+          await io.to(room).emit('tieGame');
+
           const board = await gameInit(5, 4);
-          let gameIndex = uuidv4();
-
-          let p1Resources = await db.getResources(room, gameIndex, 'player1');
-          let p2Resources = await db.getResources(room, gameIndex, 'player2');
-
-          games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
+          let newGameIndex = uuidv4();
+          games[newGameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
             board: board, // set board,
             playerOneResources: { // p1 resources,
               gold: 10,
@@ -819,7 +817,7 @@ const moveUnits = async (data, socket, hexbot) => {
 
           const newGameBoard = {
             board: board,
-            gameIndex: gameIndex,
+            gameIndex: newGameIndex,
             room: room,
             playerOneResources: {
               gold: 10,
@@ -837,7 +835,7 @@ const moveUnits = async (data, socket, hexbot) => {
           // let playerOne = // need to get username to get user id from db
           // let playerTwo = // need to get username to get user id from db
 
-          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
+          await db.createGame(room, board, newGameIndex); // saves the new game & hexes in the database
           /////////////////////////////////////////////////////////////////////////////////////////////
 
           setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000);
@@ -899,7 +897,7 @@ const moveUnits = async (data, socket, hexbot) => {
           return;
         }
         if (result.gameOver) {  // // if the game is over & attacker wins, need to change hexes and send back board
-          // console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GAME IS OVER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n')
+          // console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GAME IS OVER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngameIndex: ', result.gameIndex);
           if (result.gameOver === 'player1') { // if player1 won
             await db.gameComplete(result.gameIndex, room, 'player1', 'player2');
           } else if (result.gameOver === 'player2') { // if player2 won
@@ -922,10 +920,6 @@ const moveUnits = async (data, socket, hexbot) => {
           const board = await gameInit(5, 4); // init board for new game
           let gameIndex = uuidv4();
 
-          let p1Resources = await db.getResources(room, gameIndex, 'player1');
-          let p2Resources = await db.getResources(room, gameIndex, 'player2');
-
-          //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
           games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
             board: board, // set board,
             playerOneResources: { // p1 resources,
@@ -951,19 +945,15 @@ const moveUnits = async (data, socket, hexbot) => {
               wood: 10,
               metal: 10
             },
-            playerTwoResources: { // and p2 resources
+            playerTwoResources: {
               gold: 10,
               wood: 10,
               metal: 10
             }
           }
 
-          /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
-          // let playerOne = // need to get username to get user id from db
-          // let playerTwo = // need to get username to get user id from db
-
           await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
-          /////////////////////////////////////////////////////////////////////////////////////////////
+//////
 
           setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000); // send game board to user
 

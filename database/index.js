@@ -689,20 +689,20 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
   // console.log(`\ngameComplete: gameIndex (${gameIndex}), room (${room}), winner (${winner}), loser (${loser})`)
   let roomNum = room.includes('*') ? room.split('*').join('') : room;
   let game = await getGame(room, gameIndex);
-  if ((winner === 'player1') && (game[0].player1 !== 1)) { // if the winner is player1 & is not anonymous //TODO: needs to be updated with user id instead of 1 or 2
+  if ((winner === 'player1') && (game[0].player1 !== 1)) { // if the winner is player1 & is not anonymous
     await knex('users')
       .where(knex.raw(`user_id = ${game[0].player1}`))
       .increment('wins', 1) // increase wins
-    if (game[0].player2 !== 2) { // if player2 (player2 id = 2 in db) is not anonymous //TODO: needs to be updated with user id instead of 1 or 2
+    if (game[0].player2 !== 2) { // if player2 (player2 id = 2 in db) is not anonymous
       await knex('users') // if the winner is player1 & is not anonymous
       .where(knex.raw(`user_id = ${game[0].player2}`))
       .increment('losses', 1) // increase losses
     }
-  } else if ((winner === 'player2') && (game[0].player2 !== 2)) { // if the winner is player2 & is not anonymous //TODO: needs to be updated with user id instead of 1 or 2
+  } else if ((winner === 'player2') && (game[0].player2 !== 2)) { // if the winner is player2 & is not anonymous
     await knex('users')
       .where(knex.raw(`user_id = ${game[0].player2}`))
       .increment('wins', 1) // increase wins
-    if (game[0].player1 !== 1) { // if player1 (player1 id = 1 in db) is not anonymous //TODO: needs to be updated with user id instead of 1 or 2
+    if (game[0].player1 !== 1) { // if player1 (player1 id = 1 in db) is not anonymous
       await knex('users')
         .where(knex.raw(`user_id = ${game[0].player1}`))
         .increment('losses', 1) // increase losses
