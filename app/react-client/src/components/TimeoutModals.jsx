@@ -11,11 +11,11 @@ const TimeoutModals = (props) => {
         <Modal open={props.warningModalOpen} onClose={() => props.warningOpen(false)} closeIcon>
           <Modal.Content>
             <Modal.Description>
-              You have 30 seconds to finish your move 
+              You have 30 seconds to finish your move
             </Modal.Description>
           </Modal.Content>
         </Modal>
-        <Modal open={props.forfeitModalOpen} onClose={() => props.forfeitOpen(false)} closeIcon> 
+        <Modal open={props.forfeitModalOpen} onClose={() => props.forfeitOpen(false)} closeIcon>
           <Modal.Content>
             <Modal.Description>
               {props.currentPlayer + ' '} took to long to make a move and forfeits the turn

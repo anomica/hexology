@@ -18,22 +18,13 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
-    // axios.post('/signup', {
-    //   username: 'amy11',
-    //   email: 'glova11@aol.com',
-    //   password: 'kitty'
-    // })
-    //   .then(data => {
-    //     console.log('data from signup:', data);
-    //   })
-    //   .catch(err => {
-    //     console.log('error from signup:', err);
-    //   })
     (async () => {
       let endpoint = '/';
       console.log('endpoint:', endpoint);
       let socket = await socketIOClient(endpoint);
       console.log('socket:', socket);
+
+      let socket = await socketIOClient('http://127.0.0.1:8080');
       this.props.setSocket(socket);
     })();
 
@@ -51,7 +42,7 @@ class Main extends React.Component {
     axios.get('/rooms')
       .then(rooms => {
         for (let room in rooms.data) {
-          if (room[0] !== '*') {
+          if (room[0] !== '*' || rooms.data[room].player2 === 'hexbot') {
             delete rooms.data[room]
           }
         }

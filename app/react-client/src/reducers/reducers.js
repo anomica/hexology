@@ -138,6 +138,18 @@ const reducers = (state = defaultState, action) => {
         selectedHex: {}, // initialize selected hex
         neighbors: [] // and neighbor array
       }
+    case 'BOT-MOVE':
+      originIndex = action.payload.originIndex; //  store indices of hexes in question for creating array copies
+      targetIndex = action.payload.targetIndex;
+      origin = action.payload.origin; // updated versions of hex moved from and hex moved to
+      target = action.payload.target;
+      newBoardState = state.boardState.slice(); // create clean copy of board state
+      newBoardState.splice(originIndex, 1, origin); // replace each of origin and target with updated copies in array
+      newBoardState.splice(targetIndex, 1, target);
+      return {
+        ...state,
+        boardState: newBoardState // insert board state with updated hexes
+      }
     case 'REINFORCE-HEX':
       newBoardState = state.boardState.slice();
       let hex = state.boardState[action.payload.hexIndex];
@@ -211,7 +223,7 @@ const reducers = (state = defaultState, action) => {
       }
     case 'LOGIN':
       let user;
-      action.payload === 'spectator' ? user = state.loggedInUser + '-spectator' 
+      action.payload === 'spectator' ? user = state.loggedInUser + '-spectator'
       : user = action.payload;
       return {
         ...state,
@@ -239,7 +251,16 @@ const reducers = (state = defaultState, action) => {
         ...state,
         forfeitModalOpen: action.payload
       }
-
+    case 'SET-PLAYER-ONE':
+      return {
+        ...state,
+        playerOne: action.payload
+      }
+    case 'SET-PLAYER-TWO':
+      return {
+        ...state,
+        playerTwo: action.payload
+      }
   }
 }
 
