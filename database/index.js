@@ -724,7 +724,7 @@ const getGameByGameIndex = async (gameIndex) => {
 
 /////////////////////// Deletes game when a player leaves the room ///////////////////////
 const forceEndGame = async (gameIndex) => {
-  console.log('\nforce ending the game... gameIndex: ', gameIndex, '\n');
+  // console.log('\nforce ending the game... gameIndex: ', gameIndex, '\n');
   let game = await getGameByGameIndex(gameIndex);
 
   if (game.length > 0) {

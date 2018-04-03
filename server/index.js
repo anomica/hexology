@@ -301,6 +301,59 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     emailHandler.sendEmail(username, email, room, message);
   });
 
+  socket.on('challenge', async (request) => {
+    let player2 = await db.getUserId(request.username); // user receiving the challenge request (aka player2)
+    let player1 = await db.getUserId(request.userPlayer); // user sending the challenge request (aka player1)
+    let newRoom = `*${roomNum}`;
+    room = newRoom;
+    let gameType = request.gameType;
+    await socket.join(newRoom);
+
+    io.sockets.adapter.rooms[newRoom].type = gameType;
+    io.sockets.adapter.rooms[newRoom].player1 = request.userPlayer;
+    io.sockets.adapter.rooms[newRoom].player1Wins = player1[0].wins;
+    io.sockets.adapter.rooms[newRoom].player1Losses = player1[0].losses;
+    io.sockets.adapter.rooms[newRoom].player1Email = player1[0].email;
+
+    await socket.emit('challenge', {
+      room: newRoom,
+      player2: {
+        email: player2[0].email,
+        losses: player2[0].losses,
+        wins: player2[0].wins,
+        userId: player2[0].user_id
+      }
+    });
+
+    await io.to(newRoom).emit('newGame', {
+      room: newRoom, 
+      player1Wins: player1[0].wins,
+      player1Losses: player1[0].losses,
+      player1Email: player1[0].email
+    });
+
+    gameType === 'public' && await socket.broadcast.emit('newRoom', { 
+      roomName: room, 
+      room: io.sockets.adapter.rooms[newRoom],
+      player1: request.userPlayer,
+      player1Wins: player1[0].wins,
+      player1Losses: player1[0].losses,
+      player1Email: player1[0].email
+     });
+
+    roomNum++;
+  });
+
+  socket.on('getUserStuff', async (request) => {
+    let user = await db.getUserId(request.username);
+    await socket.emit('getUserStuff', {
+      user: {
+        wins: user[0].wins,
+        losses: user[0].losses
+      }
+    });
+  });
+
   socket.on('newGame', async (request) => {
     let user = await db.getUserId(request.username);
     let newRoom = `*${roomNum}`;
