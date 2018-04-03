@@ -1,7 +1,7 @@
 version: '2'
 services:
   hexo:
-    image: hexweb:latest
+    image: gloverac/hexweb:latest
     ports:
      - "80:3000"
     depends_on:
@@ -9,4 +9,4 @@ services:
     environment:
      - DATABASE_HOST=database-hexology
   database-hexology:
-    image: hexdb:latest
+    image: gloverac/hexdb:latest
