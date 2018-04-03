@@ -77,14 +77,15 @@ const RoomsList = props => {
                         <Modal.Header>Profile: {' ' + room.player1}</Modal.Header>
                         <Modal.Content>
                           <Modal.Description>
-                            Rank: TBD
-                            <br/>
+                            {/* Rank: TBD
+                            <br/> */}
                             Wins: {' ' + room.player1Wins}
                             <br/>
                             Losses: {' ' + room.player1Losses}
                             <p/>
                             { room.player1 !== props.loggedInUser
-                              ? <Button>Challenge {' ' + room.player1}</Button>
+                              ? null
+                              // ? <Button>Challenge {' ' + room.player1}</Button>
                               : null
                             }
                           </Modal.Description>
@@ -103,14 +104,15 @@ const RoomsList = props => {
                           <Modal.Header>Profile: {' ' + room.player2}</Modal.Header>
                           <Modal.Content>
                             <Modal.Description>
-                              Rank: TBD
-                              <br/>
+                              {/* Rank: TBD
+                              <br/> */}
                               Wins: {' ' + room.player2Wins}
                               <br/>
                               Losses: {' ' + room.player2Losses}
                               <p/>
                               { room.player2 !== props.loggedInUser
-                                ? <Button>Challenge {' ' + room.player2}</Button>
+                                ? null
+                                // ? <Button>Challenge {' ' + room.player2}</Button>
                                 : null
                               }
                             </Modal.Description>

@@ -573,12 +573,12 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('leaveRoom', async (data) => {
-    console.log('left the room');
+    // console.log('left the room');
     if (data.gameSaved) { // if the game was saved when leaving the room
-      console.log('LEAVE ROOM requested game to be saved....')
+      // console.log('LEAVE ROOM requested game to be saved....')
       await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
     } else { // otherwise, the game wasn't saved
-      console.log('LEAVE ROOM game was not saved by user...')
+      // console.log('LEAVE ROOM game was not saved by user...')
       await db.forceEndGame(data.gameIndex); // game gets deleted from db
     }
     await socket.leave(data.room);
@@ -589,10 +589,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('disconnect', async (data) => {
     if (data.gameSaved) { // if the game was saved when leaving the room
-      console.log('DISCONNECT requested game to be saved....')
+      // console.log('DISCONNECT requested game to be saved....')
       await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
     } else { // otherwise, the game wasn't saved
-      console.log('DISCONNECT game was not saved by user...')
+      // console.log('DISCONNECT game was not saved by user...')
       await db.forceEndGame(data.gameIndex); // game gets deleted from db
     }
     await room && io.to(room).emit('disconnect');

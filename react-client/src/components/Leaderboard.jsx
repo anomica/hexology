@@ -57,7 +57,7 @@ class Leaderboard extends React.Component {
   }
 
   sendEmail() {
-    console.log('does this even work or nah')
+    // console.log('does this even work or nah')
     this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' });
 
     let messageDefault = this.state.message ? this.state.message : 'Hello there! Please join me for an awesome game of Hexology!';
@@ -152,8 +152,6 @@ class Leaderboard extends React.Component {
                           <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
                         </Modal.Actions>
                       </Modal>
-
-
 
                     </Modal.Description>
                   </Modal.Content>
