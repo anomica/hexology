@@ -326,14 +326,14 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     });
 
     await io.to(newRoom).emit('newGame', {
-      room: newRoom, 
+      room: newRoom,
       player1Wins: player1[0].wins,
       player1Losses: player1[0].losses,
       player1Email: player1[0].email
     });
 
-    gameType === 'public' && await socket.broadcast.emit('newRoom', { 
-      roomName: room, 
+    gameType === 'public' && await socket.broadcast.emit('newRoom', {
+      roomName: room,
       room: io.sockets.adapter.rooms[newRoom],
       player1: request.userPlayer,
       player1Wins: player1[0].wins,
@@ -866,6 +866,9 @@ const moveUnits = async (data, socket, hexbot) => {
           let p1Resources = await db.getResources(room, gameIndex, 'player1');
           let p2Resources = await db.getResources(room, gameIndex, 'player2');
 
+          let dbP1TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player1');
+          let dbP2TotalUnits = await db.getPlayerTotalUnits(room, gameIndex, 'player2');
+
           let newMove = {
             room: room,
             updatedOrigin: {
@@ -895,6 +898,10 @@ const moveUnits = async (data, socket, hexbot) => {
               gold: p2Resources[0].p2_gold,
               metal: p2Resources[0].p2_metal,
               wood: p2Resources[0].p2_wood
+            },
+            updatedUnitCounts: {
+              playerOneTotalUnits: dbP1TotalUnits[0].p1_total_units,
+              playerTwoTotalUnits: dbP2TotalUnits[0].p2_total_units,
             },
             tie: true
           }

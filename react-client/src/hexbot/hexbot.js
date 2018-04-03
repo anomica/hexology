@@ -37,6 +37,8 @@ const hexbot = (state = store.getState().state) => {
   let worstSecondaryThreat = [null, null, null, Number.NEGATIVE_INFINITY]; // also need to track worst secondary threa to move to decide on purchase
   let purchase = [];
 
+  console.log(playerTotalUnits, botTotalUnits, playerResources, botResources)
+
   let turnCounter = 2;
   let botHexes = [], playerHexes = [], adjacentEnemies = {}, secondaryEnemies = {}, adjacentResources = {}, secondaryResources = {}; // collect all adjacent and secondary adjacent threats and resources
   boardState.forEach(hex => { // check each hex on the board

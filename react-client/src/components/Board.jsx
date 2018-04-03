@@ -139,6 +139,7 @@ class Board extends React.Component {
             }), 2500);
             setTimeout(() => this.resetCombatModal(), 5001);
           }
+          console.log(move);
           if (move.updatedUnitCounts) {
             this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
           }
