@@ -9,4 +9,4 @@ services:
     environment:
      - DATABASE_HOST=database-hexology
   database-hexology:
-    build: /Docker-DB
+    build: ./Docker-DB
