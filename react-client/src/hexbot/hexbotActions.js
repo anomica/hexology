@@ -9,3 +9,10 @@ export const botMove = (origin, originIndex, target, targetIndex) => (
     }
   }
 )
+
+export const hexbotIsThinking = (value) => (
+  {
+    type: 'HEXBOT-IS-THINKING',
+    payload: value
+  }
+)
