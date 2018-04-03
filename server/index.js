@@ -314,14 +314,14 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.sockets.adapter.rooms[newRoom].player1Email = user[0].email;
 
     await io.to(newRoom).emit('newGame', {
-      room: newRoom, 
+      room: newRoom,
       player1Wins: user[0].wins,
       player1Losses: user[0].losses,
       player1Email: user[0].email
     }); // and send back a string to initialize for player 1
 
-    gameType === 'public' && await socket.broadcast.emit('newRoom', { 
-      roomName: room, 
+    gameType === 'public' && await socket.broadcast.emit('newRoom', {
+      roomName: room,
       room: io.sockets.adapter.rooms[newRoom],
       player1: request.username,
       player1Wins: user[0].wins,
@@ -442,7 +442,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('getUserGames', async (data) => {
-    let userGames = await db.retrieveUserGames(data.username);  
+    let userGames = await db.retrieveUserGames(data.username);
     await io.to(data.socketId).emit('getUserGames', {
       games: userGames
     })
@@ -467,8 +467,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       room: newRoom,
       otherPlayerInfo: otherPlayer[0]
     });
-    socket.broadcast.emit('newRoom', { 
-      roomName: room, 
+    socket.broadcast.emit('newRoom', {
+      roomName: room,
       room: io.sockets.adapter.rooms[newRoom]
       // player1: request.username
      });
@@ -482,12 +482,14 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('botMove', data => {
     if (data.resources) {
-      data.purchase.forEach(type => {
-        buyUnits(type, 'player2', data.gameIndex, data.socketId, data.room);
-        deployUnitsOnHex(data.originIndex, data.gameIndex, type, 10, data.room, data.updatedOrigin.index, 'player2')
+      data.purchase.forEach(async type => {
+        await buyUnits(type, 'player2', data.gameIndex, data.socketId, data.room);
+        await deployUnitsOnHex(data.originIndex, data.gameIndex, type, 10, data.room, data.updatedOrigin.index, 'player2')
+        await moveUnits(data, socket, true);
       });
+    } else {
+      moveUnits(data, socket, true);
     }
-    moveUnits(data, socket, true);
   });
 
   socket.on('buy', data => {
@@ -562,7 +564,7 @@ const assignLoggedInUser = async (username, player, gameIndex, room) => { // nee
 }
 
 const fetchUserGames = async (username, socketId) => {
-  let userGames = await db.retrieveUserGames(username);  
+  let userGames = await db.retrieveUserGames(username);
   // let user = await db.getUserId(username);
   // userGames.map( async (game, i) => {
   //   if (game.player1 === user[0].user_id) { // if user id = player1
@@ -705,11 +707,11 @@ const moveUnits = async (data, socket, hexbot) => {
         }
 
         // console.log('\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\nMOVE ON FRIENDLY COLLISION:\n', move, '\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\n')
-        
+
         /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
         await db.updateDbHexes(masterOrigin, updatedTarget, currentPlayer, updatedOrigin); // updates the original hex and new hex in the db for the current player
         /////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         await io.to(room).emit('move', move); // then send back okay to move units
 
       } else { // if collision & combat time
@@ -953,7 +955,7 @@ const moveUnits = async (data, socket, hexbot) => {
 
     } else { // if move is to unoccupied hex, execute move
       // await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room);
-      let p1Resources = await db.getResources(room, gameIndex, 'player1'); 
+      let p1Resources = await db.getResources(room, gameIndex, 'player1');
       let p2Resources = await db.getResources(room, gameIndex, 'player2');
 
       let move = {
