@@ -139,7 +139,6 @@ class Board extends React.Component {
             }), 2500);
             setTimeout(() => this.resetCombatModal(), 5001);
           }
-          console.log(move);
           if (move.updatedUnitCounts) {
             this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
           }
@@ -227,7 +226,7 @@ class Board extends React.Component {
           combatMessage: combatMessage,
           combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
         }), 2500);
-        setTimeout(() => this.resetCombatModal(), 5001);
+        setTimeout(() => this.resetCombatModal(), this.props.hexbot && this.props.currentPlayer === 'player2' ? 7001 : 5001);
       })
       socket.on('tieGame', () => {
         let tag;
@@ -265,6 +264,7 @@ class Board extends React.Component {
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
       socket.on('disconnect', () => {
+        clearInterval(interval);
         this.setState({ disconnectModalOpen: true });
         setTimeout(() => {
           this.props.history.push('/');
