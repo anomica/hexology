@@ -484,6 +484,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     if (data.resources) {
       data.purchase.forEach(async type => {
         await buyUnits(type, 'player2', data.gameIndex, data.socketId, data.room);
+        await verifyBankSubtractUnits('player2', type, 10, 10, data.gameIndex, data.room);
         await deployUnitsOnHex(data.originIndex, data.gameIndex, type, 10, data.room, data.updatedOrigin.index, 'player2')
         await moveUnits(data, socket, true);
       });
@@ -497,6 +498,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('deployUnits', data => {
+    console.log(data);
     verifyBankSubtractUnits(data.player, data.unit, data.quantity, data.bank, data.gameIndex, data.room);
   })
 
@@ -725,7 +727,6 @@ const moveUnits = async (data, socket, hexbot) => {
         ////////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////////
         let result = await resolveCombat(updatedOrigin.index, updatedTarget.index, gameIndex, room, updatedOrigin, updatedTarget, currentPlayer); //otherwise, roll for combat
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-
         // console.log('\n=================================================================================\nRESULT OF COMBAT:\n', result, '\n=================================================================================\n')
         if (result === 'tie') { // game tie
           // console.log('\n===================================================== IT WAS A TIE =================================\n')

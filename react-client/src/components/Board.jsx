@@ -204,7 +204,7 @@ class Board extends React.Component {
         this.props.knights(this.props.currentPlayer);
       });
       socket.on('troopsDeployed', data => {
-        this.props.addUnitsToHex(data.hex, data.hexIndex, data.currentPlayer);
+        this.props.addUnitsToHex(data.hex, data.hexIndex, data.hex.player);
       })
       socket.on('combatWin', (data) => {
         let combatMessage;
