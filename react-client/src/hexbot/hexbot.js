@@ -1,6 +1,6 @@
 import { store } from '../store/index.js';
 import { evaluateCombat } from './hexbotUtils.js';
-import { botMove, botPurchase } from './hexbotActions.js';
+import { botMove, hexbotIsThinking } from './hexbotActions.js';
 import _ from 'lodash';
 
 const boardRelationships = {
@@ -134,7 +134,7 @@ const hexbot = (state = store.getState().state) => {
       for (let combatIndex in adjacentEnemies[botHex]) { // simulate each combat
         if (adjacentEnemies[botHex][combatIndex].tie || adjacentEnemies[botHex][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
           let newOutcome = evaluateCombatAfterPurchase(adjacentEnemies[botHex][combatIndex], combatIndex, botResources, botHex, boardState, botTotalUnits, playerTotalUnits); // determine if a purchase the bot can make would change outcome
-          if (newOutcome.path && !newOutcome.tie && !newOutcome.combatWin && newOutcome.gameOver !== 'win') { // if a purchase could lead to a win,
+          if (newOutcome.path && !newOutcome.tie && newOutcome.gameOver !== 'lose' && !newOutcome.loseCombat) { // if a purchase could lead to a win,
             possibleMoves[botHex][combatIndex] = {
               ...possibleMoves[botHex][combatIndex],
               purchase: newOutcome.path,
@@ -157,7 +157,7 @@ const hexbot = (state = store.getState().state) => {
               ...possibleMoves[botHex][combatIndex],
               loseCombat: true,
               armyDiff: newOutcome.armyDiff,
-              gameOver: newOutcome.gameOver
+              gameOver: newOutcome.gameOver,
             }
           }
         } else { // if an attack will win outright
@@ -177,7 +177,7 @@ const hexbot = (state = store.getState().state) => {
         for (let combatIndex in secondaryEnemies[botHex][neighbor]) { // simulate each combat
           if (secondaryEnemies[botHex][neighbor][combatIndex].tie || secondaryEnemies[botHex][neighbor][combatIndex].armyDiff < 0) { // if the combat results in a tie or a loss,
             let newOutcome = evaluateCombatAfterPurchase(secondaryEnemies[botHex][neighbor][combatIndex], combatIndex, botResources, botHex, boardState, botTotalUnits, playerTotalUnits); // determine if a purchase the bot can make would change outcome
-            if (newOutcome.path && !newOutcome.tie) { // if a purchase could lead to a win,
+            if (newOutcome.path && !newOutcome.tie && newOutcome.gameOver !== 'lose' && !newOutcome.loseCombat) { // if a purchase could lead to a win,
               possibleNextTurnMoves[botHex][neighbor][combatIndex] = {
                 purchase: newOutcome.path,
                 cost: newOutcome.cost,
@@ -461,6 +461,9 @@ const hexbot = (state = store.getState().state) => {
     purchase: purchase,
     botTotalUnits: botTotalUnits
   });
+
+  store.dispatch(hexbotIsThinking(true));
+  setTimeout(() => store.dispatch(hexbotIsThinking(false)), 2000);
 
   // let alpha = Number.NEGATIVE_INFINITY, beta = Number.POSITIVE_INFINITY;
 }

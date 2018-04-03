@@ -104,7 +104,7 @@ class Board extends React.Component {
 
       socket.on('move', (move) => { // when socket receives result of move request,
         if (this.props.hexbot && this.props.currentPlayer === 'player2') {
-          this.hexbotIsThinking();
+          // this.hexbotIsThinking();
           setTimeout(() => {
             this.props.botMove(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex);
             if (move.tie) {
@@ -256,8 +256,8 @@ class Board extends React.Component {
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
           combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
-        }), 2500);
-        setTimeout(() => this.resetCombatModal(), 5001);
+        }), this.props.hexbot && this.props.currentPlayer === 'player2' ? 4500 : 2500);
+        setTimeout(() => this.resetCombatModal(), this.props.hexbot && this.props.currentPlayer === 'player2' ? 7001 : 5001);
       });
 
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
@@ -432,17 +432,6 @@ class Board extends React.Component {
     }
   }
 
-  hexbotIsThinking() {
-    this.setState({
-      hexbotModalOpen: true,
-    });
-    setTimeout(() => {
-      this.setState({
-        hexbotModalOpen: false
-      })
-    }, 2000);
-  }
-
   render() {
     return (
       <div>
@@ -565,8 +554,8 @@ class Board extends React.Component {
             </Modal.Actions>
           </Modal>
         </Transition>
-        <Transition animation={'fade up'} duration={'1500'} visible={this.state.hexbotModalOpen}>
-          <Modal open={this.state.hexbotModalOpen} size={'small'} style={{ textAlign: 'center' }}>
+        <Transition animation={'fade up'} duration={'1500'} visible={this.props.hexbotModalOpen}>
+          <Modal open={this.props.hexbotModalOpen} size={'small'} style={{ textAlign: 'center' }}>
             <Modal.Header>
               <Image style={{maxHeight: '200px', display: 'inline'}} src={'https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'} />
               Hexbot is thinking...
@@ -611,7 +600,8 @@ const mapStateToProps = (state) => {
     playerOne: state.state.playerOne,
     playerTwo: state.state.playerTwo,
     spectator: state.state.spectator,
-    hexbot: state.state.hexbot
+    hexbot: state.state.hexbot,
+    hexbotModalOpen: state.state.hexbotModalOpen
   }
 }
 
