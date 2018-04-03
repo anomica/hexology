@@ -515,6 +515,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('leaveRoom', async (data) => {
+    console.log('left the room')
     await db.forceEndGame(data.gameIndex); // deletes game from db when someone leaves room
     await socket.leave(data.room);
     await socket.broadcast.emit('deleteRoom', data.room);

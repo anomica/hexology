@@ -72,7 +72,7 @@ class Leaderboard extends React.Component {
                       <br/>
                       Losses: {user.losses}
                       <p/>
-                      {this.props.loggedInUser !== 'anonymous'
+                      {this.props.loggedInUser !== 'anonymous' && this.props.loggedInUser !== user.username
                         ? <Button color='blue' key='blue'>Challenge</Button>
                         : null
                       }
