@@ -18,6 +18,7 @@ class App extends React.Component {
   // App component handles all redirections based on path options below
   // switch first route to Profile to see profile
   render() {
+    console.log('this is a new build');
     return (
 
       <Router history={browserHistory}>

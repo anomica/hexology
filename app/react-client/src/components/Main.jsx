@@ -14,6 +14,7 @@ import RoomsList from './RoomsList.jsx';
 class Main extends React.Component {
   constructor(props) {
     super(props);
+    console.log('in the main component constructor');
   }
 
   componentDidMount() {

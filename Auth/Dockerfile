@@ -1,7 +1,7 @@
 FROM node:carbon
 
 # Create app directory
-WORKDIR /users/src/app
+WORKDIR /auth
 
 COPY package*.json ./
 
@@ -12,6 +12,6 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-EXPOSE 3000:3000
+EXPOSE 8000:8000
 
-CMD npm start && webpack
+CMD npm start 

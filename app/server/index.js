@@ -13,6 +13,7 @@ const emailHandler = require('./emailhandler.js');
 var cors = require('cors');
 const socketIo = require("socket.io");
 const io = socketIo(server);
+const axios = require('axios');
 require('./auth-config.js')(passport);
 require('events').EventEmitter.prototype._maxListeners = 100;
 // const http = require('http').Server(app);
@@ -29,9 +30,8 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 app.use(cors())
 
-console.log('server', server);
-console.log('io:', io);
 
+console.log('in the updated server2');
 // local Login Strategy
 const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
@@ -41,29 +41,41 @@ const isLoggedIn = (req, res, next) => {
 }
 
 app.get('/persistUser', (req, res) => {
-  // console.log('req.session.passport.user:', req.session.passport.user);
-  // console.log('passport.user:', passport.user);
-  // console.log('req.user:', req.user);
   res.send(req.user);
 });
 
-app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
-  // console.log('req.body', req.body);
-  // console.log('req.user upon login:', req.user);
-  // let response = {
-  //   email: req.body.email,
-  //   password: req.body.password
-  // }
-  res.status(201).json(req.user);
+app.post('/signup', (req, res) => {
+  console.log('process.env.AUTH_HOST:', process.env.AUTH_HOST);
+  axios.post('http://' + process.env.AUTH_HOST + ':8000/signup', req)
+    .then(response => {
+      console.log('response in signup:', response);
+      res.status(201).json(response);
+    })
+    .catch(err => {
+      console.log('error signing up:', err);
+    })
 });
 
-app.post('/login', passport.authenticate('local-login'), (req, res) => {
-  res.status(201).json(req.user);
+app.post('/login', (req, res) => {
+  axios.post('http://' + process.env.AUTH_HOST + ':8000/login', req)
+    .then(response => {
+      console.log('response in login:', response)
+      res.status(201).json(response);
+    })
+    .catch(err => {
+      console.log('error logging in:', err);
+    })
 });
 
-app.post('/logout', isLoggedIn, function (req, res) {
-  req.logout();
-  res.clearCookie('connect.sid').status(200).redirect('/');
+app.post('/logout', (req, res) => {
+  axios.post(process.env.AUTH_HOST + '/logout', req)
+    .then(response => {
+      console.log('logged out user');
+    })
+    .catch(err => {
+      console.log('error signing up');
+    })
+  
 });
 
 let games = {};
