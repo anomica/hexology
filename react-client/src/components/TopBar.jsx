@@ -40,6 +40,7 @@ class TopBar extends React.Component {
   confirm() {
     this.setState({ confirmOpen: true });
   }
+  
   handleConfirm() {
     this.exitGame();
     this.setState({ confirmOpen: false });

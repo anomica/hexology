@@ -301,6 +301,59 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     emailHandler.sendEmail(username, email, room, message);
   });
 
+  socket.on('challenge', async (request) => {
+    let player2 = await db.getUserId(request.username); // user receiving the challenge request (aka player2)
+    let player1 = await db.getUserId(request.userPlayer); // user sending the challenge request (aka player1)
+    let newRoom = `*${roomNum}`;
+    room = newRoom;
+    let gameType = request.gameType;
+    await socket.join(newRoom);
+
+    io.sockets.adapter.rooms[newRoom].type = gameType;
+    io.sockets.adapter.rooms[newRoom].player1 = request.userPlayer;
+    io.sockets.adapter.rooms[newRoom].player1Wins = player1[0].wins;
+    io.sockets.adapter.rooms[newRoom].player1Losses = player1[0].losses;
+    io.sockets.adapter.rooms[newRoom].player1Email = player1[0].email;
+
+    await socket.emit('challenge', {
+      room: newRoom,
+      player2: {
+        email: player2[0].email,
+        losses: player2[0].losses,
+        wins: player2[0].wins,
+        userId: player2[0].user_id
+      }
+    });
+
+    await io.to(newRoom).emit('newGame', {
+      room: newRoom, 
+      player1Wins: player1[0].wins,
+      player1Losses: player1[0].losses,
+      player1Email: player1[0].email
+    });
+
+    gameType === 'public' && await socket.broadcast.emit('newRoom', { 
+      roomName: room, 
+      room: io.sockets.adapter.rooms[newRoom],
+      player1: request.userPlayer,
+      player1Wins: player1[0].wins,
+      player1Losses: player1[0].losses,
+      player1Email: player1[0].email
+     });
+
+    roomNum++;
+  });
+
+  socket.on('getUserStuff', async (request) => {
+    let user = await db.getUserId(request.username);
+    await socket.emit('getUserStuff', {
+      user: {
+        wins: user[0].wins,
+        losses: user[0].losses
+      }
+    });
+  });
+
   socket.on('newGame', async (request) => {
     let user = await db.getUserId(request.username);
     let newRoom = `*${roomNum}`;
@@ -519,6 +572,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('leaveRoom', async (data) => {
+    console.log('left the room')
     await db.forceEndGame(data.gameIndex); // deletes game from db when someone leaves room
     await socket.leave(data.room);
     await socket.broadcast.emit('deleteRoom', data.room);
@@ -699,13 +753,26 @@ const moveUnits = async (data, socket, hexbot) => {
 
         await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room); // update hexes without combat occuring
 
+        let p1Resources = await db.getResources(room, gameIndex, 'player1');
+        let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
         let move = {
           updatedOrigin: updatedOrigin,
           originIndex: originIndex,
           targetIndex: targetIndex,
           updatedTarget: updatedTarget,
-          playerOneResources: games[gameIndex].playerOneResources,
-          playerTwoResources: games[gameIndex].playerTwoResources
+          // playerOneResources: games[gameIndex].playerOneResources,
+          // playerTwoResources: games[gameIndex].playerTwoResources
+          playerOneResources: {
+            gold: p1Resources[0].p1_gold,
+            metal: p1Resources[0].p1_metal,
+            wood: p1Resources[0].p1_wood
+          },
+          playerTwoResources: {
+            gold: p2Resources[0].p2_gold,
+            metal: p2Resources[0].p2_metal,
+            wood: p2Resources[0].p2_wood
+          }
         }
 
         // console.log('\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\nMOVE ON FRIENDLY COLLISION:\n', move, '\n(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\n')
@@ -734,6 +801,9 @@ const moveUnits = async (data, socket, hexbot) => {
           const board = await gameInit(5, 4);
           let gameIndex = uuidv4();
 
+          let p1Resources = await db.getResources(room, gameIndex, 'player1');
+          let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
           games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
             board: board, // set board,
             playerOneResources: { // p1 resources,
@@ -754,8 +824,16 @@ const moveUnits = async (data, socket, hexbot) => {
             board: board,
             gameIndex: gameIndex,
             room: room,
-            playerOneResources: games[gameIndex].playerOneResources,
-            playerTwoResources: games[gameIndex].playerTwoResources
+            playerOneResources: {
+              gold: 10,
+              wood: 10,
+              metal: 10
+            },
+            playerTwoResources: { // and p2 resources
+              gold: 10,
+              wood: 10,
+              metal: 10
+            }
           }
 
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
@@ -785,6 +863,9 @@ const moveUnits = async (data, socket, hexbot) => {
 
           await updateHexes(originIndex, updatedOrigin, targetIndex, updatedTarget, gameIndex, currentPlayer, room);
 
+          let p1Resources = await db.getResources(room, gameIndex, 'player1');
+          let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
           let newMove = {
             room: room,
             updatedOrigin: {
@@ -805,8 +886,16 @@ const moveUnits = async (data, socket, hexbot) => {
             },
             originIndex: originIndex,
             targetIndex: targetIndex,
-            playerOneResources: games[gameIndex].playerOneResources,
-            playerTwoResources: games[gameIndex].playerTwoResources,
+            playerOneResources: {
+              gold: p1Resources[0].p1_gold,
+              metal: p1Resources[0].p1_metal,
+              wood: p1Resources[0].p1_wood
+            },
+            playerTwoResources: {
+              gold: p2Resources[0].p2_gold,
+              metal: p2Resources[0].p2_metal,
+              wood: p2Resources[0].p2_wood
+            },
             tie: true
           }
           io.to(room).emit('move', newMove);
@@ -836,6 +925,9 @@ const moveUnits = async (data, socket, hexbot) => {
           const board = await gameInit(5, 4); // init board for new game
           let gameIndex = uuidv4();
 
+          let p1Resources = await db.getResources(room, gameIndex, 'player1');
+          let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
           //TODO: TAKE OUT THIS OBJECT ONCE DB WORKS
           games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
             board: board, // set board,
@@ -857,8 +949,16 @@ const moveUnits = async (data, socket, hexbot) => {
             board: board,
             gameIndex: gameIndex,
             room: room,
-            playerOneResources: games[gameIndex].playerOneResources,
-            playerTwoResources: games[gameIndex].playerTwoResources
+            playerOneResources: {
+              gold: 10,
+              wood: 10,
+              metal: 10
+            },
+            playerTwoResources: { // and p2 resources
+              gold: 10,
+              wood: 10,
+              metal: 10
+            }
           }
 
           /////////////////////////////// UNCOMMENT WHEN USING DATABASE ///////////////////////////////
@@ -904,6 +1004,9 @@ const moveUnits = async (data, socket, hexbot) => {
 
           await updateHexes(originIndex, result.updatedOrigin, targetIndex, result.updatedTarget, gameIndex, currentPlayer, room); // if move is to unoccupied hex, execute move
 
+          let p1Resources = await db.getResources(room, gameIndex, 'player1');
+          let p2Resources = await db.getResources(room, gameIndex, 'player2');
+
           let move = {
             room: room,
             updatedOrigin: {
@@ -931,8 +1034,20 @@ const moveUnits = async (data, socket, hexbot) => {
               playerOneTotalUnits: dbP1TotalUnits[0].p1_total_units,
               playerTwoTotalUnits: dbP2TotalUnits[0].p2_total_units,
             },
-            playerOneResources: games[gameIndex].playerOneResources,
-            playerTwoResources: games[gameIndex].playerTwoResources
+
+            playerOneResources: {
+              gold: p1Resources[0].p1_gold,
+              metal: p1Resources[0].p1_metal,
+              wood: p1Resources[0].p1_wood
+            },
+
+            playerTwoResources: {
+              gold: p2Resources[0].p2_gold,
+              metal: p2Resources[0].p2_metal,
+              wood: p2Resources[0].p2_wood
+            }
+            // playerOneResources: games[gameIndex].playerOneResources,
+            // playerTwoResources: games[gameIndex].playerTwoResources
           }
 
           // console.log('\n---------> MOVE WHEN GAME ISNT OVER:\n', move, '\n');
