@@ -45,208 +45,219 @@ class Board extends React.Component {
   componentDidMount() {
     (async () => {
       let socket = this.props.socket;
-      if (this.props.location.state.type) {
-        await this.props.setSpectator(true);
-        socket.emit('watchGame', {
-          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
-          username: this.props.loggedInUser,
-          gameIndex: this.props.location.state.gameIndex
-        })
-        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
-      } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
-        if (!socket) {
+      if (!socket) {
           let endpoint = '/';
           console.log('endpoint in board:', endpoint)
           socket = await socketIOClient(endpoint);
           console.log('socket in board:', socket);
-          this.props.setSocket(socket);
-        }
-        socket.emit('joinGame', {
-          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
-          username: this.props.loggedInUser,
-          spectator: true
-        });
-        !this.props.playerAssigned && this.props.setUserPlayer('player2');
-        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
-      } else if (this.props.location.state.extra === 'create') {
-        !this.props.playerAssigned && this.props.setUserPlayer('player1');
+      console.log('socket in board:', socket);
       }
-
-      socket.on('loadGameBoard', data => {
-        this.props.drawBoard(data.game); // inits the board from last saved state
-        this.props.setGameIndex(data.game.gameIndex); // sets original game index
-        this.props.selectHex({}); // initialize selected hex
-        this.props.highlightNeighbors([]); // and neighbors
-        this.props.setRoom(data.game.room); // sets the room
-        this.props.updateUnitCounts(data.game.playerOneTotalUnits, data.game.playerTwoTotalUnits); // retrieves players resource counts
-        this.props.updateBank(data.game.playerOneUnitBank, data.game.playerTwoUnitBank); // retrieves players units in the bank
-        this.props.setUserPlayer(`${data.game.userPlayer}`); // sets the current user
-        this.props.switchPlayer(`${data.game.currentPlayer}`); // sets the current player's turn
-      });
-
-      socket.on('gameCreated', data => {
-        this.props.drawBoard(data); // if the server sends an object, it means that the player is player 2
-        this.props.setGameIndex(data.gameIndex); // if so, set game index
-        this.props.selectHex({}); // initialize selected hex
-        this.props.highlightNeighbors([]); // and neighbors
-        this.props.user ? null : this.props.updateUnitCounts(10, 10);
-        this.props.switchPlayer('player1');
-        !this.props.spectator && !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
-        !this.props.spectator && socket.emit('setLoggedInUser', {
-          username: this.props.loggedInUser,
-          player: this.props.userPlayer,
-          gameIndex: data.gameIndex,
-          room: data.room
-        });
-        interval = setInterval(() => {
-          this.setState({
-            timer: this.state.timer += 1
-          })
-        }, 1000)
-      });
-      
-      socket.on('move', (move) => { // when socket receives result of move request,
-        if (this.props.hexbot && this.props.currentPlayer === 'player2') {
-          this.hexbotIsThinking();
-          setTimeout(() => this.props.botMove(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex), 2000);
-        } else {
-          this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
-        }
-        if (move.tie) {
-          this.setState({
-            combatModalOpen: true,
-          });
-          setTimeout(() => this.setState({
-            combatMessage: 'Combat ends in a bitter draw.',
-            combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
-          }), 2500);
-          setTimeout(() => this.resetCombatModal(), 5001);
-        }
-        if (move.updatedUnitCounts) {
-          this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
-        }
-        this.props.updateResources(move.playerOneResources, move.playerTwoResources);
-        this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
-        clearInterval(interval);
-        this.setState({
-          timer: 0
-        }, () => {
-          interval = setInterval(() => {
-              this.setState({
-                timer: this.state.timer += 1
-              })
-            }, 1000)
-
-        })
-      });
-
-      setInterval(async () => {
-        if (this.state.timer === 90) {
-          if (this.props.userPlayer === this.props.currentPlayer) {
-            this.props.warningOpen(true);
-            setTimeout(() => this.props.warningOpen(false), 3000);
-          }
-        } else if (this.state.timer > 120) {
-          this.props.forfeitOpen(true);
-          setTimeout(() => this.props.forfeitOpen(false), 3000);
-          await this.nextTurn();
-          await this.setState({
-            timer: 0
-          })
-
-        }
-      }, 1000)
-
-      socket.on('watchGame', data => {
-        this.props.setSpectator(this.props.loggedInUser);
-      })
-      socket.on('setLoggedInUser', data => {
-        this.props.setLoggedInPlayer(data.player1, data.player2);
-      })
-      socket.on('combat', () => {
-        this.setState({ combatModalOpen: true });
-        setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
-      })
-      this.props.socket.on('updateResources', data => {
-        this.props.updateResources(data.playerOneResources, data.playerTwoResources);
-      })
-      this.props.socket.on('swordsmen', () => {
-        this.props.swordsmen(this.props.currentPlayer);
-      });
-      this.props.socket.on('archers', () => {
-        this.props.archers(this.props.currentPlayer);
-      });
-      this.props.socket.on('knights', () => {
-        this.props.knights(this.props.currentPlayer);
-      });
-      socket.on('troopsDeployed', data => {
-        this.props.addUnitsToHex(data.hex, data.hexIndex, data.currentPlayer);
-      })
-      socket.on('combatWin', (data) => {
-        let combatMessage;
-        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
-          combatMessage = `${data} is victorious!` :
-          combatMessage = 'You are victorious!';
-        setTimeout(() => this.setState({
-          combatMessage: combatMessage,
-          combatIcon: 'https://royalarmouries.files.wordpress.com/2015/10/di-2015-3939.jpg'
-        }), 2500);
-        setTimeout(() => this.resetCombatModal(), 5001);
-      });
-      socket.on('combatLoss', (data) => {
-        let combatMessage;
-        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
-          combatMessage = `${data} is victorious!` :
-          combatMessage = 'Your armies have been bested.';
-        setTimeout(() => this.setState({
-          combatMessage: combatMessage,
-          combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
-        }), 2500);
-        setTimeout(() => this.resetCombatModal(), 5001);
-      })
-      socket.on('tieGame', () => {
-        let tag;
-        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
-          '' : tag = 'Try again';
-        setTimeout(() => {
-          this.setState({ combatMessage: `The war has ended in a stalemate. ${tag}`});
-        }, 2500);
-        setTimeout(() => this.resetCombatModal(), 5001);
-      })
-      socket.on('winGame', (data) => {
-        let combatMessage;
-        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
-          combatMessage = `${data} wins the battle and the day!` :
-          combatMessage = 'Congratulations! You have won the battle, and the day!';
-        setTimeout(() => this.setState({
-          combatMessage: combatMessage,
-          combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
-        }), 2500);
-        setTimeout(() => this.resetCombatModal(), 5001);
-      });
-      socket.on('loseGame', (data) => {
-        let combatMessage;
-        this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
-          combatMessage = data + ' wins the battle and the day!' :
-          combatMessage = 'Your armies have been bested, and your enemy is victorious. Better luck next time.';
-        setTimeout(() => this.setState({
-          combatMessage: combatMessage,
-          combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
-        }), 2500);
-        setTimeout(() => this.resetCombatModal(), 5001);
-      });
-
-      socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
-        alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
-      });
-      socket.on('disconnect', () => {
-        this.setState({ disconnectModalOpen: true });
-        setTimeout(() => {
-          this.props.history.push('/');
-          this.props.resetBoard();
-        }, 2500);
-      })
     })();
+
+    // (async () => {
+    //   let socket = this.props.socket;
+    //   if (this.props.location.state.type) {
+    //     await this.props.setSpectator(true);
+    //     socket.emit('watchGame', {
+    //       room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
+    //       username: this.props.loggedInUser,
+    //       gameIndex: this.props.location.state.gameIndex
+    //     })
+    //     this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
+    //   } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
+    //     if (!socket) {
+    //       let endpoint = '/';
+    //       console.log('endpoint in board:', endpoint)
+    //       socket = await socketIOClient(endpoint);
+    //       console.log('socket in board:', socket);
+    //       this.props.setSocket(socket);
+    //     }
+    //     socket.emit('joinGame', {
+    //       room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
+    //       username: this.props.loggedInUser,
+    //       spectator: true
+    //     });
+    //     !this.props.playerAssigned && this.props.setUserPlayer('player2');
+    //     this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
+    //   } else if (this.props.location.state.extra === 'create') {
+    //     !this.props.playerAssigned && this.props.setUserPlayer('player1');
+    //   }
+
+    //   socket.on('loadGameBoard', data => {
+    //     this.props.drawBoard(data.game); // inits the board from last saved state
+    //     this.props.setGameIndex(data.game.gameIndex); // sets original game index
+    //     this.props.selectHex({}); // initialize selected hex
+    //     this.props.highlightNeighbors([]); // and neighbors
+    //     this.props.setRoom(data.game.room); // sets the room
+    //     this.props.updateUnitCounts(data.game.playerOneTotalUnits, data.game.playerTwoTotalUnits); // retrieves players resource counts
+    //     this.props.updateBank(data.game.playerOneUnitBank, data.game.playerTwoUnitBank); // retrieves players units in the bank
+    //     this.props.setUserPlayer(`${data.game.userPlayer}`); // sets the current user
+    //     this.props.switchPlayer(`${data.game.currentPlayer}`); // sets the current player's turn
+    //   });
+
+    //   socket.on('gameCreated', data => {
+    //     this.props.drawBoard(data); // if the server sends an object, it means that the player is player 2
+    //     this.props.setGameIndex(data.gameIndex); // if so, set game index
+    //     this.props.selectHex({}); // initialize selected hex
+    //     this.props.highlightNeighbors([]); // and neighbors
+    //     this.props.user ? null : this.props.updateUnitCounts(10, 10);
+    //     this.props.switchPlayer('player1');
+    //     !this.props.spectator && !this.props.playerAssigned && this.props.setUserPlayer('player2'); // and set player to player2
+    //     !this.props.spectator && socket.emit('setLoggedInUser', {
+    //       username: this.props.loggedInUser,
+    //       player: this.props.userPlayer,
+    //       gameIndex: data.gameIndex,
+    //       room: data.room
+    //     });
+    //     interval = setInterval(() => {
+    //       this.setState({
+    //         timer: this.state.timer += 1
+    //       })
+    //     }, 1000)
+    //   });
+      
+    //   socket.on('move', (move) => { // when socket receives result of move request,
+    //     if (this.props.hexbot && this.props.currentPlayer === 'player2') {
+    //       this.hexbotIsThinking();
+    //       setTimeout(() => this.props.botMove(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex), 2000);
+    //     } else {
+    //       this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
+    //     }
+    //     if (move.tie) {
+    //       this.setState({
+    //         combatModalOpen: true,
+    //       });
+    //       setTimeout(() => this.setState({
+    //         combatMessage: 'Combat ends in a bitter draw.',
+    //         combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
+    //       }), 2500);
+    //       setTimeout(() => this.resetCombatModal(), 5001);
+    //     }
+    //     if (move.updatedUnitCounts) {
+    //       this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
+    //     }
+    //     this.props.updateResources(move.playerOneResources, move.playerTwoResources);
+    //     this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
+    //     clearInterval(interval);
+    //     this.setState({
+    //       timer: 0
+    //     }, () => {
+    //       interval = setInterval(() => {
+    //           this.setState({
+    //             timer: this.state.timer += 1
+    //           })
+    //         }, 1000)
+
+    //     })
+    //   });
+
+    //   setInterval(async () => {
+    //     if (this.state.timer === 90) {
+    //       if (this.props.userPlayer === this.props.currentPlayer) {
+    //         this.props.warningOpen(true);
+    //         setTimeout(() => this.props.warningOpen(false), 3000);
+    //       }
+    //     } else if (this.state.timer > 120) {
+    //       this.props.forfeitOpen(true);
+    //       setTimeout(() => this.props.forfeitOpen(false), 3000);
+    //       await this.nextTurn();
+    //       await this.setState({
+    //         timer: 0
+    //       })
+
+    //     }
+    //   }, 1000)
+
+    //   socket.on('watchGame', data => {
+    //     this.props.setSpectator(this.props.loggedInUser);
+    //   })
+    //   socket.on('setLoggedInUser', data => {
+    //     this.props.setLoggedInPlayer(data.player1, data.player2);
+    //   })
+    //   socket.on('combat', () => {
+    //     this.setState({ combatModalOpen: true });
+    //     setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
+    //   })
+    //   this.props.socket.on('updateResources', data => {
+    //     this.props.updateResources(data.playerOneResources, data.playerTwoResources);
+    //   })
+    //   this.props.socket.on('swordsmen', () => {
+    //     this.props.swordsmen(this.props.currentPlayer);
+    //   });
+    //   this.props.socket.on('archers', () => {
+    //     this.props.archers(this.props.currentPlayer);
+    //   });
+    //   this.props.socket.on('knights', () => {
+    //     this.props.knights(this.props.currentPlayer);
+    //   });
+    //   socket.on('troopsDeployed', data => {
+    //     this.props.addUnitsToHex(data.hex, data.hexIndex, data.currentPlayer);
+    //   })
+    //   socket.on('combatWin', (data) => {
+    //     let combatMessage;
+    //     this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+    //       combatMessage = `${data} is victorious!` :
+    //       combatMessage = 'You are victorious!';
+    //     setTimeout(() => this.setState({
+    //       combatMessage: combatMessage,
+    //       combatIcon: 'https://royalarmouries.files.wordpress.com/2015/10/di-2015-3939.jpg'
+    //     }), 2500);
+    //     setTimeout(() => this.resetCombatModal(), 5001);
+    //   });
+    //   socket.on('combatLoss', (data) => {
+    //     let combatMessage;
+    //     this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+    //       combatMessage = `${data} is victorious!` :
+    //       combatMessage = 'Your armies have been bested.';
+    //     setTimeout(() => this.setState({
+    //       combatMessage: combatMessage,
+    //       combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
+    //     }), 2500);
+    //     setTimeout(() => this.resetCombatModal(), 5001);
+    //   })
+    //   socket.on('tieGame', () => {
+    //     let tag;
+    //     this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+    //       '' : tag = 'Try again';
+    //     setTimeout(() => {
+    //       this.setState({ combatMessage: `The war has ended in a stalemate. ${tag}`});
+    //     }, 2500);
+    //     setTimeout(() => this.resetCombatModal(), 5001);
+    //   })
+    //   socket.on('winGame', (data) => {
+    //     let combatMessage;
+    //     this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+    //       combatMessage = `${data} wins the battle and the day!` :
+    //       combatMessage = 'Congratulations! You have won the battle, and the day!';
+    //     setTimeout(() => this.setState({
+    //       combatMessage: combatMessage,
+    //       combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
+    //     }), 2500);
+    //     setTimeout(() => this.resetCombatModal(), 5001);
+    //   });
+    //   socket.on('loseGame', (data) => {
+    //     let combatMessage;
+    //     this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
+    //       combatMessage = data + ' wins the battle and the day!' :
+    //       combatMessage = 'Your armies have been bested, and your enemy is victorious. Better luck next time.';
+    //     setTimeout(() => this.setState({
+    //       combatMessage: combatMessage,
+    //       combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
+    //     }), 2500);
+    //     setTimeout(() => this.resetCombatModal(), 5001);
+    //   });
+
+    //   socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
+    //     alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
+    //   });
+    //   socket.on('disconnect', () => {
+    //     this.setState({ disconnectModalOpen: true });
+    //     setTimeout(() => {
+    //       this.props.history.push('/');
+    //       this.props.resetBoard();
+    //     }, 2500);
+    //   })
+    // })();
   }
 
   componentWillUnmount() {

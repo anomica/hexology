@@ -40,19 +40,14 @@ app.get('/persistUser', (req, res) => {
   res.send(req.user);
 });
 
-// app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
-//   console.log('in auth signup');
-//   res.status(201).json(req.user);
-// });
-
-app.post('/signup', (req, res) => {
+app.post('/signup', passport.authenticate('local-signup'), (req, res) => {
   console.log('in auth signup');
-  res.status(201).json('credentials validated');
+  res.status(201).json(req.user);
 });
 
 app.post('/login', passport.authenticate('local-login'), (req, res) => {
   console.log('in auth login')
-  res.status(201).json('credentials validated');
+  res.status(201).json(req.user);
 });
 
 app.post('/logout', isLoggedIn, function (req, res) {

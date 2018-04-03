@@ -21,7 +21,7 @@ class Leaderboard extends React.Component {
     this.getUsers = this.getUsers.bind(this);
     this.sendEmail = this.sendEmail.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    this.setUser = this.setUser.bind(this);
+    // this.setUser = this.setUser.bind(this);
   }
 
   setUser(email, username) {

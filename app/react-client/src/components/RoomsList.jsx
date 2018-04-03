@@ -22,26 +22,26 @@ const RoomsList = props => {
     })
   }
 
-  const refreshRooms = async () => {
-    let socket = await props.socket;
-    if (socket) {
-      socket.on('newRoom', (room) => {
-        room.room.player1Wins = room.player1Wins;
-        room.room.player1Losses = room.player1Losses;
-        room.room.player1Email = room.player1Email;
-        room.room.player1 = room.player1;
-        props.newRoom(room);
-      })
-      socket.on('deleteRoom', (room) => {
-        props.deleteRoom(room);
-      })
-      socket.on('updateRoom', (room) => {
-        props.updateRoom(room);
-      })
-    }
-  }
+  // const refreshRooms = async () => {
+  //   let socket = await props.socket;
+  //   if (socket) {
+  //     socket.on('newRoom', (room) => {
+  //       room.room.player1Wins = room.player1Wins;
+  //       room.room.player1Losses = room.player1Losses;
+  //       room.room.player1Email = room.player1Email;
+  //       room.room.player1 = room.player1;
+  //       props.newRoom(room);
+  //     })
+  //     socket.on('deleteRoom', (room) => {
+  //       props.deleteRoom(room);
+  //     })
+  //     socket.on('updateRoom', (room) => {
+  //       props.updateRoom(room);
+  //     })
+  //   }
+  // }
 
-  refreshRooms();
+  // refreshRooms();
   
   return (
 

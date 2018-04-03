@@ -46,7 +46,11 @@ app.get('/persistUser', (req, res) => {
 
 app.post('/signup', (req, res) => {
   console.log('process.env.AUTH_HOST:', process.env.AUTH_HOST);
-  axios.post('http://' + process.env.AUTH_HOST + ':8000/signup', req)
+  axios.post('http://' + process.env.AUTH_HOST + ':8000/signup', {
+    username: req.body.username,
+    password: req.body.password,
+    email: req.body.email
+  })
     .then(response => {
       console.log('response in signup:', response);
       res.status(201).json(response);
@@ -57,7 +61,10 @@ app.post('/signup', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  axios.post('http://' + process.env.AUTH_HOST + ':8000/login', req)
+  axios.post('http://' + process.env.AUTH_HOST + ':8000/login', {
+    username: req.body.username,
+    password: req.body.password
+  })
     .then(response => {
       console.log('response in login:', response)
       res.status(201).json(response);

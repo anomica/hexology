@@ -24,7 +24,7 @@ class Main extends React.Component {
       let socket = await socketIOClient(endpoint);
       console.log('socket:', socket);
 
-      let socket = await socketIOClient('http://127.0.0.1:8080');
+      // let socket = await socketIOClient('http://127.0.0.1:8080');
       this.props.setSocket(socket);
     })();
 
