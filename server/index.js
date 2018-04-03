@@ -2012,18 +2012,11 @@ const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room) => {
 }
 
 const deleteOldGames = async () => {
-  // console.log('\nchecking for old games...\n')
-  let oldGames = await db.getOldGames();
-  // console.log('\nold games in the db:\n', oldGames)
-  for (let i = 0; i < oldGames.length; i++) {
-    // console.log('old game id: ', oldGames[i].game_id)
-    // await db.deleteHex(oldGames[i].game_id); // first mark hexes to delete
-    await db.deleteGames(oldGames[i].game_id); // then delete the game
-  }
+  await db.deleteGames();
 }
 
-// Check for old games and marks them as completed // 1 day = 86400000
-setInterval(deleteOldGames, 86400000);
+// Check for old games and marks them as completed // (1 day = 86400000) checks every half day
+setInterval(deleteOldGames, 43200000);
 
 const buyUnits = async (type, player, gameIndex, socketId, room) => {
   ///////////////////////////////////// IF USING DATABASE ///////////////////////////////////////
@@ -2032,11 +2025,10 @@ const buyUnits = async (type, player, gameIndex, socketId, room) => {
 
   let currentPlayerResources = await db.getResources(room, gameIndex, player); // returns an object
 
-  // IF BUYING SWORDSMEN
-  if (type === 'swordsmen') { // if buying swordsmen
+  if (type === 'swordsmen') { // IF BUYING SWORDSMEN
     // console.log('\nLETS BUY SOME ----> SWORDSMEN');
     // IF PLAYER 1 IS BUYING SWORDSMEN
-    if (player === 'player1') { // for player 1
+    if (player === 'player1') { // IF PLAYER 1 IS BUYING SWORDSMEN
       // console.log('\nplayer 1 buying swordsmen\n')
       if (currentPlayerResources[0].p1_gold >= 10 && currentPlayerResources[0].p1_metal >= 10) { // check if player has enough resources to purchase unit
 

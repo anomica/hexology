@@ -659,24 +659,6 @@ const getCurrentPlayerHex = async (gameId, currentPlayer) => {
   }
 }
 
-/////////////////////// Returns an object containing games older than 1 day from today's date /////////////////
-const getOldGames = async () => {
-  let today = await moment(new Date()).format('YYYY-MM-DD 23:59:59');
-  let yesterday = await moment(new Date()).subtract(1, 'days').format('YYYY-MM-DD 00:00:00');
-
-  return await knex('games').select()
-    .where(knex.raw(`created_at NOT BETWEEN '${yesterday}' AND '${today}'`))
-    .returning('game_id')
-}
-
-/////////////////////// Deletes game if > 1 day has passed ///////////////////////
-const deleteGames = async (gameId) => {
-  await deleteHex(gameId); // first delete the hexes
-  await knex('games') // then delete the game
-    .where(knex.raw(`${gameId} = game_id`))
-    .del();
-}
-
 /////////////////////// Deletes hexes if game has ended ///////////////////////
 const deleteHex = async (gameId) => {
   await knex('hex')
@@ -847,6 +829,37 @@ const getOtherUserStuff = async (gameIndex, username) => { // username = current
   }
 }
 
+/////////////////////// Deletes game if > 1 day has passed ///////////////////////
+const deleteGames = async (gameId) => {
+  // console.log('\ndeleting games in da db\n')
+  let today = await moment(new Date()).format('YYYY-MM-DD 23:59:59');
+  let yesterday = await moment(new Date()).subtract(1, 'days').format('YYYY-MM-DD 00:00:00');
+
+  // console.log('\ntoday: ', today, '\nyesterday: ', yesterday)
+
+  let oldGames = await knex.column(knex.raw(`games.created_at, games.game_id, hex.*`))
+    .from(knex.raw(`games, hex`))
+    .where(knex.raw(`games.created_at NOT BETWEEN '${yesterday}' AND '${today}'`))
+    .andWhere(knex.raw(`games.game_id = hex.game_id`))
+    .orderByRaw(`games.created_at DESC`)
+  
+  // console.log('\nhere are the old games length:\n', oldGames)
+  
+  if (oldGames.length > 0) {
+    return Promise.all(oldGames.forEach(async (hex, i, oldGames) => {
+      // console.log('\ngame deleted....:\n', '\ngame id:\n', hex.game_id, '\nhex id:\n', hex.hex_id, )
+      await deleteHex(hex.game_id); // delete the hexes
+      await knex('games') // then delete the game
+      .where(knex.raw(`${hex.game_id} = game_id`))
+      .del()
+      console.log(`Games older than ${today} and ${yesterday} have been deleted`);
+    }));
+  } else {
+    console.log('No old games to be deleted')
+    return;
+  }
+}
+
 /////////////////////// Gets user's existing games ///////////////////////
 const retrieveUserGames = async (username) => {
    let currentUser = await getUserId(username);
@@ -899,7 +912,6 @@ module.exports = {
   removeHasMetal,
   getHex,
   getGame,
-  getOldGames,
   deleteGames,
   deleteHex,
   gameComplete,
