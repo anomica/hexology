@@ -723,16 +723,20 @@ const getGameByGameIndex = async (gameIndex) => {
 }
 
 /////////////////////// Deletes game when a player leaves the room ///////////////////////
-const forceEndGame = async (gameIndex) => {
+const forceEndGame = async (gameIndex, saveGame) => {
   // console.log('\nforce ending the game... gameIndex: ', gameIndex, '\n');
-  let game = await getGameByGameIndex(gameIndex);
-
-  if (game.length > 0) {
-    await deleteHex(game[0].game_id); // first delete the hexes
-    await knex('games') // then delete the game
-    .where(knex.raw(`${game[0].game_id} = game_id`))
-    .del();
-    // console.log('done deleting gam from db!');
+  if (saveGame !== 'saveOnly') { // if only passing in the gameindex, then the game needs to be ended
+    let game = await getGameByGameIndex(gameIndex);
+    
+    if (game.length > 0) {
+      await deleteHex(game[0].game_id); // first delete the hexes
+      await knex('games') // then delete the game
+      .where(knex.raw(`${game[0].game_id} = game_id`))
+      .del();
+      // console.log('done deleting gam from db!');
+    }
+  } else { // else the game is being saved, do nothing!
+    return;
   }
 }
 

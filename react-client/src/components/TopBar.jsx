@@ -18,19 +18,38 @@ class TopBar extends React.Component {
       email: '',
       message: '',
       inviteSent: false,
-      buttonMessage: 'Invite'
+      buttonMessage: 'Invite',
+      gameSaved: false,
+      saveDisabled: false
     }
 
     this.saveGame = this.saveGame.bind(this);
     this.sendEmailToResume = this.sendEmailToResume.bind(this);
     this.confirm = this.confirm.bind(this);
-    this.handleCancel = this.handleCancel.bind(this);
-    this.handleConfirm = this.handleConfirm.bind(this);
+    this.handleDontSave = this.handleDontSave.bind(this);
+    this.handleSaveOnExit = this.handleSaveOnExit.bind(this);
     this.handleSaveClose = this.handleSaveClose.bind(this);
   }
 
-  saveGame() {
-    this.setState({saveOpen: true});
+  saveGame(exit) {    
+    this.props.socket.emit('saveGame', {
+      gameIndex: this.props.gameIndex,
+      room: this.props.room,
+      socketId: this.props.socket.id
+    });
+    
+    this.props.socket.on('saveGame', data => {
+      this.setState({
+        saveOpen: true,
+        gameSaved: true,
+        saveDisabled: true
+      });
+    });
+
+    if (exit === 'saveOnExit') {
+      this.exitGame('saveOnExit');
+    }
+
   }
 
   handleSaveClose() {
@@ -40,27 +59,47 @@ class TopBar extends React.Component {
   confirm() {
     this.setState({ confirmOpen: true });
   }
-  
-  handleConfirm() {
+
+  handleSaveOnExit() {
+    this.saveGame('saveOnExit');
+    this.setState({
+      confirmOpen: false,
+      gameSaved: true
+    });
+  }
+
+  handleDontSave() {
     this.exitGame();
     this.setState({ confirmOpen: false });
   }
 
-  handleCancel() {
-    this.setState({ confirmOpen: false });
-  }
-
-  exitGame() {
+  exitGame(exit) {
     this.props.exitGame();
     this.props.setRoom(null);
     this.props.resetBoard();
     this.props.deleteRoom(this.props.room);
     this.props.setHexbot(false);
-    this.props.socket.emit('disconnect', { gameIndex: this.props.gameIndex });
-    this.props.socket.emit('leaveRoom', {
-      room: this.props.room,
-      gameIndex: this.props.gameIndex
-    });
+    if (exit === 'saveOnExit') { // saves the game in the db on exit
+      this.props.socket.emit('disconnect', {
+        gameIndex: this.props.gameIndex,
+        gameSaved: true
+      });
+      this.props.socket.emit('leaveRoom', {
+        room: this.props.room,
+        gameIndex: this.props.gameIndex,
+        gameSaved: true
+      });
+    } else { // deletes game from db
+      this.props.socket.emit('disconnect', {
+        gameIndex: this.props.gameIndex,
+        gameSaved: this.state.gameSaved
+      });
+      this.props.socket.emit('leaveRoom', {
+        room: this.props.room,
+        gameIndex: this.props.gameIndex,
+        gameSaved: this.state.gameSaved
+      });
+    }
     this.props.history.push('/');
   }
 
@@ -105,6 +144,7 @@ class TopBar extends React.Component {
                 <Button 
                   style={{marginRight: '5px'}}
                   onClick={this.saveGame}
+                  disabled={this.state.saveDisabled}
                 >Save Game</Button>}>
               <Modal.Content>Game Saved</Modal.Content>
               <Modal.Actions>
@@ -117,13 +157,13 @@ class TopBar extends React.Component {
             onClick={this.confirm}
             >Exit Game</Button>
             <Confirm
-              header='Exit Game?'
-              content="Are you sure you want to exit this game?"
-              cancelButton='Cancel'
+              header='Save Game?'
+              content="Do you want to save this game?"
+              cancelButton='No'
               confirmButton="Yes"
               open={this.state.confirmOpen}
-              onCancel={this.handleCancel}
-              onConfirm={this.handleConfirm}
+              onCancel={this.handleDontSave}
+              onConfirm={this.handleSaveOnExit}
             />
         </div>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>

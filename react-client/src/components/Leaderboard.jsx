@@ -39,7 +39,7 @@ class Leaderboard extends React.Component {
     });
 
     socket.on('challenge', data => {
-      console.log('data yo: ',data)
+      // console.log('data yo: ',data)
       this.setState({
         room: data.room,
         email: data.player2.email
