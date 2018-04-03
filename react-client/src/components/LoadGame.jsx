@@ -97,7 +97,6 @@ class LoadGame extends React.Component {
         onClose={this.props.close}
         closeIcon
       >
-        <Loader active={this.state.loader} />
         <Modal.Header>My Current Games</Modal.Header>
         <Modal.Content image scrolling>
           <Modal.Description>
