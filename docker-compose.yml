@@ -1,7 +1,7 @@
 version: '2'
 services:
   hexo:
-    image: gloverac/hexg:latest
+    build: ./app
     ports:
      - "80:3000"
     depends_on:
@@ -9,4 +9,4 @@ services:
     environment:
      - DATABASE_HOST=database-hexology
   database-hexology:
-    image: gloverac/hexodb:latest
+    image: /Docker-DB
