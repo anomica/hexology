@@ -112,6 +112,18 @@ const getGameBoard = async (room, gameIndex) => {
     .where(knex.raw(`${roomNum} = games.room_id AND '${gameIndex}' = game_index AND hex.game_id = games.game_id`));
 }
 
+const switchPlayers = async (gameIndex, currentPlayer) => {
+  if (currentPlayer === 'player1') { // if the current player who just made a move is player 1
+    await knex('games')
+      .where(knex.raw(`'${gameIndex}' = game_index`))
+      .update('current_player', 2) // switch to player 2
+  } else if (currentPlayer === 'player2') ( // else vice versa
+    await knex('games')
+      .where(knex.raw(`'${gameIndex}' = game_index`))
+      .update('current_player', 1)
+  )
+}
+
 /////////////////////// Update origin hex & new hex when player moves ///////////////////////
 const updateDbHexes = async (originalOrigin, newOrigin, currentPlayer, updatedOrigin) => {
   console.log('\nupdateDbHexes function in db:\n', '\n\noriginalOrigin:\n', originalOrigin, '\n\nnewOrigin:\n', newOrigin, '\n\ncurrentPlayer: ',currentPlayer, '\n\nUpdatedOrigin:\n', updatedOrigin)
@@ -858,5 +870,6 @@ module.exports = {
   getUsernames,
   retrieveUserGames,
   getPlayerUsername,
-  getGameByGameIndex
+  getGameByGameIndex,
+  switchPlayers
 };
