@@ -25,8 +25,11 @@ class SidebarLeft extends React.Component {
       saveGameButton: false,
       gameType: 'public',
       rules: false,
+      profile: false,
       logoutModal: false,
       loadGameModal: false,
+      userWins: null,
+      userLosses: null,
       disabled: window.location.href.indexOf('game') === -1 ? false : true,
       hexbot: false
     }
@@ -35,10 +38,25 @@ class SidebarLeft extends React.Component {
     this.toggleRules = this.toggleRules.bind(this);
     this.showLoadGames = this.showLoadGames.bind(this);
     this.toggleLoadGames = this.toggleLoadGames.bind(this);
+    this.getUserStuff = this.getUserStuff.bind(this);
   }
 
-  // toggles sidebar
-  toggleMenu() {
+  getUserStuff() {
+    let socket = this.props.socket;
+    socket.emit('getUserStuff', {
+      username: this.props.loggedInUser,
+    });
+
+    socket.on('getUserStuff', data => {
+      // console.log('data yo: ',data)
+      this.setState({
+        userWins: data.user.wins,
+        userLosses: data.user.losses
+      });
+    })
+  }
+
+  toggleMenu() { // toggles sidebar
     this.setState({ visible: !this.state.visible });
   }
 
@@ -54,11 +72,19 @@ class SidebarLeft extends React.Component {
     (async () => {
       let username = await this.props.loggedInUser;
       if (username) {
-        this.state.hexbot && this.props.setHexbot(true);
-        this.props.socket.emit('newGame', { 
-          gameType: this.state.gameType,
-          username: this.props.loggedInUser
-         });
+        if (this.state.hexbot) {
+          this.props.setHexbot(true);
+          this.props.socket.emit('botGame', {
+            username: this.props.setLoggedInUser || 'anonymous',
+            type: 'private'
+          })
+        } else {
+          this.props.socket.emit('newGame', {
+            gameType: this.state.gameType,
+            username: this.props.loggedInUser,
+            socketId: this.props.socket.id
+          });
+        }
         this.props.socket.on('newGame', data => {
           this.props.setRoom(data.room);
           this.props.history.push({
@@ -82,6 +108,7 @@ class SidebarLeft extends React.Component {
       .then(data => {
         this.props.login('anonymous');
         this.setState({ logoutModal: true });
+        this.props.history.push('/');
         setTimeout(() => this.setState({ logoutModal: false }), 2000);
       })
       .catch(err => {
@@ -92,7 +119,7 @@ class SidebarLeft extends React.Component {
   handleChange(e, { name, value }) {
     this.setState({ [name]: value });
   }
-  
+
   showLoadGames() {
     if (this.state.loadGameModal) {
       return (
@@ -106,8 +133,7 @@ class SidebarLeft extends React.Component {
   }
 
   render() {
-    // Shows rules modal if rules menu item is clicked
-    const showRules = () => {
+    const showRules = () => { // Shows rules modal if rules menu item is clicked
       if (this.state.rules) {
         return (
           <Rules open={this.state.rules} close={this.toggleRules} />
@@ -146,6 +172,7 @@ class SidebarLeft extends React.Component {
                 onClick={() => {
                   this.setState({ loadGameModal: !this.state.loadGameModal });
                 }}
+                disabled={this.state.disabled}
               >
                 <Icon name='gamepad' />
                 Load Game
@@ -167,13 +194,26 @@ class SidebarLeft extends React.Component {
                 >
                 <Signup />
                 <Icon name='user plus' />
-                Signup
+                Sign Up
               </Menu.Item> :
-              <Menu.Item
-                name='welcome'
-              >
-              <Icon name='hand victory'/>
-              Welcome, {this.props.loggedInUser}!
+              <Menu.Item name='welcome' style={{cursor: 'pointer'}} onClick={() => {
+                this.getUserStuff();
+                this.setState({ profile: !this.state.profile })}}>
+                <Icon name='hand victory'/>
+                Welcome, {this.props.loggedInUser}!
+                <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
+                  <Modal.Header>Profile: {this.props.loggedInUser}</Modal.Header>
+                  <Modal.Content>
+                    <Modal.Description>
+                      Rank: TBD
+                      <br/>
+                      Wins: {this.state.userWins}
+                      <br/>
+                      Losses: {this.state.userLosses}
+                      <p/>
+                    </Modal.Description>
+                  </Modal.Content>
+                </Modal>
               </Menu.Item>
             }
 

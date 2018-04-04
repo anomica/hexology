@@ -6,7 +6,7 @@ import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Descrip
          Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
 import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
          highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
-         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard } from '../../src/actions/actions.js';
+         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -18,6 +18,8 @@ import UnitBank from './UnitBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
 import hexbot from '../hexbot/hexbot.js';
 import TimeoutModals from './TimeoutModals.jsx';
+
+let interval;
 
 class Board extends React.Component {
   constructor(props) {
@@ -35,12 +37,12 @@ class Board extends React.Component {
       tempArchers: 0,
       tempKnights: 0,
       timer:0,
-      turnsForfeited: 0
+      turnsForfeited: 0,
+      hexbotModalOpen: false,
     }
   }
 
   componentDidMount() {
-    let interval;
     (async () => {
       let socket = this.props.socket;
       if (this.props.location.state.type) {
@@ -53,7 +55,7 @@ class Board extends React.Component {
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
-          socket = await socketIOClient('http://127.0.0.1:3000');
+          socket = await socketIOClient('http://127.0.0.1:8080');
           this.props.setSocket(socket);
         }
         socket.emit('joinGame', {
@@ -62,10 +64,23 @@ class Board extends React.Component {
           spectator: true
         });
         !this.props.playerAssigned && this.props.setUserPlayer('player2');
-        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);        
+        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
+
+      socket.on('loadGameBoard', data => {
+        this.props.drawBoard(data.game); // inits the board from last saved state
+        this.props.setGameIndex(data.game.gameIndex); // sets original game index
+        this.props.selectHex({}); // initialize selected hex
+        this.props.highlightNeighbors([]); // and neighbors
+        this.props.setRoom(data.game.room); // sets the room
+        this.props.updateUnitCounts(data.game.playerOneTotalUnits, data.game.playerTwoTotalUnits); // retrieves players resource counts
+        this.props.updateBank(data.game.playerOneUnitBank, data.game.playerTwoUnitBank); // retrieves players units in the bank
+        this.props.setUserPlayer(`${data.game.userPlayer}`); // sets the current user
+        this.props.switchPlayer(`${data.game.currentPlayer}`); // sets the current player's turn
+      });
+
       socket.on('gameCreated', data => {
         this.props.drawBoard(data); // if the server sends an object, it means that the player is player 2
         this.props.setGameIndex(data.gameIndex); // if so, set game index
@@ -79,59 +94,85 @@ class Board extends React.Component {
           player: this.props.userPlayer,
           gameIndex: data.gameIndex,
           room: data.room
-        })
+        });
         interval = setInterval(() => {
           this.setState({
             timer: this.state.timer += 1
           })
         }, 1000)
       });
+
       socket.on('move', (move) => { // when socket receives result of move request,
-        this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
-        if (move.tie) {
+        if (this.props.hexbot && this.props.currentPlayer === 'player2') {
+          // this.hexbotIsThinking();
+          setTimeout(() => {
+            this.props.botMove(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex);
+            if (move.tie) {
+              setTimeout(() => this.setState({
+                combatMessage: 'Combat ends in a bitter draw.',
+                combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
+              }), 2500);
+              setTimeout(() => this.resetCombatModal(), 5001);
+            }
+            if (move.updatedUnitCounts) {
+              this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
+            }
+            this.props.updateResources(move.playerOneResources, move.playerTwoResources);
+            this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
+            clearInterval(interval);
+            this.setState({
+              timer: 0
+            }, () => {
+              interval = setInterval(() => {
+                this.setState({
+                  timer: this.state.timer += 1
+                })
+              }, 1000)
+            })
+          }, 2000);
+        } else {
+          this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
+          if (move.tie) {
+            setTimeout(() => this.setState({
+              combatMessage: 'Combat ends in a bitter draw.',
+              combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
+            }), 2500);
+            setTimeout(() => this.resetCombatModal(), 5001);
+          }
+          if (move.updatedUnitCounts) {
+            this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
+          }
+          this.props.updateResources(move.playerOneResources, move.playerTwoResources);
+          this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
+          clearInterval(interval);
           this.setState({
-            combatModalOpen: true,
-          });
-          setTimeout(() => this.setState({
-            combatMessage: 'Combat ends in a bitter draw.',
-            combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
-          }), 2500);
-          setTimeout(() => this.resetCombatModal(), 5001);
-        }
-        if (move.updatedUnitCounts) {
-          this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
-        }
-        this.props.updateResources(move.playerOneResources, move.playerTwoResources);
-        this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
-        clearInterval(interval);
-        this.setState({
-          timer: 0
-        }, () => {
-          interval = setInterval(() => {
+            timer: 0
+          }, () => {
+            interval = setInterval(() => {
               this.setState({
                 timer: this.state.timer += 1
               })
             }, 1000)
-            
-        })
+          })
+        }
       });
 
-      setInterval(async () => {
-        if (this.state.timer === 90) {
-          if (this.props.userPlayer === this.props.currentPlayer) {
-            this.props.warningOpen(true);
-            setTimeout(() => this.props.warningOpen(false), 3000);
-          }
-        } else if (this.state.timer > 120) {
-          this.props.forfeitOpen(true);
-          setTimeout(() => this.props.forfeitOpen(false), 3000);
-          await this.nextTurn();
-          await this.setState({
-            timer: 0
-          })
-
-        }
-      }, 1000)
+      // setInterval(async () => {
+      //   if (this.state.timer === 90) {
+      //     if (this.props.userPlayer === this.props.currentPlayer) {
+      //       this.props.warningOpen(true);
+      //       setTimeout(() => this.props.warningOpen(false), 3000);
+      //     }
+      //   } else if (this.state.timer > 120) {
+      //     this.props.forfeitOpen(true);
+      //     setTimeout(() => this.props.forfeitOpen(false), 3000);
+      //     await this.nextTurn();
+      //     await this.setState({
+      //       timer: 0
+      //     })
+      //
+      //   }
+      // }, 1000)
 
       socket.on('watchGame', data => {
         this.props.setSpectator(this.props.loggedInUser);
@@ -140,8 +181,15 @@ class Board extends React.Component {
         this.props.setLoggedInPlayer(data.player1, data.player2);
       })
       socket.on('combat', () => {
-        this.setState({ combatModalOpen: true });
-        setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
+        if (this.props.hexbot && this.props.currentPlayer === 'player2') {
+          setTimeout(() => {
+            this.setState({ combatModalOpen: true });
+            setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
+          }, 2000);
+        } else {
+          this.setState({ combatModalOpen: true });
+          setTimeout(() => this.setState({ combatModalOpen: false }), 5000);
+        }
       })
       this.props.socket.on('updateResources', data => {
         this.props.updateResources(data.playerOneResources, data.playerTwoResources);
@@ -156,7 +204,7 @@ class Board extends React.Component {
         this.props.knights(this.props.currentPlayer);
       });
       socket.on('troopsDeployed', data => {
-        this.props.addUnitsToHex(data.hex, data.hexIndex, this.props.userPlayer);
+        this.props.addUnitsToHex(data.hex, data.hexIndex, data.hex.player);
       })
       socket.on('combatWin', (data) => {
         let combatMessage;
@@ -170,6 +218,7 @@ class Board extends React.Component {
         setTimeout(() => this.resetCombatModal(), 5001);
       });
       socket.on('combatLoss', (data) => {
+        let combatMessage;
         this.props.loggedInUser.slice(this.props.loggedInUser.length - 9) === 'spectator' ?
           combatMessage = `${data} is victorious!` :
           combatMessage = 'Your armies have been bested.';
@@ -177,7 +226,7 @@ class Board extends React.Component {
           combatMessage: combatMessage,
           combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
         }), 2500);
-        setTimeout(() => this.resetCombatModal(), 5001);
+        setTimeout(() => this.resetCombatModal(), this.props.hexbot && this.props.currentPlayer === 'player2' ? 7001 : 5001);
       })
       socket.on('tieGame', () => {
         let tag;
@@ -207,14 +256,15 @@ class Board extends React.Component {
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
           combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
-        }), 2500);
-        setTimeout(() => this.resetCombatModal(), 5001);
+        }), this.props.hexbot && this.props.currentPlayer === 'player2' ? 4500 : 2500);
+        setTimeout(() => this.resetCombatModal(), this.props.hexbot && this.props.currentPlayer === 'player2' ? 7001 : 5001);
       });
- 
+
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
         alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
       });
       socket.on('disconnect', () => {
+        clearInterval(interval);
         this.setState({ disconnectModalOpen: true });
         setTimeout(() => {
           this.props.history.push('/');
@@ -222,6 +272,13 @@ class Board extends React.Component {
         }, 2500);
       })
     })();
+  }
+
+  componentWillUnmount() {
+    this.setState({
+      timer: null
+    });
+    clearInterval(interval);
   }
 
   resetCombatModal() {
@@ -357,7 +414,6 @@ class Board extends React.Component {
   }
 
   nextTurn() { // after move completes,
-    this.props.boardState ? hexbot() : null;
     let currentPlayer = this.props.currentPlayer;
     currentPlayer === 'player1' ? currentPlayer = 'player2' : currentPlayer = 'player1'; // toggle player from player 1 to player 2 or vice versa
     this.props.switchPlayer(currentPlayer);
@@ -372,6 +428,9 @@ class Board extends React.Component {
         }
       }
     })
+    if (this.props.hexbot && this.props.currentPlayer === 'player2') {
+      this.state.combatModalOpen ? setTimeout(() => hexbot(), 5000) : hexbot();
+    }
   }
 
   render() {
@@ -385,8 +444,11 @@ class Board extends React.Component {
           </Grid.Column>     
     
           <Grid.Row>
-            <Grid.Column width={16} style={{float: 'left'}}>
-              <TopBar />
+            <Grid.Column width={2}>
+              <SidebarLeft />
+            </Grid.Column>
+            <Grid.Column width={16}>
+              <TopBar otherPlayer={this.props.location.state}/>
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
@@ -495,6 +557,19 @@ class Board extends React.Component {
             </Modal.Actions>
           </Modal>
         </Transition>
+        <Transition animation={'fade up'} duration={'1500'} visible={this.props.hexbotModalOpen}>
+          <Modal open={this.props.hexbotModalOpen} size={'small'} style={{ textAlign: 'center' }}>
+            <Modal.Header>
+              <Image style={{maxHeight: '200px', display: 'inline'}} src={'https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'} />
+              Hexbot is thinking...
+            </Modal.Header>
+            <Modal.Content>
+              <Segment>
+                <Image style={{maxHeight: '400px', margin: 'auto'}} src={'http://www.netanimations.net/large%20gears.gif'}/>
+              </Segment>
+            </Modal.Content>
+          </Modal>
+        </Transition>
         <Transition animation={'fade up'} duration={'3500'} visible={this.state.disconnectModalOpen}>
           <Modal open={this.state.disconnectModalOpen} size={'small'} style={{ textAlign: 'center' }}>
             <Modal.Header>Your opponent has left the room.</Modal.Header>
@@ -528,7 +603,8 @@ const mapStateToProps = (state) => {
     playerOne: state.state.playerOne,
     playerTwo: state.state.playerTwo,
     spectator: state.state.spectator,
-    hexbot: state.state.hexbot
+    hexbot: state.state.hexbot,
+    hexbotModalOpen: state.state.hexbotModalOpen
   }
 }
 
@@ -536,7 +612,7 @@ const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
-    setGameIndex, resetBoard }, dispatch);
+    setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);

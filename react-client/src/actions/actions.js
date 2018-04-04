@@ -267,9 +267,28 @@ export const forfeitOpen = isTrue => (
   }
 )
 
-export const deployTroopsModal = isTrue => (
+export const setPlayerOne = username => (
   {
-    type: 'SHOW-DEPLOYTROOPS-MODAL',
-    payload: isTrue
+    type: 'SET-PLAYER-ONE',
+    payload: username
+  }
+)
+
+export const setPlayerTwo = username => (
+  {
+    type: 'SET-PLAYER-TWO',
+    payload: username
+  }
+)
+
+export const botMove = (origin, originIndex, target, targetIndex) => (
+  {
+    type: 'BOT-MOVE',
+    payload: {
+      origin: origin,
+      originIndex: originIndex,
+      target: target,
+      targetIndex: targetIndex
+    }
   }
 )

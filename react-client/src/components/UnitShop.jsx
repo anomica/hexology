@@ -38,7 +38,10 @@ class UnitShop extends React.Component {
 
   close() {
     this.setState({
-      open: false
+      open: false,
+      swordsmen: true,
+      archers: true,
+      knights: true
     })
   }
 
