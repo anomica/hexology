@@ -1,9 +1,8 @@
 import React from 'react';
-import { Header, Image, Table, Icon, Button, Modal, Form, Input, Divider, Transition } from 'semantic-ui-react';
+import { Header, Table, Icon, Button, Modal, Form, Divider, Transition } from 'semantic-ui-react';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
 
 class Leaderboard extends React.Component {
@@ -15,14 +14,12 @@ class Leaderboard extends React.Component {
       buttonMessage: 'Invite',
       modalOpen: false,
       email: '',
-      challengeUser: '',
-      room: ''
     }
+    
     this.getUsers = this.getUsers.bind(this);
     this.sendEmail = this.sendEmail.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.setUser = this.setUser.bind(this);
-    this.handleSort = this.handleSort.bind(this);
   }
 
   setUser(email, username) {
@@ -38,7 +35,6 @@ class Leaderboard extends React.Component {
     });
 
     socket.on('challenge', data => {
-      // console.log('data yo: ',data)
       this.setState({
         room: data.room,
         email: data.player2.email
@@ -56,18 +52,14 @@ class Leaderboard extends React.Component {
   }
 
   sendEmail() {
-    // console.log('does this even work or nah')
     this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' });
-
     let messageDefault = this.state.message ? this.state.message : 'Hello there! Please join me for an awesome game of Hexology!';
-
     this.props.socket.emit('sendEmail', {
       username: this.props.loggedInUser,
       email: this.state.email,
       message: messageDefault,
       room: this.state.room
     });
-
     setTimeout(() => this.setState({ modalOpen: false }), 2000);
   }
 
@@ -80,6 +72,7 @@ class Leaderboard extends React.Component {
   }
 
   render() {
+    let userList = this.state.users.slice(0, 5) || [];
     return (
       <Table
         celled
@@ -87,14 +80,15 @@ class Leaderboard extends React.Component {
         sortable
         collapsing
         compact
-        celled striped
+        celled
+        striped
         style={{ margin: 'auto' }}
       >
 
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell colSpan='4' style={{textAlign: 'center'}}>
-              <h3><Icon name='trophy' />Leaderboard</h3>
+            <Table.HeaderCell colSpan="4" style={{textAlign: 'center'}}>
+              <h3><Icon name="trophy" />Leaderboard</h3>
             </Table.HeaderCell>
           </Table.Row>
         </Table.Header>
@@ -109,7 +103,7 @@ class Leaderboard extends React.Component {
         </Table.Header>
 
         <Table.Body>
-          {this.state.users.slice(0, 5).map( (user, key) => (
+          {userList.map( (user, key) => (
             <Table.Row key={key}>
               <Table.Cell style={{textAlign: 'center'}}>
                 {key + 1}
@@ -117,7 +111,7 @@ class Leaderboard extends React.Component {
               <Table.Cell>
                 <Transition animation={'pulse'} duration={5000} visible={true}>
                   <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}>{user.username}</Header>}>
-                    <Modal.Header>Profile: {user.username}</Modal.Header>
+                    <Modal.Header><Icon name="user" /> Profile: {user.username}</Modal.Header>
                     <Modal.Content>
                       <Modal.Description>
                         Rank: {key + 1}
