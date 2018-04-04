@@ -637,7 +637,7 @@ const getGame = async (room, gameIndex) => {
 
 /////////////////////// Deletes game when a player leaves the room ///////////////////////
 const forceEndGame = async (gameIndex, saveGame) => {
-  console.log('\nforce ending the game... gameIndex: ', gameIndex, '\n');
+  // console.log('\nforce ending the game... gameIndex: ', gameIndex, '\n');
   if (saveGame !== 'saveOnly') { // if only passing in the gameindex, then the game needs to be ended
     let game = await getGame(null, gameIndex);
     if (game.length > 0) {

@@ -103,8 +103,8 @@ class LoadGame extends React.Component {
                 <Table.Header>
                   <Table.Row>
                     <Table.HeaderCell rowSpan='2' style={{textAlign: 'center'}}>Game</Table.HeaderCell>
-                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player One</Table.HeaderCell>
-                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player Two</Table.HeaderCell>
+                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player 1</Table.HeaderCell>
+                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player 2</Table.HeaderCell>
                     <Table.HeaderCell rowSpan='2' style={{textAlign: 'center'}}>Current Turn</Table.HeaderCell>
                     <Table.HeaderCell rowSpan='2'/>
                   </Table.Row>
@@ -132,7 +132,6 @@ class LoadGame extends React.Component {
                               <div><strong>Player 2: {game.player2_username}</strong></div>
                             </div>
                         }
-                        Room ID: {game.room_id}
                       </Table.Cell>
                       <Table.Cell>
                         Gold: {game.p1_gold}

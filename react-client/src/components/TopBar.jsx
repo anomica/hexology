@@ -95,12 +95,12 @@ class TopBar extends React.Component {
     } 
     this.props.socket.emit('disconnect', { // deletes game from db
       gameIndex: this.props.gameIndex,
-      gameSaved: false
+      gameSaved: this.state.gameSaved
     });
     this.props.socket.emit('leaveRoom', {
       room: this.props.room,
       gameIndex: this.props.gameIndex,
-      gameSaved: false
+      gameSaved: this.state.gameSaved
     });
     this.props.history.push('/');
   }
