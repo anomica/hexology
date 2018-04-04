@@ -1,4 +1,4 @@
-const config = require('../config.js');
+const config = require('./config.js');
 const mysql = require('mysql');
 const moment = require('moment');
 
@@ -586,7 +586,7 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
     await knex('users')
       .where(knex.raw(`user_id = ${game[0].player1}`))
       .increment('wins', 1) // increase wins
-    if (game[0].player2 !== 2) { // if player2 is not anonymous (id of 2 = anon in db) 
+    if (game[0].player2 !== 2) { // if player2 is not anonymous (id of 2 = anon in db)
       await knex('users') // if the winner is player1 & is not anonymous
       .where(knex.raw(`user_id = ${game[0].player2}`))
       .increment('losses', 1) // increase losses
@@ -595,13 +595,13 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
     await knex('users')
       .where(knex.raw(`user_id = ${game[0].player2}`))
       .increment('wins', 1) // increase wins
-    if (game[0].player1 !== 1) { // if player1 is not anonymous (id of 1 = anon in db) 
+    if (game[0].player1 !== 1) { // if player1 is not anonymous (id of 1 = anon in db)
       await knex('users')
         .where(knex.raw(`user_id = ${game[0].player1}`))
         .increment('losses', 1) // increase losses
     }
   }
-  
+
   await deleteHex(game[0].game_id); // first delete the hexes (foreign key restraint)
   await knex('games') // then delete the game
     .where(knex.raw(`${game[0].game_id} = game_id`))
@@ -629,7 +629,7 @@ const getGame = async (room, gameIndex) => {
     return await knex('games').select()
       .where(knex.raw(`${roomNum} = room_id`))
       .returning('game_id')
-  }  
+  }
   if (gameIndex === undefined && room === null) {
     console.log('error in getting the game from database');
   }
@@ -700,6 +700,13 @@ const getUsernames = async () => {
     .select(knex.raw(`username, wins, losses, email`))
     .whereNot(knex.raw(`username = 'anonymous'`))
     .orderByRaw(`wins DESC`)
+    .orderByRaw(`username ASC`)
+}
+
+/////////////////////// Get user rank ///////////////////////
+const getUserRank = async (username) => {
+  let users = await getUsernames();
+  return users.findIndex(user => user.username == username);
 }
 
 /////////////////////// Updates the room number once a game is resumed ///////////////////////
@@ -734,7 +741,7 @@ const deleteOldGames = async (gameId) => {
     .from(knex.raw(`games, hex`))
     .where(knex.raw(`games.created_at NOT BETWEEN '${yesterday}' AND '${today}'`))
     .andWhere(knex.raw(`games.game_id = hex.game_id`))
-    .orderByRaw(`games.created_at DESC`)  
+    .orderByRaw(`games.created_at DESC`)
   if (oldGames.length > 0) {
     return Promise.all(oldGames.forEach(async (hex, i, oldGames) => {
       await deleteHex(hex.game_id); // delete the hexes
@@ -771,7 +778,7 @@ const retrieveUserGames = async (username) => {
      AND LOWER('${username}') = LOWER(users.username
    )`)) // where current user is player1 or player2 and username matches current user
    .orderByRaw(`games.created_at DESC`);
-  
+
   return Promise.all(games.map(async (game, i, games) => {
     if (game.player1 === currentUser[0].user_id) { // if current user is player1
       let otherUser = await knex.select()
@@ -828,5 +835,6 @@ module.exports = {
   getUserPlayer,
   getOtherUserStuff,
   removeHexResource,
-  deleteUserGame
+  deleteUserGame,
+  getUserRank
 };

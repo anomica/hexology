@@ -12,7 +12,9 @@ class UnitShop extends React.Component {
       open: false,
       swordsmen: true,
       archers: true,
-      knights: true
+      knights: true,
+      notEnoughResourcesModalOpen: false,
+      resourceNeeded: ''
     }
   }
 
@@ -66,7 +68,10 @@ class UnitShop extends React.Component {
         swordsmen: !this.state.swordsmen
       })
     } else {
-      alert('Not enough resources!');
+      this.setState({
+        notEnoughResourcesModalOpen: true,
+        resourceNeeded: resources.gold < 10 && resources.metal < 10 ? 'Gold and Metal' : resources.gold < 10 ? 'Gold' : 'Metal'
+      })
     }
   }
 
@@ -88,7 +93,10 @@ class UnitShop extends React.Component {
         archers: !this.state.archers
       })
     } else {
-      alert('Not enough resources!');
+      this.setState({
+        notEnoughResourcesModalOpen: true,
+        resourceNeeded: resources.gold < 10 && resources.wood < 20 ? 'Gold and Wood' : resources.gold < 10 ? 'Gold' : 'Wood'
+      })
     }
   }
 
@@ -110,7 +118,14 @@ class UnitShop extends React.Component {
         knights: !this.state.knights
       })
     } else {
-      alert('Not enough resources!');
+      this.setState({
+        notEnoughResourcesModalOpen: true,
+        resourceNeeded: resources.gold < 20 && resources.metal < 20 && resources.metal ? 'Gold, Wood, and Metal' :
+          resources.gold < 20 && resources.wood < 20 ? 'Gold and Wood' :
+          resources.gold < 20 && resources.metal < 20 ? 'Gold and Metal' :
+          resources.gold < 20 ? 'Gold' :
+          resources.wood < 20 ? 'Wood' : 'Metal'
+      })
     }
   }
 
@@ -144,21 +159,21 @@ class UnitShop extends React.Component {
             <Modal.Description>
               <Transition animation={'jiggle'} duration={'1000'} visible={this.state.swordsmen}>
                 <Label color='blue' image className={'unitType'} onClick={this.buySwordsmen.bind(this)}>
-                  <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
+                  <Image src="./images/sword.png" />
                   Swordsmen
                   <Label.Detail>Cost: 10 gold, 10 metal</Label.Detail>
                 </Label>
               </Transition>
               <Transition animation={'jiggle'} duration={'1000'} visible={this.state.archers}>
                 <Label color='green' image className={'unitType'} onClick={this.buyArchers.bind(this)}>
-                  <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
+                  <Image src="./images/archer.png" />
                   Archer
                   <Label.Detail>Cost: 10 gold, 20 wood</Label.Detail>
                 </Label>
               </Transition>
               <Transition animation={'jiggle'} duration={'1000'} visible={this.state.knights}>
                 <Label color='grey' image className={'unitType'} onClick={this.buyKnights.bind(this)}>
-                  <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
+                  <Image src="./images/knight.png" />
                   Knight
                   <Label.Detail>Cost: 20 gold, 20 metal, 20 wood</Label.Detail>
                 </Label>
@@ -166,6 +181,15 @@ class UnitShop extends React.Component {
             </Modal.Description>
           </Modal.Content>
         </Modal>
+        <Transition animation={'fade up'} duration={'1000'} visible={this.state.notEnoughResourcesModalOpen}>
+          <Modal open={this.state.notEnoughResourcesModalOpen} closeIcon onClose={() => this.setState({ notEnoughResourcesModalOpen: false })} size={'mini'} style={{ textAlign: 'center' }}>
+            <Modal.Header>Not Enough {this.state.resourceNeeded}</Modal.Header>
+            <Modal.Content>
+              You require additional pylons.
+              <Image style={{margin: 'auto', height: '150px'}} src='./images/pylon.png'/>
+            </Modal.Content>
+          </Modal>
+        </Transition>
       </div>
     )
   }

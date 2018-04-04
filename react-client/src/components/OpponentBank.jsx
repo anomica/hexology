@@ -14,17 +14,17 @@ const opponentBank = (props) => {
     {
       text: 'Swordsmen',
       value: 'swordsmen',
-      image: { avatar: true, src: 'https://png.icons8.com/metro/50/000000/sword.png' }
+      image: { avatar: true, src: './images/sword.png' }
     },
     {
       text: 'Archers',
       value: 'archers',
-      image: { avatar: false, src: 'https://png.icons8.com/windows/50/000000/archer.png' }
+      image: { avatar: false, src: './images/archer.png' }
     },
     {
       text: 'Knights',
       value: 'knights',
-      image: { avatar: false, src: 'https://png.icons8.com/ios/50/000000/knight-shield-filled.png' }
+      image: { avatar: false, src: './images/knight.png' }
     }
   ]
 
@@ -34,7 +34,7 @@ const opponentBank = (props) => {
         <List>
           <List.Header>{props.spectator ? `Player 2's Bank:` : `Opponent's Bank:`}</List.Header>
           <List.Item>
-            <Image src="https://cdn2.iconfinder.com/data/icons/finance_icons/PNG/png64/gold_bullion.png" />
+            <Image height="100px" style={{marginBottom: '-50px'}} src="./images/gold-bar.svg" />
             <List.Content>
               <List.Header>
                 {props.userPlayer === 'player1' ? props.playerTwoResources.gold + ' gold' : props.playerOneResources.gold + ' gold'}
@@ -42,7 +42,7 @@ const opponentBank = (props) => {
             </List.Content>
           </List.Item>
           <List.Item>
-            <Image src="https://cdn4.iconfinder.com/data/icons/free-game-icons/64/Tree.png" />
+            <Image height="100px" style={{marginBottom: '-50px'}} src="./images/wood-pile.svg" />
             <List.Content>
               <List.Header>
                 {props.userPlayer === 'player1' ? props.playerTwoResources.wood + ' wood' : props.playerOneResources.wood + ' wood'}
@@ -50,7 +50,7 @@ const opponentBank = (props) => {
             </List.Content>
           </List.Item>
           <List.Item>
-            <Image src="https://cdn1.iconfinder.com/data/icons/CrystalClear/64x64/apps/Service-Manager.png" />
+            <Image height="100px" style={{marginBottom: '-30px'}} src="./images/metal-bar.svg" />
             <List.Content>
               <List.Header>
                 {props.userPlayer === 'player1' ? props.playerTwoResources.metal + ' metal' : props.playerOneResources.metal + ' metal'}
@@ -58,7 +58,7 @@ const opponentBank = (props) => {
             </List.Content>
           </List.Item>
           <List.Item>
-            <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
+            <Image src="./images/sword.png" />
             <List.Content>
               <List.Header>
                 {props.userPlayer === 'player1' ? props.playerTwoUnitBank.swordsmen + ' swordsmen' : props.playerOneUnitBank.swordsmen + ' swordsmen'}
@@ -66,7 +66,7 @@ const opponentBank = (props) => {
             </List.Content>
           </List.Item>
           <List.Item>
-            <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
+            <Image src="./images/archer.png" />
             <List.Content>
               <List.Header>
                 {props.userPlayer === 'player1' ? props.playerTwoUnitBank.archers + ' archers' : props.playerOneUnitBank.archers + ' archers'}
@@ -74,7 +74,7 @@ const opponentBank = (props) => {
             </List.Content>
           </List.Item>
           <List.Item>
-            <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
+            <Image src="./images/knight.png" />
             <List.Content>
               <List.Header>
                 {props.userPlayer === 'player1' ? props.playerTwoUnitBank.knights + ' knights' : props.playerOneUnitBank.knights + ' knights'}

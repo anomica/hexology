@@ -137,8 +137,7 @@ class TopBar extends React.Component {
     return (
       <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%', marginBottom: '-20px' }} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
-
-        <div style={{ right: '10px', top: '20px', position: 'absolute' }}>
+        <div style={{right: '10px', top: '20px', position: 'absolute'}}>
           {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')
             ? <Modal
               open={this.state.saveOpen}
@@ -204,8 +203,8 @@ class TopBar extends React.Component {
             </Segment>)
           : null
         }
-        <Segment.Group horizontal> 
-          {this.props.userPlayer && this.props.playerOneResources.hasOwnProperty('wood') ? 
+        <Segment.Group horizontal>
+          {this.props.userPlayer && this.props.playerOneResources.hasOwnProperty('wood') ?
             <UserPlayerBank /> :
             <Segment>
               <strong>Player One has joined!</strong>

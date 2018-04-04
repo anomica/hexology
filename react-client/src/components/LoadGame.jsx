@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Button, Modal, Table, Confirm } from 'semantic-ui-react';
+import { Button, Modal, Table, Confirm, Transition } from 'semantic-ui-react';
 import { withRouter } from 'react-router';
 import { setRoom } from '../../src/actions/actions.js';
 
@@ -90,13 +90,14 @@ class LoadGame extends React.Component {
 
   render() {
     return (
+      <Transition animation={'pulse'} duration={5000} visible={true}>
       <Modal
         open={this.props.open}
         onClose={this.props.close}
         closeIcon
       >
         <Modal.Header>My Current Games</Modal.Header>
-        <Modal.Content image scrolling>
+        <Modal.Content scrolling>
           <Modal.Description>
           { (this.state.games.length > 0)
             ? <Table celled striped selectable color='green' key='green'>
@@ -186,6 +187,7 @@ class LoadGame extends React.Component {
           </Modal.Description>
         </Modal.Content>
       </Modal>
+      </Transition>
     )
   }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header, Table, Icon, Button, Modal, Form, Divider, Transition } from 'semantic-ui-react';
+import { Header, Table, Icon, Button, Modal, Form, Divider, Transition, Statistic } from 'semantic-ui-react';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -15,7 +15,7 @@ class Leaderboard extends React.Component {
       modalOpen: false,
       email: '',
     }
-    
+
     this.getUsers = this.getUsers.bind(this);
     this.sendEmail = this.sendEmail.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -113,22 +113,29 @@ class Leaderboard extends React.Component {
                   <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}>{user.username}</Header>}>
                     <Modal.Header><Icon name="user" />{user.username}</Modal.Header>
                     <Modal.Content>
-                      <Modal.Description style={{fontSize: '14pt'}}>
-                        <strong>Rank:</strong> {key + 1}
-                        <br/>
-                        <strong>Wins:</strong> {user.wins}
-                        <br/>
-                        <strong>Losses:</strong> {user.losses}
-                        <p/>
+                      <Modal.Description style={{fontSize: '14pt', textAlign: 'center', margin: 'auto'}}>
+                        <Statistic.Group widths='three' style={{marginRight: '15%', marginLeft: '15%'}}>
+                          <Statistic>
+                            <Statistic.Value>{user.wins}</Statistic.Value>
+                            <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
+                          </Statistic>
+                          <Statistic>
+                            <Statistic.Value># {key + 1}</Statistic.Value>
+                            <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
+                          </Statistic>
+                          <Statistic>
+                            <Statistic.Value>{user.losses}</Statistic.Value>
+                            <Statistic.Label><Icon name='tint' />Losses</Statistic.Label>
+                          </Statistic>
+                        </Statistic.Group>
                         {this.props.loggedInUser !== 'anonymous' && this.props.loggedInUser !== user.username
                           ? <Button color='blue' key='blue' onClick={ () =>
                               this.setUser(user.email, user.username)
-                            }>Challenge {user.username}!</Button>
+                            } style={{marginTop: '5%'}} icon><Icon name='mail outline'/> Challenge {user.username}!</Button>
                           : null
                         }
-
                         <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
-                          <Modal.Header>Challenge {user.username}!</Modal.Header>
+                          <Modal.Header><Icon name='envelope'/> Challenge {user.username}!</Modal.Header>
                           <Modal.Content>
                             <Modal.Description>
                               <Form size={'large'} key={'small'}>
@@ -157,12 +164,12 @@ class Leaderboard extends React.Component {
               <Table.Cell style={{textAlign: 'center'}}>
                 {user.wins}
                 <br/>
-                ({Math.round((user.wins) / (user.wins + user.losses) * 100)}%)
+                ({Math.round((user.wins) / (user.wins + user.losses) * 100) || 0}%)
               </Table.Cell>
               <Table.Cell style={{textAlign: 'center'}}>
                 {user.losses}
                 <br />
-                ({Math.round((user.losses) / (user.wins + user.losses) * 100)}%)
+                ({Math.round((user.losses) / (user.wins + user.losses) * 100 || 0)}%)
               </Table.Cell>
             </Table.Row>
           ))}

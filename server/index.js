@@ -353,10 +353,12 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('getUserStuff', async (request) => {
     let user = await db.getUserId(request.username);
+    let userRank = await db.getUserRank(request.username);
     await socket.emit('getUserStuff', {
       user: {
         wins: user[0].wins,
-        losses: user[0].losses
+        losses: user[0].losses,
+        rank: 1 + userRank
       }
     });
   });
