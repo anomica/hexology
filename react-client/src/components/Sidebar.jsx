@@ -11,7 +11,7 @@ import Signup from './Signup.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
-import { toggleLoginSignup, exitGame, setRoom, login, setHexbot } from '../../src/actions/actions.js';
+import { toggleLoginSignup, exitGame, setRoom, login, setHexbot, callTimer } from '../../src/actions/actions.js';
 import axios from 'axios';
 
 class SidebarLeft extends React.Component {
@@ -117,7 +117,7 @@ class SidebarLeft extends React.Component {
   }
 
   handleChange(e, { name, value }) {
-    this.setState({ [name]: value });
+    name === 'timer' ? this.props.callTimer(true) : this.setState({ [name]: value });
   }
 
   showLoadGames() {
@@ -282,6 +282,15 @@ class SidebarLeft extends React.Component {
                       onChange={this.handleChange.bind(this)}
                       label='Play Against Hexbot?'
                      />
+                    <Form.Select
+                      required
+                      label
+                      placeholder={'No'}
+                      options={[{ key: 'yes', text: 'Yes', value: 'yes' }, { key: 'no', text: 'No', value: 'no' }]}
+                      name={'timer'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Play With Timer?'
+                    />
                    <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
                   </Form.Group>
                 </Form>
@@ -328,7 +337,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup, login, setHexbot }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup, login, setHexbot, callTimer }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));
