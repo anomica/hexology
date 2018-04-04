@@ -64,7 +64,6 @@ g.opponentIcon > g > text {
 }
 
 g.opponentIcon > g > polygon {
-  fill: red;
   cursor: url(https://png.icons8.com/metro/50/000000/sword.png), auto;
 }
 

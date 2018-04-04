@@ -455,7 +455,7 @@ class Board extends React.Component {
             <Grid.Column width={this.props.menuVisible ? 14 : 15}>
               <div className="Board">
                 <HexGrid height={800} viewBox="-50 -50 150 150">
-                  <Layout size={{ x: 12, y: 12 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -37.5 }}>
+                  <Layout size={{ x: 12, y: 12 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -35 }}>
                     {this.props.boardState ? this.props.boardState.map((hex, index) => {
                       let targetClass = '';
                       if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
@@ -491,8 +491,7 @@ class Board extends React.Component {
                           this.setState({ hex: hex });
                         }}
                         className={targetClass.indexOf('neighbor') > -1 && targetClass.indexOf('opponent') > -1 ? 'opponentIcon' :
-                                   targetClass.indexOf('neighbor') > -1 ? 'neighborIcon' : null
-                        }
+                                   targetClass.indexOf('neighbor') > -1 ? 'neighborIcon' : null}
                         fill={targetClass.indexOf('gold') > -1 && targetClass.indexOf('neighbor') > -1 ? 'gold-bar-neighbor' :
                               targetClass.indexOf('wood') > -1 && targetClass.indexOf('neighbor') > -1 ? 'wood-pile-neighbor' :
                               targetClass.indexOf('metal') > -1 && targetClass.indexOf('neighbor') > -1 ? 'metal-bar-neighbor' :

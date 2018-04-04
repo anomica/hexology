@@ -48,7 +48,7 @@ class SidebarLeft extends React.Component {
     });
 
     socket.on('getUserStuff', data => {
-      console.log('data yo: ',data)
+      // console.log('data yo: ',data)
       this.setState({
         userWins: data.user.wins,
         userLosses: data.user.losses
