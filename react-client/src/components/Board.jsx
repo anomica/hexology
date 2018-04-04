@@ -30,7 +30,7 @@ class Board extends React.Component {
       modalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
+      combatIcon: './images/battle.jpg',
       confirmOpen: false,
       disconnectModalOpen: false,
       tempSwordsmen: 0,
@@ -110,7 +110,7 @@ class Board extends React.Component {
             if (move.tie) {
               setTimeout(() => this.setState({
                 combatMessage: 'Combat ends in a bitter draw.',
-                combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
+                combatIcon: './images/white-flag.jpg'
               }), 2500);
               setTimeout(() => this.resetCombatModal(), 5001);
             }
@@ -135,7 +135,7 @@ class Board extends React.Component {
           if (move.tie) {
             setTimeout(() => this.setState({
               combatMessage: 'Combat ends in a bitter draw.',
-              combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
+              combatIcon: './images/white-flag.jpg'
             }), 2500);
             setTimeout(() => this.resetCombatModal(), 5001);
           }
@@ -213,7 +213,7 @@ class Board extends React.Component {
           combatMessage = 'You are victorious!';
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
-          combatIcon: 'https://royalarmouries.files.wordpress.com/2015/10/di-2015-3939.jpg'
+          combatIcon: './images/victory.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
@@ -224,7 +224,7 @@ class Board extends React.Component {
           combatMessage = 'Your armies have been bested.';
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
-          combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
+          combatIcon: './images/loss.png'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), this.props.hexbot && this.props.currentPlayer === 'player2' ? 7001 : 5001);
       })
@@ -244,7 +244,7 @@ class Board extends React.Component {
           combatMessage = 'Congratulations! You have won the battle, and the day!';
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
-          combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
+          combatIcon: './images/game-victory.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
@@ -255,7 +255,7 @@ class Board extends React.Component {
           combatMessage = 'Your armies have been bested, and your enemy is victorious. Better luck next time.';
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
-          combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
+          combatIcon: './images/game-loss.png'
         }), this.props.hexbot && this.props.currentPlayer === 'player2' ? 4500 : 2500);
         setTimeout(() => this.resetCombatModal(), this.props.hexbot && this.props.currentPlayer === 'player2' ? 7001 : 5001);
       });
@@ -284,7 +284,7 @@ class Board extends React.Component {
   resetCombatModal() {
     this.setState({
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
+      combatIcon: './images/battle.jpg',
     })
   }
 
@@ -482,9 +482,9 @@ class Board extends React.Component {
                       } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knights') {
                         targetClass += ' knight';
                       }
-                      return <Hexagon
+                      let hexagon = this.props.icons ?
+                      <Hexagon
                         key={uuidv4()}
-                        className={this.props.icons ? null : targetClass}
                         onClick={() => {
                           this.props.deployment && hex.player === this.props.userPlayer ? this.addUnitsToHex(index, hex) :
                           this.handleClick(hex);
@@ -514,7 +514,23 @@ class Board extends React.Component {
                         <Text>
                           {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
                         </Text>
-                      </Hexagon>
+                      </Hexagon> :
+                      <Hexagon
+                        key={uuidv4()}
+                        className={targetClass}
+                        onClick={() => {
+                          this.props.deployment && hex.player === this.props.userPlayer ? this.addUnitsToHex(index, hex) :
+                          this.handleClick(hex);
+                          this.setState({ hex: hex });
+                        }}
+                        q={hex.coordinates[0]}
+                        r={hex.coordinates[1]}
+                        s={hex.coordinates[2]}>
+                        <Text>
+                          {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
+                        </Text>
+                      </Hexagon>;
+                      return hexagon;
                     }): <div></div>}
                   </Layout>
                   <Pattern id="gold-bar" link="./images/gold-bar.svg" />
@@ -600,12 +616,12 @@ class Board extends React.Component {
         <Transition animation={'fade up'} duration={'1500'} visible={this.props.hexbotModalOpen}>
           <Modal open={this.props.hexbotModalOpen} size={'small'} style={{ textAlign: 'center' }}>
             <Modal.Header>
-              <Image style={{maxHeight: '200px', display: 'inline'}} src={'https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'} />
+              <Image style={{maxHeight: '200px', display: 'inline'}} src={'./images/hexbot.jpg'} />
               Hexbot is thinking...
             </Modal.Header>
             <Modal.Content>
               <Segment>
-                <Image style={{maxHeight: '400px', margin: 'auto'}} src={'http://www.netanimations.net/large%20gears.gif'}/>
+                <Image style={{maxHeight: '400px', margin: 'auto'}} src={'./images/gears.gif'}/>
               </Segment>
             </Modal.Content>
           </Modal>
