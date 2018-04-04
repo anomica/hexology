@@ -15,7 +15,7 @@ class Leaderboard extends React.Component {
       modalOpen: false,
       email: '',
     }
-    
+
     this.getUsers = this.getUsers.bind(this);
     this.sendEmail = this.sendEmail.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -157,12 +157,12 @@ class Leaderboard extends React.Component {
               <Table.Cell style={{textAlign: 'center'}}>
                 {user.wins}
                 <br/>
-                ({Math.round((user.wins) / (user.wins + user.losses) * 100)}%)
+                ({Math.round((user.wins) / (user.wins + user.losses) * 100) || 0}%)
               </Table.Cell>
               <Table.Cell style={{textAlign: 'center'}}>
                 {user.losses}
                 <br />
-                ({Math.round((user.losses) / (user.wins + user.losses) * 100)}%)
+                ({Math.round((user.losses) / (user.wins + user.losses) * 100 || 0)}%)
               </Table.Cell>
             </Table.Row>
           ))}

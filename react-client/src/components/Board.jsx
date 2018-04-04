@@ -27,7 +27,7 @@ class Board extends React.Component {
 
     this.state = {
       hex: null,
-      modalOpen: false,
+      moveModalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
       combatIcon: './images/battle.jpg',
@@ -39,6 +39,9 @@ class Board extends React.Component {
       timer:0,
       turnsForfeited: 0,
       hexbotModalOpen: false,
+      genericModalOpen: false,
+      genericModalHeader: 'test',
+      genericModalFalse: 'test',
     }
   }
 
@@ -261,7 +264,15 @@ class Board extends React.Component {
       });
 
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
-        alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
+        this.setState({
+          genericModalOpen: true,
+          genericModalHeader: 'Cheating Detected',
+          genericModalMessage: 'You are being redirected to the home page. Please don\'t cheat, it makes Hexbot sad :('
+        })
+        setTimeout(() => {
+          this.props.history.push('/');
+          this.props.resetBoard();
+        }, 2500);
       });
       socket.on('disconnect', () => {
         clearInterval(interval);
@@ -285,11 +296,18 @@ class Board extends React.Component {
     this.setState({
       combatMessage: 'May the strongest prevail!',
       combatIcon: './images/battle.jpg',
-    })
+    });
   }
 
-  closeModal() {
-    this.setState({ modalOpen: false });
+  resetGenericModal() {
+    this.setState({
+      genericModalHeader: '',
+      genericModalMessage: '',
+    });
+  }
+
+  closeMoveModal() {
+    this.setState({ moveModalOpen: false });
   }
 
   skipCombatAnmiation() {
@@ -308,12 +326,16 @@ class Board extends React.Component {
     let hex = this.props.selectedHex;
     if (hex.swordsmen < this.state.tempSwordsmen || hex.archers < this.state.tempArchers || hex.knights < this.state.tempKnights) {
       resetState();
-      alert('you cannot enter a number higher of units than you currently have');
+      this.setState({
+        genericModalOpen: true,
+        genericModalHeader: 'Invalid Number',
+        genericModalMessage: 'Please select a number of units less than or equal to the number units on the hex.'
+      })
       return false;
     } else {
       this.handleMoveClick(this.state.hex);
       this.setState({
-        modalOpen: false
+        moveModalOpen: false
       })
     }
   }
@@ -383,7 +405,11 @@ class Board extends React.Component {
 
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex); // send information to be sent over socket
     } else { //  if selected hex is not a neighbor,
-      alert('Please select a valid move.') // alert player they can't move there
+      this.setState({
+        genericModalOpen: true,
+        genericModalHeader: 'Invalid Move',
+        genericModalMessage: 'Please select a hex contiguous with one of the hexes you control.'
+      }) // alert player they can't move there
     }
   }
 
@@ -443,11 +469,11 @@ class Board extends React.Component {
         <Radio style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '100px', left: '50px'}} onClick={this.props.iconsToggle} toggle/>
         <Button style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle} >Menu</Button>
         <Grid>
-   
+
           <Grid.Column width={2}>
             <SidebarLeft />
-          </Grid.Column>     
-    
+          </Grid.Column>
+
           <Grid.Row>
             <Grid.Column width={2}>
               <SidebarLeft />
@@ -463,22 +489,22 @@ class Board extends React.Component {
                   <Layout size={{ x: 12, y: 12 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -35 }}>
                     {this.props.boardState ? this.props.boardState.map((hex, index) => {
                       let targetClass = '';
-                      if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
-                        targetClass += 'opponent';
-                      } else if (this.props.selectedHex.index === hex.index) {
-                        targetClass += 'selected';
-                      } else if (hex.player === this.props.userPlayer || (this.props.spectator && hex.player === 'player1')) {
-                        targetClass += 'friendly';
-                      }
                       if (hex.hasGold) {
-                        targetClass += 'gold';
+                        targetClass += ' gold';
                       } else if (hex.hasWood) {
-                        targetClass += 'wood';
+                        targetClass += ' wood';
                       } else if (hex.hasMetal) {
-                        targetClass += 'metal';
+                        targetClass += ' metal';
                       }
                       if (this.props.neighbors.indexOf(hex.index) > -1) {
                         targetClass += ' neighbor';
+                      }
+                      if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
+                        targetClass += ' opponent';
+                      } else if (this.props.selectedHex.index === hex.index) {
+                        targetClass += ' selected';
+                      } else if (hex.player === this.props.userPlayer || (this.props.spectator && hex.player === 'player1')) {
+                        targetClass += ' friendly';
                       }
                       if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
                         targetClass += ' swordsmen';
@@ -564,7 +590,7 @@ class Board extends React.Component {
                   content={'Move all your troops to this hex?'}
                   cancelButton={'No, only some'}
                   onCancel={() => {
-                    this.setState({ modalOpen: true })
+                    this.setState({ moveModalOpen: true })
                     this.setState({ confirmOpen: false })
                   }}
                   confirmButton={'Yes'}
@@ -577,8 +603,8 @@ class Board extends React.Component {
                     this.handleMoveClick(this.state.hex);
                   }}/>
 
-                  <Modal open={this.state.modalOpen} size={'small'}
-                    style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
+                <Modal open={this.state.moveModalOpen} size={'small'}
+                    style={{ textAlign: 'center' }} closeIcon onClose={this.closeMoveModal.bind(this)}>
                     <Modal.Header>Move Troops</Modal.Header>
                     <Modal.Content>
                       <Modal.Description>
@@ -596,7 +622,7 @@ class Board extends React.Component {
                       <Button type='submit' onClick={this.validateTroopAmounts.bind(this)}>Move</Button>
                     </Modal.Actions>
                   </Modal>
-                </div> 
+                </div>
               </Grid.Column>
               <Grid.Column width={2}>
                 <ChatWindow/>
@@ -635,6 +661,23 @@ class Board extends React.Component {
             <Modal.Header>Your opponent has left the room.</Modal.Header>
             <Modal.Content>
               You are being rerouted to the lobby.
+            </Modal.Content>
+          </Modal>
+        </Transition>
+        <Transition animation={'fade up'} duration={'1000'} visible={this.state.genericModalOpen}>
+          <Modal
+            open={this.state.genericModalOpen}
+            closeIcon
+            onClose={() => {
+              this.setState({ genericModalOpen: false });
+              this.resetGenericModal();
+            }}
+            size={'small'}
+            style={{ textAlign: 'center' }}
+          >
+            <Modal.Header>{this.state.genericModalHeader}</Modal.Header>
+            <Modal.Content>
+              {this.state.genericModalMessage}
             </Modal.Content>
           </Modal>
         </Transition>
