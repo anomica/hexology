@@ -591,29 +591,14 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('disconnect', async (data) => {
-    console.log('data on disconnect: ', data)
     if (data.gameSaved && data.gameIndex) { // if the game was saved when leaving the room
-      console.log('DISCONNECT requested game to be saved....')
       await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
     } else if (data.gameIndex) { // otherwise, the game wasn't saved
-      console.log('DISCONNECT game was not saved by user...')
       await db.forceEndGame(data.gameIndex); // game gets deleted from db
     }
     await room && io.to(room).emit('disconnect');
     console.log('user disconnected');
   });
-
-//   socket.on('deleteGame', async (data) => {
-//     console.log('delete game data: ', data)
-//     if (data.gameSaved && data.gameIndex) { // if the game was saved when leaving the room
-//       console.log('DISCONNECT requested game to be saved....')
-//       await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
-//     } else if (data.gameIndex) { // otherwise, the game wasn't saved
-//       console.log('DISCONNECT game was not saved by user...')
-//       await db.forceEndGame(data.gameIndex); // game gets deleted from db
-//     }
-//     await room && io.to(room).emit('deleteGame');
-//   })
 });
 
 // assignLoggedInUser function: If using game object on server

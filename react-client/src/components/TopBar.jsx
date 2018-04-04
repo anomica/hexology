@@ -156,7 +156,7 @@ class TopBar extends React.Component {
             </Modal>
             : null
           }
-          {this.props.loggedInUser !== 'anonymous' && this.props.currentPlayer !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator
+          {this.props.loggedInUser !== 'anonymous' && this.props.currentPlayer !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources.hasOwnProperty('wood')
             ? <span>
                 <Button size='small' onClick={this.confirm}>Exit Game</Button>
                 <Confirm
