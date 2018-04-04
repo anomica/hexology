@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 3000:3000
 
-CMD npm start && webpack
+CMD webpack webpack.config.js && npm start
