@@ -436,7 +436,10 @@ class Board extends React.Component {
   render() {
     return (
       <div>
-        <Label style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '130px', left: '35px'}}>{this.props.icons ? 'Colors' : 'Icons'}</Label>
+        {this.props.icons ?
+          <Label style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '130px', left: '47.5px'}}>Colors</Label> :
+          <Label style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '130px', left: '50px'}}>Icons</Label>
+        }
         <Radio style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '100px', left: '50px'}} onClick={this.props.iconsToggle} toggle/>
         <Button style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle} >Menu</Button>
         <Grid>
@@ -487,7 +490,19 @@ class Board extends React.Component {
                           this.handleClick(hex);
                           this.setState({ hex: hex });
                         }}
-                        fill={targetClass.indexOf('gold') > -1 ? 'gold-bar' :
+                        fill={targetClass.indexOf('gold') > -1 && targetClass.indexOf('neighbor') > -1 ? 'gold-bar-neighbor' :
+                              targetClass.indexOf('wood') > -1 && targetClass.indexOf('neighbor') > -1 ? 'wood-pile-neighbor' :
+                              targetClass.indexOf('metal') > -1 && targetClass.indexOf('neighbor') > -1 ? 'metal-bar-neighbor' :
+                              targetClass.indexOf('opponent') > -1 && targetClass.indexOf('neighbor') > -1 ? 'opponent-neighbor' :
+                              targetClass.indexOf('gold') > -1 && targetClass.indexOf('opponent') > -1 ? 'gold-bar-opponent' :
+                              targetClass.indexOf('wood') > -1 && targetClass.indexOf('opponent') > -1 ? 'wood-pile-opponent' :
+                              targetClass.indexOf('metal') > -1 && targetClass.indexOf('opponent') > -1 ? 'metal-bar-opponent' :
+                              targetClass.indexOf('gold') > -1 && targetClass.indexOf('friendly') > -1 ? 'gold-bar-friendly' :
+                              targetClass.indexOf('wood') > -1 && targetClass.indexOf('friendly') > -1 ? 'wood-pile-friendly' :
+                              targetClass.indexOf('metal') > -1 && targetClass.indexOf('friendly') > -1 ? 'metal-bar-friendly' :
+                              targetClass.indexOf('neighbor') > -1 ? 'neighbor' :
+                              targetClass.indexOf('selected') > -1 ? 'friendly-selected' :
+                              targetClass.indexOf('gold') > -1 ? 'gold-bar' :
                               targetClass.indexOf('wood') > -1 ? 'wood-pile' :
                               targetClass.indexOf('metal') > -1 ? 'metal-bar' :
                               targetClass.indexOf('friendly') > -1 ? 'friendly' :
@@ -507,6 +522,18 @@ class Board extends React.Component {
                   <Pattern id="metal-bar" link="./images/metal-bar.svg" />
                   <Pattern id="friendly" link="./images/friendly.svg" />
                   <Pattern id="opponent" link="./images/opponent.svg" />
+                  <Pattern id="neighbor" link="./images/neighbor.svg" />
+                  <Pattern id="friendly-selected" link="./images/friendly-selected.svg" />
+                  <Pattern id="gold-bar-neighbor" link="./images/gold-bar-neighbor.svg" />
+                  <Pattern id="wood-pile-neighbor" link="./images/wood-pile-neighbor.svg" />
+                  <Pattern id="metal-bar-neighbor" link="./images/metal-bar-neighbor.svg" />
+                  <Pattern id="opponent-neighbor" link="./images/opponent-neighbor.svg" />
+                  <Pattern id="gold-bar-friendly" link="./images/gold-bar-friendly.svg" />
+                  <Pattern id="gold-bar-opponent" link="./images/gold-bar-opponent.svg" />
+                  <Pattern id="wood-pile-friendly" link="./images/wood-pile-friendly.svg" />
+                  <Pattern id="wood-pile-opponent" link="./images/wood-pile-opponent.svg" />
+                  <Pattern id="metal-bar-friendly" link="./images/metal-bar-friendly.svg" />
+                  <Pattern id="metal-bar-opponent" link="./images/metal-bar-opponent.svg" />
                 </HexGrid>
                 <Confirm
                   open={this.state.confirmOpen}
