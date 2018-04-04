@@ -31,13 +31,13 @@ class TopBar extends React.Component {
     this.handleSaveClose = this.handleSaveClose.bind(this);
   }
 
-  saveGame(exit) {    
+  saveGame(exit) {
     this.props.socket.emit('saveGame', {
       gameIndex: this.props.gameIndex,
       room: this.props.room,
       socketId: this.props.socket.id
     });
-    
+
     this.props.socket.on('saveGame', data => {
       this.setState({
         saveOpen: true,
@@ -133,7 +133,7 @@ class TopBar extends React.Component {
 
   render() {
     return (
-      <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%' }} secondary floated={'right'} raised>
+      <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%', marginBottom: '-20px' }} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
 
         <div style={{right: '10px', top: '20px', position: 'absolute'}}>
@@ -142,7 +142,7 @@ class TopBar extends React.Component {
               open={this.state.saveOpen}
               trigger={
                 <Button 
-                  size={'small'}
+                  size='small' color='green'
                   style={{marginRight: '5px'}}
                   onClick={this.saveGame}
                   disabled={this.state.saveDisabled}
@@ -155,11 +155,8 @@ class TopBar extends React.Component {
             : null
           }
           {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator
-            ? <div>
-                <Button
-                  size={'small'}
-                  onClick={this.confirm}
-                >Exit Game</Button>
+            ? <span>
+                <Button size='small' color='red' onClick={this.confirm}>Exit Game</Button>
                 <Confirm
                   header='Save Game?'
                   content="Do you want to save this game?"
@@ -169,10 +166,8 @@ class TopBar extends React.Component {
                   onCancel={this.handleDontSave}
                   onConfirm={this.handleSaveOnExit}
                 />
-              </div>
-            : <Button
-                onClick={this.handleDontSave}
-              >Exit Game</Button>
+              </span>
+            : <Button size='tiny' color='red' onClick={this.handleDontSave}>Exit Game</Button>
           }
         </div>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
@@ -244,7 +239,7 @@ class TopBar extends React.Component {
             </Segment>
           }
         </Segment.Group>
-        
+
           {this.props.location.state.otherPlayerInfo
             ? <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({
                 modalOpen: false,

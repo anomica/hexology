@@ -111,14 +111,14 @@ class Leaderboard extends React.Component {
               <Table.Cell>
                 <Transition animation={'pulse'} duration={5000} visible={true}>
                   <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}>{user.username}</Header>}>
-                    <Modal.Header><Icon name="user" /> Profile: {user.username}</Modal.Header>
+                    <Modal.Header><Icon name="user" />{user.username}</Modal.Header>
                     <Modal.Content>
-                      <Modal.Description>
-                        Rank: {key + 1}
+                      <Modal.Description style={{fontSize: '14pt'}}>
+                        <strong>Rank:</strong> {key + 1}
                         <br/>
-                        Wins: {user.wins}
+                        <strong>Wins:</strong> {user.wins}
                         <br/>
-                        Losses: {user.losses}
+                        <strong>Losses:</strong> {user.losses}
                         <p/>
                         {this.props.loggedInUser !== 'anonymous' && this.props.loggedInUser !== user.username
                           ? <Button color='blue' key='blue' onClick={ () =>
