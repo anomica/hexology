@@ -14,7 +14,7 @@ import SidebarLeft from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
-import UnitBank from './UnitBank.jsx';
+import OpponentBank from './OpponentBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
 import hexbot from '../hexbot/hexbot.js';
 import TimeoutModals from './TimeoutModals.jsx';
@@ -325,7 +325,6 @@ class Board extends React.Component {
     }
     let hex = this.props.selectedHex;
     if (hex.swordsmen < this.state.tempSwordsmen || hex.archers < this.state.tempArchers || hex.knights < this.state.tempKnights) {
-      console.log('hi')
       resetState();
       this.setState({
         genericModalOpen: true,
@@ -470,6 +469,11 @@ class Board extends React.Component {
         <Radio style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '100px', left: '50px'}} onClick={this.props.iconsToggle} toggle/>
         <Button style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle} >Menu</Button>
         <Grid>
+
+          <Grid.Column width={2}>
+            <SidebarLeft />
+          </Grid.Column>
+
           <Grid.Row>
             <Grid.Column width={2}>
               <SidebarLeft />
@@ -622,10 +626,7 @@ class Board extends React.Component {
               </Grid.Column>
               <Grid.Column width={2}>
                 <ChatWindow/>
-                {this.props.currentPlayer === this.props.userPlayer ?
-                  <UnitBank />
-                  : <div></div>
-              }
+                <OpponentBank />
             </Grid.Column>
           </Grid.Row>
         </Grid>

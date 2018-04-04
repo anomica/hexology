@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Modal, Input, Card, Icon, Button, Transition, Header, Popup, Image, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
-import { updateBank, deployUnits } from '../../src/actions/actions.js';
+import { Dropdown, List, Modal, Input, Card, Icon, Button, Transition, Header, Popup, Image, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
+import { deployTroopsModal, updateBank, deployUnits } from '../../src/actions/actions.js';
 
 class UnitBank extends React.Component {
   constructor(props) {
@@ -30,9 +30,7 @@ class UnitBank extends React.Component {
   }
 
   handleClose() {
-    this.setState({
-      open: false
-    })
+    this.props.deployTroopsModal(false);
   }
 
   handleSubmit() {
@@ -61,67 +59,103 @@ class UnitBank extends React.Component {
       }
     }
 
-    if (this.props.userPlayer === this.props.currentPlayer) {
-      return (
-        <div>
-          <Card>
-            <Card.Header>Your Unit Reserve</Card.Header>
-            <Card.Content>
-              <Label color='blue' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Swordsmen')}>
+    const dropDown = [
+      {
+        text: 'Swordsmen',
+        value: 'swordsmen',
+        image: { avatar: true, src: 'https://png.icons8.com/metro/50/000000/sword.png' }
+      },
+      {
+        text: 'Archers',
+        value: 'archers',
+        image: { avatar: false, src: 'https://png.icons8.com/windows/50/000000/archer.png' }
+      },
+      {
+        text: 'Knights',
+        value: 'knights',
+        image: { avatar: false, src: 'https://png.icons8.com/ios/50/000000/knight-shield-filled.png' }
+      }
+      
+    ]
+
+    console.log(this.props.room);
+    console.log('this.props.rooms:', this.props.rooms);
+
+    return (
+      <div>
+        {this.props.boardState ? 
+          <List>
+            <List.Header>{this.props.userPlayer === 'player1' ? `Player 2's Bank:` : `Player 1's Bank':`}</List.Header>
+            <List.Item>
+              <Image src="https://cdn2.iconfinder.com/data/icons/finance_icons/PNG/png64/gold_bullion.png" />
+              <List.Content>
+                <List.Header>
+                  {this.props.userPlayer === 'player1' ? this.props.playerTwoResources.gold + ' gold' : this.props.playerOneResources.gold + ' gold'}
+                </List.Header>
+              </List.Content>
+            </List.Item>
+            <List.Item>
+              <Image src="https://cdn4.iconfinder.com/data/icons/free-game-icons/64/Tree.png" />
+              <List.Content>
+                <List.Header>
+                  {this.props.userPlayer === 'player1' ? this.props.playerTwoResources.wood + ' wood' : this.props.playerOneResources.wood + ' wood'}
+                </List.Header>
+              </List.Content>
+            </List.Item>
+            <List.Item>
+              <Image src="https://cdn1.iconfinder.com/data/icons/CrystalClear/64x64/apps/Service-Manager.png" />
+              <List.Content>
+                <List.Header>
+                  {this.props.userPlayer === 'player1' ? this.props.playerTwoResources.metal + ' metal' : this.props.playerOneResources.metal + ' metal'}
+                </List.Header>
+              </List.Content>
+            </List.Item>
+            <List.Item>
               <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
-                Deploy Swordsmen
-              </Label>
-              <Card.Description>
-                Swordsmen:
-                {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.swordsmen
-              : ' ' + this.props.playerTwoUnitBank.swordsmen}
-              </Card.Description>
-            </Card.Content>
-            <Card.Content>
-              <Label color='green' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Archers')} >
-                <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
-                Deploy Archers
-              </Label>
-              <Card.Description>
-                Archers:
-                {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.archers
-                : ' ' + this.props.playerTwoUnitBank.archers}
-              </Card.Description>
-            </Card.Content>
-            <Card.Content>
-              <Label color='grey' image className={'unitType'} onClick={this.handleOpen.bind(this, 'Knights')} >
-                <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
-                 Deploy Knights
-              </Label>
-            <Card.Description>
-              Knights:
-              {this.props.userPlayer === 'player1' ? ' ' + this.props.playerOneUnitBank.knights
-              : ' ' + this.props.playerTwoUnitBank.knights}
-            </Card.Description>
-            </Card.Content>
-          </Card>
-          <Modal open={this.state.open} size={'mini'}>
-            <Modal.Header>
-              Choose Quanity {' ' + this.state.unitBeingDeployed}
-            </Modal.Header>
-            <Modal.Content style={styles.modal}>
-              <Input placeholder='quantity' onChange={(e) => {this.setState({quantity: Number(e.target.value)})}} />
-            </Modal.Content>
-            <Modal.Actions>
-              <Button color='grey' onClick={this.handleClose.bind(this)} >
-                Cancel
-               </Button>
-              <Button color='blue' onClick={() => {this.handleClose(); this.handleSubmit();}} >
-                Deploy
-               </Button>
-            </Modal.Actions>
-          </Modal>
-        </div>
-      )
-    }
-    else {
-      return <div></div>
-    }
+              <List.Content>
+                <List.Header>
+                  {this.props.userPlayer === 'player1' ? this.props.playerTwoUnitBank.swordsmen + ' swordsmen' : this.props.playerOneUnitBank.swordsmen + ' swordsmen'}
+                </List.Header>
+              </List.Content>
+            </List.Item>
+            <List.Item>
+              <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
+              <List.Content>
+                <List.Header>
+                  {this.props.userPlayer === 'player1' ? this.props.playerTwoUnitBank.archers + ' archers' : this.props.playerOneUnitBank.archers + ' archers'}
+                </List.Header>
+              </List.Content>
+            </List.Item>
+            <List.Item>
+              <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
+              <List.Content>
+                <List.Header>
+                  {this.props.userPlayer === 'player1' ? this.props.playerTwoUnitBank.knights + ' knights' : this.props.playerOneUnitBank.knights + ' knights'}
+                </List.Header>
+              </List.Content>
+            </List.Item>
+          </List> : <div></div>}
+        <Modal open={this.props.deployTroopsModal === false || this.props.deployTroopsModal === true ? this.props.deployTroopsModal : false} size={'mini'}>
+          <Modal.Header>
+            Choose unit type and quantity
+          </Modal.Header>
+          <Modal.Content>
+            <Dropdown placeholder='Select Unit' fluid selection options={dropDown} />
+          </Modal.Content>  
+          <Modal.Content style={styles.modal}>
+            <Input placeholder='quantity' onChange={(e) => {this.setState({quantity: Number(e.target.value)})}} />
+          </Modal.Content>
+          <Modal.Actions>
+            <Button color='grey' onClick={this.handleClose.bind(this)} >
+              Cancel
+              </Button>
+            <Button color='blue' onClick={() => {this.handleClose(); this.handleSubmit();}} >
+              Deploy
+              </Button>
+          </Modal.Actions>
+        </Modal>
+      </div>
+    )
   }
 }
 
@@ -131,15 +165,19 @@ const mapStateToProps = (state) => {
     userPlayer: state.state.userPlayer,
     playerOneUnitBank: state.state.playerOneUnitBank,
     playerTwoUnitBank: state.state.playerTwoUnitBank,
+    playerOneResources: state.state.playerOneResources,
+    playerTwoResources: state.state.playerTwoResources,
     currentPlayer: state.state.currentPlayer,
     deployment: state.state.deployment,
     gameIndex: state.state.gameIndex,
     room: state.state.room,
+    boardState: state.state.boardState,
+    deployTroopsModal: state.state.deployTroopsModal
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ updateBank, deployUnits }, dispatch);
+  return bindActionCreators({ updateBank, deployUnits, deployTroopsModal }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(UnitBank);

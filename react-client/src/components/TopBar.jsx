@@ -3,9 +3,11 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm, Grid, Transition } from 'semantic-ui-react';
+import { List, Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm, Grid, Transition } from 'semantic-ui-react';
 import { exitGame, setRoom, deleteRoom, resetBoard, setHexbot } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
+import DeployTroops from './DeployTroops.jsx';
+import UserPlayerBank from './UserPlayerBank.jsx';
 
 class TopBar extends React.Component {
   constructor(props) {
@@ -137,7 +139,7 @@ class TopBar extends React.Component {
         <Header as='h1'>Hexology</Header>
         <div style={{right: '10px', top: '20px', position: 'absolute'}}>
           {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')
-          ? <Modal
+            ? <Modal
               open={this.state.saveOpen}
               trigger={
                 <Button
@@ -154,25 +156,25 @@ class TopBar extends React.Component {
           }
           {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator
             ? <div>
-                <Button
-                  onClick={this.confirm}
-                >Exit Game</Button>
-                <Confirm
-                  header='Save Game?'
-                  content="Do you want to save this game?"
-                  cancelButton='No'
-                  confirmButton="Yes"
-                  open={this.state.confirmOpen}
-                  onCancel={this.handleDontSave}
-                  onConfirm={this.handleSaveOnExit}
-                />
-              </div>
-            : <Button
-                onClick={this.handleDontSave}
+              <Button
+                onClick={this.confirm}
               >Exit Game</Button>
+              <Confirm
+                header='Save Game?'
+                content="Do you want to save this game?"
+                cancelButton='No'
+                confirmButton="Yes"
+                open={this.state.confirmOpen}
+                onCancel={this.handleDontSave}
+                onConfirm={this.handleSaveOnExit}
+              />
+            </div>
+            : <Button
+              onClick={this.handleDontSave}
+            >Exit Game</Button>
           }
         </div>
-        <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
+        <Header as='h4' style={{ marginTop: '-10px' }}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
         {this.props.boardState ? null :
           (this.state.inviteSent ? <Segment>Invite sent to {this.state.email}</Segment> :
             <Segment>Want to play with a friend?
@@ -180,9 +182,9 @@ class TopBar extends React.Component {
                 size={'tiny'}
                 color={'blue'}
                 compact
-                style={{marginLeft: '20px'}}
+                style={{ marginLeft: '20px' }}
                 onClick={() => this.setState({ modalOpen: true })}
-                >
+              >
                 Click Here
               </Button>
             </Segment>
@@ -196,52 +198,41 @@ class TopBar extends React.Component {
                 size={'tiny'}
                 color={'blue'}
                 compact
-                style={{marginLeft: '20px'}}
+                style={{ marginLeft: '20px' }}
                 onClick={() => this.setState({ modalOpen: true })}
-                >
+              >
                 Click Here
               </Button>
             </Segment>)
           : null
         }
         <Segment.Group horizontal>
-          {this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
-            <Segment>
-              <strong>Player One Resources</strong>
-              <ul>
-                <li>Gold: {this.props.playerOneResources.gold}</li>
-                <li>Wood: {this.props.playerOneResources.wood}</li>
-                <li>Metal: {this.props.playerOneResources.metal}</li>
-              </ul>
-            </Segment> :
+          {this.props.userPlayer && this.props.playerOneResources.hasOwnProperty('wood') ?
+            <UserPlayerBank /> :
             <Segment>
               <strong>Player One has joined!</strong>
             </Segment>
           }
-          <Segment style={{textAlign: 'center'}}><strong>{this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
-            (this.props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') : `Game will begin when both players have joined.`}</strong>
-          {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
-            <UnitShop>Shop</UnitShop> : null
+          <Segment style={{ textAlign: 'center' }}><strong>{this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
+            (this.props.currentPlayer === this.props.userPlayer ? 'Your turn' : this.props.currentPlayer + ' \'s turn') : `Game will begin when both players have joined.`}</strong>
+            {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
+              <div>
+                <List horizontal>
+                  <List.Item>
+                    <List.Content>
+                      <UnitShop />
+                    </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <List.Content>
+                      <DeployTroops />
+                    </List.Content>
+                  </List.Item>
+                </List>
+              </div> : null
             }
           </Segment>
-          {this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
-            <Segment>
-              <strong>Player Two Resources</strong>
-              <ul>
-                <li>Gold: {this.props.playerTwoResources.gold}</li>
-                <li>Wood: {this.props.playerTwoResources.wood}</li>
-                <li>Metal: {this.props.playerTwoResources.metal}</li>
-              </ul>
-            </Segment> :
-            <Segment>
-              <div>
-                <Icon loading name='spinner'/>
-                <strong>Waiting for player two to join...</strong>
-              </div>
-            </Segment>
-          }
         </Segment.Group>
-
           {this.props.location.state.otherPlayerInfo
             ? <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({
                 modalOpen: false,
@@ -275,37 +266,36 @@ class TopBar extends React.Component {
                   <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>
                 </Modal.Actions>
               </Modal>
-
-            : <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
-                <Modal.Header>Please write the recipient's email below, along with any message you would like to send.</Modal.Header>
-                <Modal.Content>
-                  <Modal.Description>
-                    <Form size={'large'} key={'small'}>
-                      <Form.Group widths='equal'>
-                        <Form.Input
-                          fluid
-                          required
-                          name={'email'}
-                          value={this.state.email}
-                          onChange={this.handleChange.bind(this)}
-                          label='Email'
-                          placeholder='example@gmail.com' />
-                        <Form.TextArea
-                          onChange={this.handleChange.bind(this)}
-                          label='Message'
-                          name={'message'}
-                          value={this.state.message}
-                          placeholder='Please join me for an awesome game of Hexology!' />
-                      </Form.Group>
-                    </Form>
-                  </Modal.Description>
-                </Modal.Content>
-                <Divider/>
-                <Modal.Actions>
-                  <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
-                </Modal.Actions>
-              </Modal>
-          }
+          : <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
+            <Modal.Header>Please write the recipient's email below, along with any message you would like to send.</Modal.Header>
+            <Modal.Content>
+              <Modal.Description>
+                <Form size={'large'} key={'small'}>
+                  <Form.Group widths='equal'>
+                    <Form.Input
+                      fluid
+                      required
+                      name={'email'}
+                      value={this.state.email}
+                      onChange={this.handleChange.bind(this)}
+                      label='Email'
+                      placeholder='example@gmail.com' />
+                    <Form.TextArea
+                      onChange={this.handleChange.bind(this)}
+                      label='Message'
+                      name={'message'}
+                      value={this.state.message}
+                      placeholder='Please join me for an awesome game of Hexology!' />
+                  </Form.Group>
+                </Form>
+              </Modal.Description>
+            </Modal.Content>
+            <Divider />
+            <Modal.Actions>
+              <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
+            </Modal.Actions>
+          </Modal>
+        }
       </Segment>
     )
   }
