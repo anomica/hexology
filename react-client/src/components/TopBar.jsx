@@ -69,8 +69,8 @@ class TopBar extends React.Component {
   }
 
   handleDontSave() {
-    this.exitGame();
     this.setState({ confirmOpen: false });
+    this.exitGame();
   }
 
   exitGame(exit) {
@@ -93,12 +93,12 @@ class TopBar extends React.Component {
     } 
     this.props.socket.emit('disconnect', { // deletes game from db
       gameIndex: this.props.gameIndex,
-      gameSaved: this.state.gameSaved
+      gameSaved: false
     });
     this.props.socket.emit('leaveRoom', {
       room: this.props.room,
       gameIndex: this.props.gameIndex,
-      gameSaved: this.state.gameSaved
+      gameSaved: false
     });
     this.props.history.push('/');
   }
@@ -245,19 +245,11 @@ class TopBar extends React.Component {
                 modalOpen: false,
                 email: this.props.location.state.otherPlayerInfo.email
               })}>
-                <Modal.Header>Send an email to {this.props.location.state.otherPlayerInfo.username} to resume this game!</Modal.Header>
+                <Modal.Header>Email to: {this.props.location.state.otherPlayerInfo.username}</Modal.Header>
                 <Modal.Content>
                   <Modal.Description>
                     <Form size={'large'} key={'small'}>
                       <Form.Group widths='equal'>
-                        <Form.Input
-                          fluid
-                          required
-                          name={'email'}
-                          value={this.props.location.state.otherPlayerInfo.email}
-                          onChange={this.handleChange.bind(this)}
-                          label='Email'
-                          />
                         <Form.TextArea
                           onChange={this.handleChange.bind(this)}
                           label='Message'
@@ -311,6 +303,8 @@ class TopBar extends React.Component {
 
 
 const mapStateToProps = state => {
+  console.log('topbar state: ', state);
+  console.log('game Index: ', state.state.gameIndex)
   return {
     socket: state.state.socket,
     room: state.state.room,
