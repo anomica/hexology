@@ -85,7 +85,7 @@ class OpponentBank extends React.Component {
       <div>
         {this.props.boardState ?
           <List>
-            <List.Header>{this.props.userPlayer === 'player1' ? `Player 2's Bank:` : `Player 1's Bank':`}</List.Header>
+            <List.Header>{this.props.spectator ? `Player 2's Bank:` : `Opponent's Bank:`}</List.Header>
             <List.Item>
               <Image src="https://cdn2.iconfinder.com/data/icons/finance_icons/PNG/png64/gold_bullion.png" />
               <List.Content>
@@ -153,7 +153,8 @@ const mapStateToProps = (state) => {
     gameIndex: state.state.gameIndex,
     room: state.state.room,
     boardState: state.state.boardState,
-    deployTroopsModal: state.state.deployTroopsModal
+    deployTroopsModal: state.state.deployTroopsModal,
+    spectator: state.state.spectator
   }
 }
 

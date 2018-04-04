@@ -10,7 +10,8 @@ class DeployTroops extends React.Component {
     this.state = {
       quantity: null,
       unit: null,
-      open: false
+      open: false,
+      showWarning: false
     }
   }
 
@@ -20,15 +21,16 @@ class DeployTroops extends React.Component {
     })
   }
 
-  setValue(e, data) {
+  setValue(e, data) { 
     this.setState({ 
-      value: data.value 
+      unit: data.value 
     });
   }
 
   handleClose() {
     this.setState({
-      open: false
+      open: false,
+      showWarning: false
     });
   }
 
@@ -51,12 +53,13 @@ class DeployTroops extends React.Component {
         gameIndex: this.props.gameIndex,
         room: this.props.room
       })
-    } else {
-      alert('hey yo this doesnt meet the submit requirements');
-    }
+      this.handleClose();
+    } else { 
+      this.setState({
+        showWarning: true
+      })
+    } 
   }
-
-
 
   render() {
     const dropDown = [
@@ -80,7 +83,7 @@ class DeployTroops extends React.Component {
     return (
       <div>
         <Button onClick={this.handleOpen.bind(this)} >Deploy Troops</Button>
-        <Modal open={this.state.open} size={'small'}>
+        <Modal open={this.state.open} size={'mini'}>
           <Modal.Header>
             Choose unit type and quantity
             </Modal.Header>
@@ -88,18 +91,22 @@ class DeployTroops extends React.Component {
             <Dropdown 
               placeholder='Select Unit' 
               options={dropDown}
-              onChange={(e) => {this.setValue(e, e.target.value)}}
+              onChange={this.setValue.bind(this)}
               selection
               value={this.state.unit} />
           </Modal.Content>
           <Modal.Content>
-            <Input placeholder='quantity' onChange={(e) => { this.setState({ quantity: Number(e.target.value) }) }} />
+            <Input placeholder='quantity' onChange={(e) => { this.setState({ quantity: Number(e.target.value), showWarning: false }) }} />
           </Modal.Content>
+          {this.state.showWarning ? 
+            <Modal.Content>Please enter a valid quantity</Modal.Content> :
+            <Modal.Content></Modal.Content>
+          }
           <Modal.Actions>
             <Button color='grey' onClick={this.handleClose.bind(this)} >
               Cancel
                 </Button>
-            <Button color='blue' onClick={() => { this.handleClose(); this.handleSubmit(); }} >
+            <Button color='blue' onClick={this.handleSubmit.bind(this)} >
               Deploy
                 </Button>
           </Modal.Actions>
