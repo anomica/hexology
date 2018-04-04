@@ -16,7 +16,7 @@ const userPlayerBank = (props) => {
         <List.Item>
           <List horizontal>
             <List.Item >
-              <Image src="https://cdn2.iconfinder.com/data/icons/finance_icons/PNG/png64/gold_bullion.png" />
+              <Image height="100px" style={{marginTop: '50px'}} src="./images/gold-bar.svg" />
               <List.Content>
                 <List.Header>Gold: {props.userPlayer === 'player1' || props.spectator ? props.playerOneResources.gold :
                   props.playerTwoResources.gold}
@@ -24,7 +24,7 @@ const userPlayerBank = (props) => {
               </List.Content>
             </List.Item>
             <List.Item >
-              <Image src="https://cdn4.iconfinder.com/data/icons/free-game-icons/64/Tree.png" />
+              <Image height="100px" style={{marginTop: '50px'}} src="./images/wood-pile.svg" />
               <List.Content>
                 <List.Header>Wood: {props.userPlayer === 'player1' || props.spectator ? props.playerOneResources.wood :
                   props.playerTwoResources.wood}
@@ -32,7 +32,7 @@ const userPlayerBank = (props) => {
               </List.Content>
             </List.Item>
             <List.Item>
-              <Image src="https://cdn1.iconfinder.com/data/icons/CrystalClear/64x64/apps/Service-Manager.png" />
+              <Image height="100px" style={{marginTop: '50px'}} src="./images/metal-bar.svg" />
               <List.Content>
                 <List.Header>Metal: {props.userPlayer === 'player1' || props.spectator ? props.playerOneResources.metal :
                   props.playerTwoResources.metal}
@@ -44,7 +44,7 @@ const userPlayerBank = (props) => {
           <List.Item>
           <List horizontal>
             <List.Item>
-              <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
+              <Image src="./images/sword.png" />
               <List.Content>
                 <List.Header>Swordsmen: {props.userPlayer === 'player1' || props.spectator ? props.playerOneUnitBank.swordsmen :
                   props.playerTwoUnitBank.swordsmen}
@@ -52,7 +52,7 @@ const userPlayerBank = (props) => {
               </List.Content>
             </List.Item>
             <List.Item>
-              <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
+              <Image src="./images/knight.png" />
               <List.Content>
                 <List.Header>Knights: {props.userPlayer === 'player1' || props.spectator ? props.playerOneUnitBank.knights :
                   props.playerTwoUnitBank.knights}
@@ -60,7 +60,7 @@ const userPlayerBank = (props) => {
               </List.Content>
             </List.Item>
             <List.Item>
-              <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
+              <Image src="./images/archer.png" />
               <List.Content>
                 <List.Header>Archers: {props.userPlayer === 'player1' || props.spectator ? props.playerOneUnitBank.archers :
                   props.playerTwoUnitBank.archers}

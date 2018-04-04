@@ -1,5 +1,4 @@
-/********* POLYGON STYLING ************/
-
+/********* HEX POLYGON STYLING ************/
 svg g {
   fill: white;
   stroke: black;
@@ -25,47 +24,7 @@ svg g > text {
   font-family: serif;
 }
 
-g.friendly > g > polygon {
-  fill: aqua;
-}
-
-g.selected > g > polygon {
-  fill: #00ffff6e;
-}
-
-g.neighbor > g > text {
-  cursor: url(https://png.icons8.com/ios/50/000000/armored-boot-filled.png), auto;
-}
-
-g.neighbor > g > polygon {
-  fill: #00ff00;
-  cursor: url(https://png.icons8.com/ios/50/000000/armored-boot-filled.png), auto;
-}
-
-g.neighborIcon > g > text {
-  cursor: url(https://png.icons8.com/ios/50/000000/armored-boot-filled.png), auto;
-}
-
-g.neighborIcon > g > polygon {
-  cursor: url(https://png.icons8.com/ios/50/000000/armored-boot-filled.png), auto;
-}
-
-g.opponent > g > text {
-  cursor: url(https://png.icons8.com/metro/50/000000/sword.png), auto;
-}
-
-g.opponent > g > polygon {
-  fill: red;
-  cursor: url(https://png.icons8.com/metro/50/000000/sword.png), auto;
-}
-
-g.opponentIcon > g > text {
-  cursor: url(https://png.icons8.com/metro/50/000000/sword.png), auto;
-}
-
-g.opponentIcon > g > polygon {
-  cursor: url(https://png.icons8.com/metro/50/000000/sword.png), auto;
-}
+/* resource styling */
 
 g.gold > g > polygon {
   fill: gold;
@@ -79,16 +38,60 @@ g.metal > g > polygon {
   fill: gray;
 }
 
+/* player styling */
+
+g.friendly > g > polygon {
+  fill: aqua;
+}
+
+g.selected > g > polygon {
+  fill: #00ffff6e;
+}
+
+g.neighbor > g > text {
+  cursor: url(/images/boot.png), auto;
+}
+
+g.neighbor > g > polygon {
+  fill: #00ff00;
+  cursor: url(/images/boot.png), auto;
+}
+
+g.neighborIcon > g > text {
+  cursor: url(/images/boot.png), auto;
+}
+
+g.neighborIcon > g > polygon {
+  cursor: url(/images/boot.png), auto;
+}
+
+g.opponent > g > text {
+  cursor: url(/images/sword.png), auto;
+}
+
+g.opponent > g > polygon {
+  fill: red;
+  cursor: url(/images/sword.png), auto;
+}
+
+g.opponentIcon > g > text {
+  cursor: url(/images/sword.png), auto;
+}
+
+g.opponentIcon > g > polygon {
+  cursor: url(/images/sword.png), auto;
+}
+
 g.swordsmen > g > polygon, g.swordsmen > g > text {
-  cursor: url(https://png.icons8.com/metro/50/000000/sword.png), auto;
+  cursor: url(/images/sword.png), auto;
 }
 
 g.archer > g > polygon, g.archer > g > text {
-  cursor: url(https://png.icons8.com/windows/50/000000/archer.png), auto;
+  cursor: url(/images/archer.png), auto;
 }
 
 g.knight > g > polygon, g.knight > g > text {
-  cursor: url(https://png.icons8.com/ios/50/000000/knight-shield-filled.png), auto;
+  cursor: url(/images/knight.png), auto;
 }
 
 .flex {

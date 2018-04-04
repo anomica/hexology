@@ -71,8 +71,8 @@ class TopBar extends React.Component {
   }
 
   handleDontSave() {
-    this.exitGame();
     this.setState({ confirmOpen: false });
+    this.exitGame();
   }
 
   exitGame(exit) {
@@ -91,17 +91,17 @@ class TopBar extends React.Component {
         gameIndex: this.props.gameIndex,
         gameSaved: true
       });
-    } else { // deletes game from db
-      this.props.socket.emit('disconnect', {
-        gameIndex: this.props.gameIndex,
-        gameSaved: this.state.gameSaved
-      });
-      this.props.socket.emit('leaveRoom', {
-        room: this.props.room,
-        gameIndex: this.props.gameIndex,
-        gameSaved: this.state.gameSaved
-      });
-    }
+      return;
+    } 
+    this.props.socket.emit('disconnect', { // deletes game from db
+      gameIndex: this.props.gameIndex,
+      gameSaved: false
+    });
+    this.props.socket.emit('leaveRoom', {
+      room: this.props.room,
+      gameIndex: this.props.gameIndex,
+      gameSaved: false
+    });
     this.props.history.push('/');
   }
 
@@ -137,13 +137,13 @@ class TopBar extends React.Component {
     return (
       <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%', marginBottom: '-20px' }} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
-
-        <div style={{ right: '10px', top: '20px', position: 'absolute' }}>
+        <div style={{right: '10px', top: '20px', position: 'absolute'}}>
           {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')
             ? <Modal
               open={this.state.saveOpen}
               trigger={
-                <Button
+                <Button 
+                  size='small'
                   style={{marginRight: '5px'}}
                   onClick={this.saveGame}
                   disabled={this.state.saveDisabled}
@@ -155,24 +155,20 @@ class TopBar extends React.Component {
             </Modal>
             : null
           }
-          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator
-            ? <div>
-              <Button
-                onClick={this.confirm}
-              >Exit Game</Button>
-              <Confirm
-                header='Save Game?'
-                content="Do you want to save this game?"
-                cancelButton='No'
-                confirmButton="Yes"
-                open={this.state.confirmOpen}
-                onCancel={this.handleDontSave}
-                onConfirm={this.handleSaveOnExit}
-              />
-            </div>
-            : <Button
-              onClick={this.handleDontSave}
-            >Exit Game</Button>
+          {this.props.loggedInUser !== 'anonymous' && this.props.currentPlayer !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator
+            ? <span>
+                <Button size='small' onClick={this.confirm}>Exit Game</Button>
+                <Confirm
+                  header='Save Game?'
+                  content="Do you want to save this game?"
+                  cancelButton='No'
+                  confirmButton="Yes"
+                  open={this.state.confirmOpen}
+                  onCancel={this.handleDontSave}
+                  onConfirm={this.handleSaveOnExit}
+                />
+              </span>
+            : <Button size='tiny' onClick={this.handleDontSave}>Exit Game</Button>
           }
         </div>
         <Header as='h4' style={{ marginTop: '-10px' }}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
@@ -207,8 +203,8 @@ class TopBar extends React.Component {
             </Segment>)
           : null
         }
-        <Segment.Group horizontal> 
-          {this.props.userPlayer && this.props.playerOneResources.hasOwnProperty('wood') ? 
+        <Segment.Group horizontal>
+          {this.props.userPlayer && this.props.playerOneResources.hasOwnProperty('wood') ?
             <UserPlayerBank /> :
             <Segment>
               <strong>Player One has joined!</strong>
@@ -239,19 +235,11 @@ class TopBar extends React.Component {
                 modalOpen: false,
                 email: this.props.location.state.otherPlayerInfo.email
               })}>
-                <Modal.Header>Send an email to {this.props.location.state.otherPlayerInfo.username} to resume this game!</Modal.Header>
+                <Modal.Header>Email to: {this.props.location.state.otherPlayerInfo.username}</Modal.Header>
                 <Modal.Content>
                   <Modal.Description>
                     <Form size={'large'} key={'small'}>
                       <Form.Group widths='equal'>
-                        <Form.Input
-                          fluid
-                          required
-                          name={'email'}
-                          value={this.props.location.state.otherPlayerInfo.email}
-                          onChange={this.handleChange.bind(this)}
-                          label='Email'
-                          />
                         <Form.TextArea
                           onChange={this.handleChange.bind(this)}
                           label='Message'

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal } from 'semantic-ui-react';
+import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal, Transition } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
@@ -201,19 +201,19 @@ class SidebarLeft extends React.Component {
                 this.setState({ profile: !this.state.profile })}}>
                 <Icon name='hand victory'/>
                 Welcome, {this.props.loggedInUser}!
-                <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
-                  <Modal.Header>Profile: {this.props.loggedInUser}</Modal.Header>
-                  <Modal.Content>
-                    <Modal.Description>
-                      Rank: TBD
-                      <br/>
-                      Wins: {this.state.userWins}
-                      <br/>
-                      Losses: {this.state.userLosses}
-                      <p/>
-                    </Modal.Description>
-                  </Modal.Content>
-                </Modal>
+                <Transition animation={'pulse'} duration={5000} visible={true}>
+                  <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
+                    <Modal.Header><Icon name='user' /> {this.props.loggedInUser}</Modal.Header>
+                    <Modal.Content>
+                      <Modal.Description style={{fontSize: '14pt'}}>
+                        <strong>Wins:</strong> {this.state.userWins}
+                        <br/>
+                        <strong>Losses:</strong> {this.state.userLosses}
+                        <p/>
+                      </Modal.Description>
+                    </Modal.Content>
+                  </Modal>
+                </Transition>
               </Menu.Item>
             }
 
