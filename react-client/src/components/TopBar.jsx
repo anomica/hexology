@@ -142,7 +142,7 @@ class TopBar extends React.Component {
               open={this.state.saveOpen}
               trigger={
                 <Button 
-                  size='small' color='green'
+                  size='small'
                   style={{marginRight: '5px'}}
                   onClick={this.saveGame}
                   disabled={this.state.saveDisabled}
@@ -154,9 +154,9 @@ class TopBar extends React.Component {
             </Modal>
             : null
           }
-          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator
+          {this.props.loggedInUser !== 'anonymous' && this.props.currentPlayer !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator
             ? <span>
-                <Button size='small' color='red' onClick={this.confirm}>Exit Game</Button>
+                <Button size='small' onClick={this.confirm}>Exit Game</Button>
                 <Confirm
                   header='Save Game?'
                   content="Do you want to save this game?"
@@ -167,7 +167,7 @@ class TopBar extends React.Component {
                   onConfirm={this.handleSaveOnExit}
                 />
               </span>
-            : <Button size='tiny' color='red' onClick={this.handleDontSave}>Exit Game</Button>
+            : <Button size='tiny' onClick={this.handleDontSave}>Exit Game</Button>
           }
         </div>
         <Header as='h4' style={{marginTop: '-10px'}}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>

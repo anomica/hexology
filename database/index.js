@@ -610,28 +610,27 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
 
 /////////////////////// Retrieves game based off room and/or game index ///////////////////////
 const getGame = async (room, gameIndex) => {
-  console.log(`\nINSIDE GET GAME: room (${room}), gameIndex (${gameIndex})`)
+  // console.log(`\nINSIDE GET GAME: room (${room}), gameIndex (${gameIndex})`)
   let roomNum;
   if (room && gameIndex) { // if room && game index are provided
-    console.log(`\nROOM & GAME INDEX AVAILABLE: (${room}), gameIndex (${gameIndex})`)
+    // console.log(`\nROOM & GAME INDEX AVAILABLE: (${room}), gameIndex (${gameIndex})`)
     roomNum = room.includes('*') ? room.split('*').join('') : room;
     return await knex('games').select()
       .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`));
   }
   if (gameIndex) { // if only game index is available
-    console.log(`\nONLY GAME INDEX AVAILABLE: gameIndex (${gameIndex})`)
+    // console.log(`\nONLY GAME INDEX AVAILABLE: gameIndex (${gameIndex})`)
     return await knex('games').select()
       .where(knex.raw(`'${gameIndex}' = game_index`));
   }
   if (room) { // if only room is available
-    console.log(`\nONLY ROOM AVAILABLE: room (${room})`)
+    // console.log(`\nONLY ROOM AVAILABLE: room (${room})`)
     roomNum = room.includes('*') ? room.split('*').join('') : room;
     return await knex('games').select()
       .where(knex.raw(`${roomNum} = room_id`))
       .returning('game_id')
   }  
   if (gameIndex === undefined && room === null) {
-    return [];
     console.log('error in getting the game from database');
   }
 }
