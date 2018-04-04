@@ -89,17 +89,17 @@ class TopBar extends React.Component {
         gameIndex: this.props.gameIndex,
         gameSaved: true
       });
-    } else { // deletes game from db
-      this.props.socket.emit('disconnect', {
-        gameIndex: this.props.gameIndex,
-        gameSaved: this.state.gameSaved
-      });
-      this.props.socket.emit('leaveRoom', {
-        room: this.props.room,
-        gameIndex: this.props.gameIndex,
-        gameSaved: this.state.gameSaved
-      });
-    }
+      return;
+    } 
+    this.props.socket.emit('disconnect', { // deletes game from db
+      gameIndex: this.props.gameIndex,
+      gameSaved: this.state.gameSaved
+    });
+    this.props.socket.emit('leaveRoom', {
+      room: this.props.room,
+      gameIndex: this.props.gameIndex,
+      gameSaved: this.state.gameSaved
+    });
     this.props.history.push('/');
   }
 
@@ -142,6 +142,7 @@ class TopBar extends React.Component {
               open={this.state.saveOpen}
               trigger={
                 <Button 
+                  size={'small'}
                   style={{marginRight: '5px'}}
                   onClick={this.saveGame}
                   disabled={this.state.saveDisabled}
@@ -156,6 +157,7 @@ class TopBar extends React.Component {
           {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator
             ? <div>
                 <Button
+                  size={'small'}
                   onClick={this.confirm}
                 >Exit Game</Button>
                 <Confirm

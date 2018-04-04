@@ -16,35 +16,90 @@ class Signup extends React.Component {
       password: '',
       email: '',
       buttonMessage: 'Submit',
-      error: false
+      error: false,
+      invalidUsername: false,
+      invalidEmail: false
     }
+    this.isValid = this.isValid.bind(this);
+    this.validateEmail = this.validateEmail.bind(this)
   }
 
-  signup(username, password, email) {
-    axios.post('/signup', {
-      username: this.state.username,
-      email: this.state.email,
-      password: this.state.password
-    })
-    .then(data => {
-      let context = this;
-      this.setState({ buttonMessage: `Success! Welcome, ${data.data[0].username}.` })
+  isValid(input) {
+    return !/[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g.test(input);
+  }
+
+  validateEmail(email) {
+    return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email);
+  }
+
+  signup() {
+    if ( this.isValid(this.state.username) && this.validateEmail(this.state.email) ) {
+      axios.post('/signup', {
+        username: this.state.username,
+        email: this.state.email,
+        password: this.state.password
+      })
+      .then(data => {
+        let context = this;
+        this.setState({ buttonMessage: `Success! Welcome, ${data.data[0].username}!` })
+        setTimeout(() => {
+          this.handleClose();
+          this.props.login(data.data[0].username);
+        }, 2500);
+      })
+      .catch(err => {
+        this.setState({
+          buttonMessage: 'That username/email is taken',
+          error: true,
+          invalidEmail: true,
+          invalidUsername: true
+        })
+        console.log('error from signup:', err);
+        setTimeout(() => {
+          this.setState({
+            error: false,
+            buttonMessage: 'Submit',
+          });
+        }, 3500);
+      })
+    } else {
+      if (!this.isValid(this.state.username) && !this.validateEmail(this.state.email)) {
+        this.setState({
+          buttonMessage: 'Invalid username/email',
+          error: true,
+          invalidUsername: true,
+          invalidEmail: true
+        });
+      } else if (!this.isValid(this.state.username)) {
+        this.setState({
+          buttonMessage: 'Invalid username',
+          error: true,
+          invalidUsername: true
+        });
+      } else if (!this.validateEmail(this.state.email)) {
+        this.setState({
+          buttonMessage: 'Invalid email',
+          error: true,
+          invalidEmail: true
+        });
+      }
       setTimeout(() => {
-        this.handleClose();
-        this.props.login(data.data[0].username);
-      }, 1000);
-    })
-    .catch(err => {
-      this.setState({ buttonMessage: 'That username/email is taken.', error: true })
-      console.log('error from signup:', err);
-    })
+        this.setState({
+          error: false,
+          buttonMessage: 'Submit'
+        });
+      }, 3500);
+    }
   }
 
   handleChange(e, name) {
     this.setState({
       [name]: e.target.value
     }, () => {
-      // console.log(`this.state[${[name]}]`, this.state[name])
+      this.setState({
+        invalidUsername: false,
+        invalidEmail: false
+      })
     })
   }
 
@@ -55,17 +110,21 @@ class Signup extends React.Component {
   render() {
     return (
       <Modal open={this.props.showSignup} closeIcon onClose={this.handleClose.bind(this)}>
-        <Modal.Header>Signup</Modal.Header>
+        <Modal.Header>Sign Up</Modal.Header>
         <Modal.Content>
           <Modal.Description>
           <Form>
             <Form.Input
               name='username'
+              required
               onChange={(e) => {this.handleChange(e, 'username')}}
               label='Username'
-              type='text' />
+              type='text'
+              error={this.state.invalidUsername}
+            />
             <Form.Input
               name='password'
+              required
               onChange={(e) => {this.handleChange(e, 'password')}}
               label='Password'
               type='password' />
@@ -73,6 +132,8 @@ class Signup extends React.Component {
               name='email'
               onChange={(e) => {this.handleChange(e, 'email')}}
               label='Email'
+              required
+              error={this.state.invalidEmail}
               type='email' />
             <Transition animation={'jiggle'} duration={'1000'} visible={true}>
               <Button
@@ -92,7 +153,6 @@ class Signup extends React.Component {
       </Modal>
     )
   }
-
 }
 
 const mapStateToProps = (state) => {

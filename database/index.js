@@ -11,9 +11,9 @@ const knex = require('knex')({
 const addUser = async (username, email, password) => {
   const existingUser = await knex.select()
     .from('users')
-    .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
+    .where(knex.raw(`LOWER(username) = LOWER('${username}') OR LOWER(email) = LOWER('${email}')`));
 
-  if (existingUser.length) { // checks if user already exists in the db
+  if (existingUser.length) { // checks if username or email already exists
     // console.log('user exists');
     return 'User already exists'; // must return this exact string for passport recognition
   } else {

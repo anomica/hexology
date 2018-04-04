@@ -84,6 +84,7 @@ class Leaderboard extends React.Component {
     return (
       <Table
         celled
+        selectable
         collapsing
         compact
         celled striped
