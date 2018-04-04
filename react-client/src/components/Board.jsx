@@ -490,6 +490,9 @@ class Board extends React.Component {
                           this.handleClick(hex);
                           this.setState({ hex: hex });
                         }}
+                        className={targetClass.indexOf('neighbor') > -1 && targetClass.indexOf('opponent') > -1 ? 'opponentIcon' :
+                                   targetClass.indexOf('neighbor') > -1 ? 'neighborIcon' : null
+                        }
                         fill={targetClass.indexOf('gold') > -1 && targetClass.indexOf('neighbor') > -1 ? 'gold-bar-neighbor' :
                               targetClass.indexOf('wood') > -1 && targetClass.indexOf('neighbor') > -1 ? 'wood-pile-neighbor' :
                               targetClass.indexOf('metal') > -1 && targetClass.indexOf('neighbor') > -1 ? 'metal-bar-neighbor' :
