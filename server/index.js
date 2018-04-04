@@ -637,26 +637,13 @@ const assignLoggedInUser = async (username, player, gameIndex, room) => { // nee
 
 const fetchUserGames = async (username, socketId) => {
   let userGames = await db.retrieveUserGames(username);
-  // let user = await db.getUserId(username);
-  // userGames.map( async (game, i) => {
-  //   if (game.player1 === user[0].user_id) { // if user id = player1
-  //     // let playerTwo = await db.findUserById(userGames[i].player2);
-  //     userGames[i].player1_username = username;
-  //     userGames[i].player2_username = ;
-  //   } else if (game.player2 === user[0].user_id) { // if user id = player2
-  //     // let playerOne = await db.findUserById(userGames[i].player1);
-  //     userGames[i].player1_username = `(ID: ${game.player1})`;
-  //     userGames[i].player2_username = username;
-  //   }
-  // })
-  // console.log('\nusergames:\n', userGames)
   await io.to(socketId).emit('getUserGames', {
     games: userGames
   })
 }
 
 const updateUserGamesList = async (username, gameId, socketId) => {
-  await db.deleteGames(gameId); // first delete the game/hexes
+  await db.deleteUserGame(gameId); // first delete the game/hexes
   let updatedGames = await db.retrieveUserGames(username); // then get the updated list of games
   await io.to(socketId).emit('updateUserGamesList', {
     games: updatedGames
@@ -2035,7 +2022,7 @@ const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room) => {
 }
 
 const deleteOldGames = async () => {
-  await db.deleteGames();
+  await db.deleteOldGames();
 }
 
 // Check for old games and marks them as completed // (1 day = 86400000) checks every half day
