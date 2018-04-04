@@ -263,7 +263,6 @@ class SidebarLeft extends React.Component {
             <Modal.Content>
               <Modal.Description>
                 <Form size={'tiny'} key={'small'}>
-                  <Form.Group widths='equal'>
                     <Form.Select
                       required
                       label
@@ -277,22 +276,21 @@ class SidebarLeft extends React.Component {
                       required
                       label
                       placeholder={'No'}
-                      options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
-                      name={'hexbot'}
-                      onChange={this.handleChange.bind(this)}
-                      label='Play Against Hexbot?'
-                     />
-                    <Form.Select
-                      required
-                      label
-                      placeholder={'No'}
                       options={[{ key: 'yes', text: 'Yes', value: 'yes' }, { key: 'no', text: 'No', value: 'no' }]}
                       name={'timer'}
                       onChange={this.handleChange.bind(this)}
                       label='Play With Timer?'
                     />
+                    <Form.Select
+                      required
+                      label
+                      placeholder={'No'}
+                      options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
+                      name={'hexbot'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Play Against Hexbot?'
+                     />
                    <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
-                  </Form.Group>
                 </Form>
               </Modal.Description>
             </Modal.Content>
