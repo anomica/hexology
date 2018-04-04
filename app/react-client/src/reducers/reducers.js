@@ -240,7 +240,11 @@ const reducers = (state = defaultState, action) => {
         ...state,
         hexbot: action.payload
       }
-    default: return state;
+    case 'HEXBOT-IS-THINKING':
+      return {
+        ...state,
+        hexbotModalOpen: action.payload
+      }
     case 'WARNING-OPEN':
       return {
         ...state,
@@ -261,6 +265,7 @@ const reducers = (state = defaultState, action) => {
         ...state,
         playerTwo: action.payload
       }
+    default: return state;
   }
 }
 
