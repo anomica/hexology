@@ -33,3 +33,7 @@ const checkUserCreds = (username) => {
     .where(knex.raw(`LOWER(username) = LOWER('${username}')`));
 }
 
+module.exports = {
+  addUser,
+  checkUserCreds
+};
