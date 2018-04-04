@@ -10,6 +10,8 @@ class ChatWindow extends React.Component {
     super(props);
 
     let alert;
+
+    this.botMessages = ['Beep boop I am a bot.', 'I will crush you.', 'You need to practice more.', 'I do not talk to humans.', 'All hail Skynet.'];
     this.state = {
       open: false,
       message: '',
@@ -33,6 +35,13 @@ class ChatWindow extends React.Component {
         this.setState({
           messageHistory: [...this.state.messageHistory, { message: data.message, username: data.username, socketId: data.socketId }]
         })
+        if (data.hexbot) {
+          setTimeout(() => {
+            this.setState({
+              messageHistory: [...this.state.messageHistory, { message: this.botMessages[Math.floor(Math.random() * this.botMessages.length)], username: 'hexbot', socketId: null }]
+            });
+          }, 1000);
+        }
         if (!this.state.open) {
           alert = setInterval(() => {
             this.setState({ alert: !this.state.alert });
@@ -54,7 +63,8 @@ class ChatWindow extends React.Component {
         message: this.state.message,
         username: this.props.loggedInUser,
         socketId: this.props.socket.id,
-        room: this.props.room
+        room: this.props.room,
+        hexbot: this.props.hexbot ? true : false
       });
       this.setState({ message: '' })
     })();
@@ -115,6 +125,7 @@ class ChatWindow extends React.Component {
                           style={{color: message.socketId === this.props.socket.id ?
                             'blue': 'red'}}>{message.username}:
                         </strong>
+                        <span> </span>
                         {message.message}
                       </p>
                     )
@@ -146,7 +157,8 @@ const mapStateToProps = state => {
   return {
     socket: state.state.socket,
     room: state.state.room,
-    loggedInUser: state.state.loggedInUser
+    loggedInUser: state.state.loggedInUser,
+    hexbot: state.state.hexbot
   }
 }
 
