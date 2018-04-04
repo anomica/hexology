@@ -1,10 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import axios from 'axios';
-import { Button, Header, Image, Modal, Icon, List, Table, Confirm, Transition, Loader, Dimmer } from 'semantic-ui-react';
-import socketIOClient from 'socket.io-client';
-import { withRouter} from 'react-router';
+import { Button, Modal, Table, Confirm } from 'semantic-ui-react';
+import { withRouter } from 'react-router';
 import { setRoom } from '../../src/actions/actions.js';
 
 class LoadGame extends React.Component {
