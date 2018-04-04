@@ -39,6 +39,9 @@ class Board extends React.Component {
       timer:0,
       turnsForfeited: 0,
       hexbotModalOpen: false,
+      genericModalOpen: false,
+      genericModalHeader: 'test',
+      genericModalFalse: 'test',
     }
   }
 
@@ -261,7 +264,15 @@ class Board extends React.Component {
       });
 
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
-        alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
+        this.setState({
+          genericModalOpen: true,
+          genericModalHeader: 'Cheating Detected',
+          genericModalMessage: 'You are being redirected to the home page. Please don\'t cheat, it makes Hexbot sad :('
+        })
+        setTimeout(() => {
+          this.props.history.push('/');
+          this.props.resetBoard();
+        }, 2500);
       });
       socket.on('disconnect', () => {
         clearInterval(interval);
@@ -285,10 +296,17 @@ class Board extends React.Component {
     this.setState({
       combatMessage: 'May the strongest prevail!',
       combatIcon: './images/battle.jpg',
-    })
+    });
   }
 
-  closeModal() {
+  resetGenericModal() {
+    this.setState({
+      genericModalHeader: '',
+      genericModalMessage: '',
+    });
+  }
+
+  closeMoveModal() {
     this.setState({ moveModalOpen: false });
   }
 
@@ -307,8 +325,13 @@ class Board extends React.Component {
     }
     let hex = this.props.selectedHex;
     if (hex.swordsmen < this.state.tempSwordsmen || hex.archers < this.state.tempArchers || hex.knights < this.state.tempKnights) {
+      console.log('hi')
       resetState();
-      alert('you cannot enter a number higher of units than you currently have');
+      this.setState({
+        genericModalOpen: true,
+        genericModalHeader: 'Invalid Number',
+        genericModalMessage: 'Please select a number of units less than or equal to the number units on the hex.'
+      })
       return false;
     } else {
       this.handleMoveClick(this.state.hex);
@@ -383,7 +406,11 @@ class Board extends React.Component {
 
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex); // send information to be sent over socket
     } else { //  if selected hex is not a neighbor,
-      alert('Please select a valid move.') // alert player they can't move there
+      this.setState({
+        genericModalOpen: true,
+        genericModalHeader: 'Invalid Move',
+        genericModalMessage: 'Please select a hex contiguous with one of the hexes you control.'
+      }) // alert player they can't move there
     }
   }
 
@@ -573,7 +600,7 @@ class Board extends React.Component {
                   }}/>
 
                 <Modal open={this.state.moveModalOpen} size={'small'}
-                    style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
+                    style={{ textAlign: 'center' }} closeIcon onClose={this.closeMoveModal.bind(this)}>
                     <Modal.Header>Move Troops</Modal.Header>
                     <Modal.Content>
                       <Modal.Description>
@@ -633,6 +660,23 @@ class Board extends React.Component {
             <Modal.Header>Your opponent has left the room.</Modal.Header>
             <Modal.Content>
               You are being rerouted to the lobby.
+            </Modal.Content>
+          </Modal>
+        </Transition>
+        <Transition animation={'fade up'} duration={'1000'} visible={this.state.genericModalOpen}>
+          <Modal
+            open={this.state.genericModalOpen}
+            closeIcon
+            onClose={() => {
+              this.setState({ genericModalOpen: false });
+              this.resetGenericModal();
+            }}
+            size={'small'}
+            style={{ textAlign: 'center' }}
+          >
+            <Modal.Header>{this.state.genericModalHeader}</Modal.Header>
+            <Modal.Content>
+              {this.state.genericModalMessage}
             </Modal.Content>
           </Modal>
         </Transition>
