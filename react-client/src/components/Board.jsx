@@ -14,7 +14,7 @@ import SidebarLeft from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
-import UnitBank from './UnitBank.jsx';
+import OpponentBank from './OpponentBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
 import hexbot from '../hexbot/hexbot.js';
 import TimeoutModals from './TimeoutModals.jsx';
@@ -540,7 +540,7 @@ class Board extends React.Component {
               </Grid.Column>
               <Grid.Column width={2}>
                 <ChatWindow/>
-                <UnitBank />
+                <OpponentBank />
             </Grid.Column>
           </Grid.Row>
         </Grid>

@@ -6,6 +6,8 @@ import { bindActionCreators } from 'redux';
 import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm, Grid, Transition } from 'semantic-ui-react';
 import { exitGame, setRoom, deleteRoom, resetBoard, setHexbot } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
+import DeployTroops from './DeployTroops.jsx';
+import UserPlayerBank from './UserPlayerBank.jsx';
 
 class TopBar extends React.Component {
   constructor(props) {
@@ -205,8 +207,14 @@ class TopBar extends React.Component {
             </Segment>)
           : null
         }
-        <Segment.Group horizontal>
-          {this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
+        <Segment.Group horizontal> 
+          {this.props.userPlayer && this.props.playerOneResources.hasOwnProperty('wood') ? 
+            <UserPlayerBank /> :
+            <Segment>
+              <strong>Player One has joined!</strong>
+            </Segment>
+          }
+          {/* {this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
             <Segment>
               <strong>Player One Resources</strong>
               <ul>
@@ -218,14 +226,14 @@ class TopBar extends React.Component {
             <Segment>
               <strong>Player One has joined!</strong>
             </Segment>
-          }
+          } */}
           <Segment style={{ textAlign: 'center' }}><strong>{this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
             (this.props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') : `Game will begin when both players have joined.`}</strong>
             {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
-              <UnitShop>Shop</UnitShop> : null
+              <div><UnitShop /><DeployTroops /></div> : null
             }
           </Segment>
-          {this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
+          {/* {this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
             <Segment>
               <strong>Player Two Resources</strong>
               <ul>
@@ -240,7 +248,7 @@ class TopBar extends React.Component {
                 <strong>Waiting for player two to join...</strong>
               </div>
             </Segment>
-          }
+          } */}
         </Segment.Group>
 
         {this.props.location.state.otherPlayerInfo
