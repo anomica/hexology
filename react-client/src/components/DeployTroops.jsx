@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Dropdown, List, Modal, Input, Card, Icon, Button, Transition, Header, Popup, Image, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
-import { deployTroopsModal, updateBank, deployUnits } from '../../src/actions/actions.js';
+import { Dropdown, List, Modal, Input, Button } from 'semantic-ui-react';
+import { deployUnits } from '../../src/actions/actions.js';
 
 class DeployTroops extends React.Component {
   constructor(props) {
@@ -122,19 +122,14 @@ const mapStateToProps = (state) => {
     userPlayer: state.state.userPlayer,
     playerOneUnitBank: state.state.playerOneUnitBank,
     playerTwoUnitBank: state.state.playerTwoUnitBank,
-    playerOneResources: state.state.playerOneResources,
-    playerTwoResources: state.state.playerTwoResources,
-    currentPlayer: state.state.currentPlayer,
-    deployment: state.state.deployment,
     gameIndex: state.state.gameIndex,
     room: state.state.room,
-    boardState: state.state.boardState,
-    deployTroopsModal: state.state.deployTroopsModal
+    boardState: state.state.boardState
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ updateBank, deployUnits }, dispatch);
+  return bindActionCreators({ deployUnits }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(DeployTroops);

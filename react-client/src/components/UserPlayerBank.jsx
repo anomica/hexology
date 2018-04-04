@@ -1,8 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import { Dropdown, List, Modal, Input, Card, Icon, Button, Transition, Header, Popup, Image, Content, Description, Label, Sidebar, Segment, Menu } from 'semantic-ui-react';
-import { deployTroopsModal, updateBank, deployUnits } from '../../src/actions/actions.js';
+import { List, Image } from 'semantic-ui-react';
+
 
 const userPlayerBank = (props) => {
   const styles = {
@@ -77,24 +76,13 @@ const userPlayerBank = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    socket: state.state.socket,
     userPlayer: state.state.userPlayer,
     playerOneUnitBank: state.state.playerOneUnitBank,
     playerTwoUnitBank: state.state.playerTwoUnitBank,
     playerOneResources: state.state.playerOneResources,
     playerTwoResources: state.state.playerTwoResources,
-    currentPlayer: state.state.currentPlayer,
-    deployment: state.state.deployment,
-    gameIndex: state.state.gameIndex,
-    room: state.state.room,
-    boardState: state.state.boardState,
-    deployTroopsModal: state.state.deployTroopsModal,
     spectator: state.state.spectator
   }
 }
 
-const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ updateBank }, dispatch);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(userPlayerBank);
+export default connect(mapStateToProps, null)(userPlayerBank);
