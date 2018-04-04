@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
-import { Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm, Grid, Transition } from 'semantic-ui-react';
+import { List, Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm, Grid, Transition } from 'semantic-ui-react';
 import { exitGame, setRoom, deleteRoom, resetBoard, setHexbot } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
 import DeployTroops from './DeployTroops.jsx';
@@ -230,7 +230,20 @@ class TopBar extends React.Component {
           <Segment style={{ textAlign: 'center' }}><strong>{this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
             (this.props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') : `Game will begin when both players have joined.`}</strong>
             {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
-              <div><UnitShop /><DeployTroops /></div> : null
+              <div>
+                <List horizontal>
+                  <List.Item>
+                    <List.Content>
+                      <UnitShop />
+                    </List.Content>
+                  </List.Item>
+                  <List.Item>
+                    <List.Content>
+                      <DeployTroops />
+                    </List.Content>
+                  </List.Item>
+                </List>
+              </div> : null
             }
           </Segment>
           {/* {this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
