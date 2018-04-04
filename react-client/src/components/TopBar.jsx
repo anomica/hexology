@@ -228,7 +228,7 @@ class TopBar extends React.Component {
             </Segment>
           } */}
           <Segment style={{ textAlign: 'center' }}><strong>{this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
-            (this.props.currentPlayer === 'player1' ? 'Player one\'s turn' : 'Player two\'s turn') : `Game will begin when both players have joined.`}</strong>
+            (this.props.currentPlayer === this.props.userPlayer ? 'Your turn' : this.props.currentPlayer + ' \'s turn') : `Game will begin when both players have joined.`}</strong>
             {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
               <div>
                 <List horizontal>
