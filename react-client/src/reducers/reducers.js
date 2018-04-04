@@ -47,6 +47,11 @@ const reducers = (state = defaultState, action) => {
         ...state,
         menuVisible: !state.menuVisible
       }
+    case 'ICONS-TOGGLE':
+      return {
+        ...state,
+        icons: !state.icons
+      }
     case 'EXIT-GAME':
       return {
         ...state,

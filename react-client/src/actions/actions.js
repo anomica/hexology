@@ -49,6 +49,12 @@ export const menuToggle = () => (
   }
 )
 
+export const iconsToggle = () => (
+  {
+    type: 'ICONS-TOGGLE'
+  }
+)
+
 export const exitGame = () => (
   {
     type: 'EXIT-GAME'

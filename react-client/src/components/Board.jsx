@@ -3,9 +3,9 @@ import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
-         Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
+         Icon, Form, Checkbox, Divider, Label, Grid, Radio } from 'semantic-ui-react';
 import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
-         highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
+         highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen, iconsToggle,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
@@ -436,7 +436,9 @@ class Board extends React.Component {
   render() {
     return (
       <div>
-        <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
+        <Label style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '130px', left: '35px'}}>{this.props.icons ? 'Colors' : 'Icons'}</Label>
+        <Radio style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '100px', left: '50px'}} onClick={this.props.iconsToggle} toggle/>
+        <Button style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle} >Menu</Button>
         <Grid>
           <Grid.Row>
             <Grid.Column width={2}>
@@ -450,7 +452,7 @@ class Board extends React.Component {
             <Grid.Column width={this.props.menuVisible ? 14 : 15}>
               <div className="Board">
                 <HexGrid height={800} viewBox="-50 -50 150 150">
-                  <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
+                  <Layout size={{ x: 12, y: 12 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -37.5 }}>
                     {this.props.boardState ? this.props.boardState.map((hex, index) => {
                       let targetClass = '';
                       if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
@@ -459,14 +461,16 @@ class Board extends React.Component {
                         targetClass += 'selected';
                       } else if (hex.player === this.props.userPlayer || (this.props.spectator && hex.player === 'player1')) {
                         targetClass += 'friendly';
-                      } else if (this.props.neighbors.indexOf(hex.index) > -1) {
-                        targetClass += 'neighbor';
-                      } else if (hex.hasGold) {
+                      }
+                      if (hex.hasGold) {
                         targetClass += 'gold';
                       } else if (hex.hasWood) {
                         targetClass += 'wood';
                       } else if (hex.hasMetal) {
                         targetClass += 'metal';
+                      }
+                      if (this.props.neighbors.indexOf(hex.index) > -1) {
+                        targetClass += ' neighbor';
                       }
                       if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
                         targetClass += ' swordsmen';
@@ -477,12 +481,18 @@ class Board extends React.Component {
                       }
                       return <Hexagon
                         key={uuidv4()}
-                        className={targetClass}
+                        className={this.props.icons ? null : targetClass}
                         onClick={() => {
                           this.props.deployment && hex.player === this.props.userPlayer ? this.addUnitsToHex(index, hex) :
                           this.handleClick(hex);
                           this.setState({ hex: hex });
                         }}
+                        fill={targetClass.indexOf('gold') > -1 ? 'gold-bar' :
+                              targetClass.indexOf('wood') > -1 ? 'wood-pile' :
+                              targetClass.indexOf('metal') > -1 ? 'metal-bar' :
+                              targetClass.indexOf('friendly') > -1 ? 'friendly' :
+                              targetClass.indexOf('opponent') > -1 ? 'opponent' :
+                              null}
                         q={hex.coordinates[0]}
                         r={hex.coordinates[1]}
                         s={hex.coordinates[2]}>
@@ -492,6 +502,11 @@ class Board extends React.Component {
                       </Hexagon>
                     }): <div></div>}
                   </Layout>
+                  <Pattern id="gold-bar" link="./images/gold-bar.svg" />
+                  <Pattern id="wood-pile" link="./images/wood-pile.svg" />
+                  <Pattern id="metal-bar" link="./images/metal-bar.svg" />
+                  <Pattern id="friendly" link="./images/friendly.svg" />
+                  <Pattern id="opponent" link="./images/opponent.svg" />
                 </HexGrid>
                 <Confirm
                   open={this.state.confirmOpen}
@@ -602,13 +617,14 @@ const mapStateToProps = (state) => {
     playerTwo: state.state.playerTwo,
     spectator: state.state.spectator,
     hexbot: state.state.hexbot,
-    hexbotModalOpen: state.state.hexbotModalOpen
+    hexbotModalOpen: state.state.hexbotModalOpen,
+    icons: state.state.icons
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
-    highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
+    highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex, iconsToggle,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove }, dispatch);
 }
