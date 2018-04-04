@@ -30,6 +30,7 @@ const RoomsList = props => {
         room.room.player1Losses = room.player1Losses;
         room.room.player1Email = room.player1Email;
         room.room.player1 = room.player1;
+        room.room.player1Rank = room.player1Rank;
         props.newRoom(room);
       })
       socket.on('deleteRoom', (room) => {
@@ -83,7 +84,7 @@ const RoomsList = props => {
                                   <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
                                 </Statistic>
                                 <Statistic>
-                                  <Statistic.Value>#</Statistic.Value>
+                                  <Statistic.Value># {' ' + room.player1Rank}</Statistic.Value>
                                   <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
                                 </Statistic>
                                 <Statistic>
@@ -113,7 +114,7 @@ const RoomsList = props => {
                                     <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
                                   </Statistic>
                                   <Statistic>
-                                    <Statistic.Value>#</Statistic.Value>
+                                    <Statistic.Value># {' ' + room.player2Rank}</Statistic.Value>
                                     <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
                                   </Statistic>
                                   <Statistic>

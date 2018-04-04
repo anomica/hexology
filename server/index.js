@@ -365,6 +365,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('newGame', async (request) => {
     let user = await db.getUserId(request.username);
+    let userRank = await db.getUserRank(request.username);
     let newRoom = `*${roomNum}`;
     room = newRoom;
     let gameType = request.gameType;
@@ -374,12 +375,14 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.sockets.adapter.rooms[newRoom].player1Wins = user[0].wins;
     io.sockets.adapter.rooms[newRoom].player1Losses = user[0].losses;
     io.sockets.adapter.rooms[newRoom].player1Email = user[0].email;
+    io.sockets.adapter.rooms[newRoom].player1Rank = 1 + userRank;
 
     await io.to(newRoom).emit('newGame', {
       room: newRoom,
       player1Wins: user[0].wins,
       player1Losses: user[0].losses,
-      player1Email: user[0].email
+      player1Email: user[0].email,
+      player1Rank: 1 + userRank
     }); // and send back a string to initialize for player 1
 
     gameType === 'public' && await socket.broadcast.emit('newRoom', {
@@ -388,7 +391,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       player1: request.username,
       player1Wins: user[0].wins,
       player1Losses: user[0].losses,
-      player1Email: user[0].email
+      player1Email: user[0].email,
+      player1Rank: 1 + userRank
      });
 
     roomNum++; // increment room count to assign new room
@@ -396,21 +400,25 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('joinGame', async (data) => {
     let userInfoPlayer2 = await db.getUserId(data.username);
+    let player2Rank = await db.getUserRank(data.username);
     await socket.join(data.room);
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
     room = data.room;
 
     let userInfoPlayer1 = await db.getUserId(io.sockets.adapter.rooms[room].player1);
+    let player1Rank = await db.getUserRank(io.sockets.adapter.rooms[room].player1);
 
     io.sockets.adapter.rooms[room].player1Wins = userInfoPlayer1[0].wins;
     io.sockets.adapter.rooms[room].player1Losses = userInfoPlayer1[0].losses;
     io.sockets.adapter.rooms[room].player1Email = userInfoPlayer1[0].email;
+    io.sockets.adapter.rooms[room].player1Rank = 1 + player1Rank;
 
     io.sockets.adapter.rooms[room].player2 = data.username;
     io.sockets.adapter.rooms[room].player2Wins = userInfoPlayer2[0].wins;
     io.sockets.adapter.rooms[room].player2Losses = userInfoPlayer2[0].losses;
     io.sockets.adapter.rooms[room].player2Email = userInfoPlayer2[0].email;
+    io.sockets.adapter.rooms[room].player2Rank = 1 + player2Rank;
 
     socket.broadcast.emit('updateRoom', {
       roomName: room,
