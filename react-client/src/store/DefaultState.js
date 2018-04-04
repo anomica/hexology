@@ -33,11 +33,7 @@ const DefaultState = {
   hexbot: false,
   warningModalOpen: false,
   forfeitModalOpen: false,
-<<<<<<< HEAD
-  deployTroopsModal: false
-=======
   icons: false
->>>>>>> ae8ff63869805f4d6d1b7b9c2a73459da9e4412a
 }
 
 export default DefaultState;
