@@ -9,10 +9,15 @@ class ChatWindow extends React.Component {
   constructor(props) {
     super(props);
 
+    let alert;
+
+    this.botMessages = ['Beep boop I am a bot.', 'I will crush you.', 'You need to practice more.', 'I do not talk to humans.', 'All hail Skynet.'];
     this.state = {
       open: false,
       message: '',
-      messageHistory: []
+      messageHistory: [],
+      unread: 0,
+      alert: false
     }
   }
 
@@ -30,6 +35,19 @@ class ChatWindow extends React.Component {
         this.setState({
           messageHistory: [...this.state.messageHistory, { message: data.message, username: data.username, socketId: data.socketId }]
         })
+        if (data.hexbot) {
+          setTimeout(() => {
+            this.setState({
+              messageHistory: [...this.state.messageHistory, { message: this.botMessages[Math.floor(Math.random() * this.botMessages.length)], username: 'hexbot', socketId: null }]
+            });
+          }, 1000);
+        }
+        if (!this.state.open) {
+          alert = setInterval(() => {
+            this.setState({ alert: !this.state.alert });
+          }, 500);
+          this.setState({ unread: this.state.unread += 1 });
+        }
       });
     })();
   }
@@ -45,7 +63,8 @@ class ChatWindow extends React.Component {
         message: this.state.message,
         username: this.props.loggedInUser,
         socketId: this.props.socket.id,
-        room: this.props.room
+        room: this.props.room,
+        hexbot: this.props.hexbot ? true : false
       });
       this.setState({ message: '' })
     })();
@@ -59,6 +78,13 @@ class ChatWindow extends React.Component {
         right: '50px',
         width: '300px',
         backgroundColor: '#2185d0'
+      },
+      chatWindowAlert: {
+        position: 'fixed',
+        bottom: '-14px',
+        right: '50px',
+        width: '300px',
+        backgroundColor: '#ff0000'
       },
       chatWindowOpen: {
         position: 'fixed',
@@ -79,10 +105,13 @@ class ChatWindow extends React.Component {
     }
     let socket = this.props.socket;
     return (
-      <Segment style={this.state.open ? styles.chatWindowOpen : styles.chatWindowClosed}>
-        <Header style={{display: 'inline'}}>Chat</Header>
+      <Segment style={this.state.open ? styles.chatWindowOpen : this.state.alert ? styles.chatWindowAlert : styles.chatWindowClosed}>
+        <Header style={{display: 'inline'}}>Chat <span style={{fontWeight: 'normal', fontSize: '15px'}}>{this.state.unread > 0 ? `(${this.state.unread} unread message${this.state.unread === 1 ? `` : `s`})` : null}</span></Header>
         <Icon
-          onClick={() => this.setState({ open: !this.state.open })}
+          onClick={() => {
+            this.setState({ open: !this.state.open, alert: false, unread: 0 });
+            clearInterval(alert);
+          }}
           className={'chatIcon'}
           name={this.state.open ? 'compress' : 'expand'}/>
         {this.state.open &&
@@ -96,6 +125,7 @@ class ChatWindow extends React.Component {
                           style={{color: message.socketId === this.props.socket.id ?
                             'blue': 'red'}}>{message.username}:
                         </strong>
+                        <span> </span>
                         {message.message}
                       </p>
                     )
@@ -127,7 +157,8 @@ const mapStateToProps = state => {
   return {
     socket: state.state.socket,
     room: state.state.room,
-    loggedInUser: state.state.loggedInUser
+    loggedInUser: state.state.loggedInUser,
+    hexbot: state.state.hexbot
   }
 }
 

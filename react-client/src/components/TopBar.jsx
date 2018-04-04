@@ -33,13 +33,13 @@ class TopBar extends React.Component {
     this.handleSaveClose = this.handleSaveClose.bind(this);
   }
 
-  saveGame(exit) {    
+  saveGame(exit) {
     this.props.socket.emit('saveGame', {
       gameIndex: this.props.gameIndex,
       room: this.props.room,
       socketId: this.props.socket.id
     });
-    
+
     this.props.socket.on('saveGame', data => {
       this.setState({
         saveOpen: true,
@@ -135,7 +135,7 @@ class TopBar extends React.Component {
 
   render() {
     return (
-      <Segment className={'topBar'} style={{ display: 'block', width: this.props.menuVisible ? '80%' : '97%' }} secondary floated={'right'} raised>
+      <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%', marginBottom: '-20px' }} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
 
         <div style={{ right: '10px', top: '20px', position: 'absolute' }}>
@@ -144,7 +144,7 @@ class TopBar extends React.Component {
               open={this.state.saveOpen}
               trigger={
                 <Button
-                  style={{ marginRight: '5px' }}
+                  style={{marginRight: '5px'}}
                   onClick={this.saveGame}
                   disabled={this.state.saveDisabled}
                 >Save Game</Button>}>
@@ -234,40 +234,39 @@ class TopBar extends React.Component {
             }
           </Segment>
         </Segment.Group>
-
-        {this.props.location.state.otherPlayerInfo
-          ? <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({
-            modalOpen: false,
-            email: this.props.location.state.otherPlayerInfo.email
-          })}>
-            <Modal.Header>Send an email to {this.props.location.state.otherPlayerInfo.username} to resume this game!</Modal.Header>
-            <Modal.Content>
-              <Modal.Description>
-                <Form size={'large'} key={'small'}>
-                  <Form.Group widths='equal'>
-                    <Form.Input
-                      fluid
-                      required
-                      name={'email'}
-                      value={this.props.location.state.otherPlayerInfo.email}
-                      onChange={this.handleChange.bind(this)}
-                      label='Email'
-                    />
-                    <Form.TextArea
-                      onChange={this.handleChange.bind(this)}
-                      label='Message'
-                      name={'message'}
-                      value={this.state.message}
-                      placeholder="Yo, let's finish our awesome game of Hexology!" />
-                  </Form.Group>
-                </Form>
-              </Modal.Description>
-            </Modal.Content>
-            <Divider />
-            <Modal.Actions>
-              <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>
-            </Modal.Actions>
-          </Modal>
+          {this.props.location.state.otherPlayerInfo
+            ? <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({
+                modalOpen: false,
+                email: this.props.location.state.otherPlayerInfo.email
+              })}>
+                <Modal.Header>Send an email to {this.props.location.state.otherPlayerInfo.username} to resume this game!</Modal.Header>
+                <Modal.Content>
+                  <Modal.Description>
+                    <Form size={'large'} key={'small'}>
+                      <Form.Group widths='equal'>
+                        <Form.Input
+                          fluid
+                          required
+                          name={'email'}
+                          value={this.props.location.state.otherPlayerInfo.email}
+                          onChange={this.handleChange.bind(this)}
+                          label='Email'
+                          />
+                        <Form.TextArea
+                          onChange={this.handleChange.bind(this)}
+                          label='Message'
+                          name={'message'}
+                          value={this.state.message}
+                          placeholder="Yo, let's finish our awesome game of Hexology!" />
+                      </Form.Group>
+                    </Form>
+                  </Modal.Description>
+                </Modal.Content>
+                <Divider/>
+                <Modal.Actions>
+                  <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>
+                </Modal.Actions>
+              </Modal>
           : <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
             <Modal.Header>Please write the recipient's email below, along with any message you would like to send.</Modal.Header>
             <Modal.Content>
