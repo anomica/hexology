@@ -31,13 +31,13 @@ class TopBar extends React.Component {
     this.handleSaveClose = this.handleSaveClose.bind(this);
   }
 
-  saveGame(exit) {    
+  saveGame(exit) {
     this.props.socket.emit('saveGame', {
       gameIndex: this.props.gameIndex,
       room: this.props.room,
       socketId: this.props.socket.id
     });
-    
+
     this.props.socket.on('saveGame', data => {
       this.setState({
         saveOpen: true,
@@ -133,7 +133,7 @@ class TopBar extends React.Component {
 
   render() {
     return (
-      <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%' }} secondary floated={'right'} raised>
+      <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%', marginBottom: '-20px' }} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
 
         <div style={{right: '10px', top: '20px', position: 'absolute'}}>
@@ -141,7 +141,7 @@ class TopBar extends React.Component {
           ? <Modal
               open={this.state.saveOpen}
               trigger={
-                <Button 
+                <Button
                   style={{marginRight: '5px'}}
                   onClick={this.saveGame}
                   disabled={this.state.saveDisabled}
@@ -242,7 +242,7 @@ class TopBar extends React.Component {
             </Segment>
           }
         </Segment.Group>
-        
+
           {this.props.location.state.otherPlayerInfo
             ? <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({
                 modalOpen: false,
