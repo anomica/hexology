@@ -214,19 +214,6 @@ class TopBar extends React.Component {
               <strong>Player One has joined!</strong>
             </Segment>
           }
-          {/* {this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood') ?
-            <Segment>
-              <strong>Player One Resources</strong>
-              <ul>
-                <li>Gold: {this.props.playerOneResources.gold}</li>
-                <li>Wood: {this.props.playerOneResources.wood}</li>
-                <li>Metal: {this.props.playerOneResources.metal}</li>
-              </ul>
-            </Segment> :
-            <Segment>
-              <strong>Player One has joined!</strong>
-            </Segment>
-          } */}
           <Segment style={{ textAlign: 'center' }}><strong>{this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
             (this.props.currentPlayer === this.props.userPlayer ? 'Your turn' : this.props.currentPlayer + ' \'s turn') : `Game will begin when both players have joined.`}</strong>
             {!this.props.spectator && this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') && this.props.currentPlayer === this.props.userPlayer ?
@@ -246,22 +233,6 @@ class TopBar extends React.Component {
               </div> : null
             }
           </Segment>
-          {/* {this.props.playerTwoResources && this.props.playerTwoResources.hasOwnProperty('wood') ?
-            <Segment>
-              <strong>Player Two Resources</strong>
-              <ul>
-                <li>Gold: {this.props.playerTwoResources.gold}</li>
-                <li>Wood: {this.props.playerTwoResources.wood}</li>
-                <li>Metal: {this.props.playerTwoResources.metal}</li>
-              </ul>
-            </Segment> :
-            <Segment>
-              <div>
-                <Icon loading name='spinner' />
-                <strong>Waiting for player two to join...</strong>
-              </div>
-            </Segment>
-          } */}
         </Segment.Group>
 
         {this.props.location.state.otherPlayerInfo
