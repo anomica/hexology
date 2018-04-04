@@ -1,4 +1,4 @@
-const config = require('../config.js');
+const config = require('./config.js');
 const mysql = require('mysql');
 const moment = require('moment');
 
@@ -690,7 +690,7 @@ const gameComplete = async (gameIndex, room, winner, loser) => {
         .increment('losses', 1) // increase losses
     }
   }
-  
+
   let gameId = await getGameId(room, gameIndex);
   await deleteHex(gameId[0].game_id); // first delete the hexes (foreign key restraint)
   await knex('games') // then delete the game
@@ -709,7 +709,7 @@ const forceEndGame = async (gameIndex, saveGame) => {
   // console.log('\nforce ending the game... gameIndex: ', gameIndex, '\n');
   if (saveGame !== 'saveOnly') { // if only passing in the gameindex, then the game needs to be ended
     let game = await getGameByGameIndex(gameIndex);
-    
+
     if (game.length > 0) {
       await deleteHex(game[0].game_id); // first delete the hexes
       await knex('games') // then delete the game
@@ -842,9 +842,9 @@ const deleteGames = async (gameId) => {
     .where(knex.raw(`games.created_at NOT BETWEEN '${yesterday}' AND '${today}'`))
     .andWhere(knex.raw(`games.game_id = hex.game_id`))
     .orderByRaw(`games.created_at DESC`)
-  
+
   // console.log('\nhere are the old games length:\n', oldGames)
-  
+
   if (oldGames.length > 0) {
     return Promise.all(oldGames.forEach(async (hex, i, oldGames) => {
       // console.log('\ngame deleted....:\n', '\ngame id:\n', hex.game_id, '\nhex id:\n', hex.hex_id, )
@@ -875,7 +875,7 @@ const retrieveUserGames = async (username) => {
      AND LOWER('${username}') = LOWER(users.username
    )`)) // where current user is player1 or player2 and username matches current user
    .orderByRaw(`games.created_at DESC`);
-  
+
   return Promise.all(games.map(async (game, i, games) => {
     if (game.player1 === currentUser[0].user_id) { // if current user is player1
       let otherUser = await knex.select()
