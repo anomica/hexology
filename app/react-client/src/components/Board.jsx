@@ -43,17 +43,6 @@ class Board extends React.Component {
   }
 
   componentDidMount() {
-    // (async () => {
-    //   let socket = this.props.socket;
-    //   if (!socket) {
-    //       let endpoint = '/';
-    //       console.log('endpoint in board:', endpoint)
-    //       socket = await socketIOClient(endpoint);
-    //       console.log('socket in board:', socket);
-    //   console.log('socket in board:', socket);
-    //   }
-    // })();
-
     (async () => {
       let socket = this.props.socket;
       if (this.props.location.state.type) {
@@ -66,10 +55,7 @@ class Board extends React.Component {
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
         if (!socket) {
-          let endpoint = '/';
-          console.log('endpoint in board:', endpoint)
-          socket = await socketIOClient(endpoint);
-          console.log('socket in board:', socket);
+          socket = await socketIOClient('/');
           this.props.setSocket(socket);
         }
         socket.emit('joinGame', {

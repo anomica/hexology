@@ -634,22 +634,15 @@ const getGameId = (room, gameIndex) => { // NOTE: This returns an object
     .where(knex.raw(`${roomNum} = room_id AND '${gameIndex}' = game_index`))
 }
 
-/////////////////////// Returns an object containing games older than 1 day from today's date /////////////////
-const getOldGames = async () => {
-  let today = await moment(new Date()).format('YYYY-MM-DD 23:59:59');
-  let yesterday = await moment(new Date()).subtract(1, 'days').format('YYYY-MM-DD 00:00:00');
-
-  return await knex('games').select()
-    .where(knex.raw(`created_at NOT BETWEEN '${yesterday}' AND '${today}'`))
-    .returning('game_id')
-}
-
-/////////////////////// Deletes game if > 1 day has passed ///////////////////////
-const deleteGames = async (gameId) => {
-  await deleteHex(gameId); // first delete the hexes
-  await knex('games') // then delete the game
-    .where(knex.raw(`${gameId} = game_id`))
-    .del();
+/////////////////////// Get the current player on the hex ///////////////////////
+const getCurrentPlayerHex = async (gameId, currentPlayer) => {
+  if (currentPlayer === 'player1') {
+    return await knex('hex')
+      .where(knex.raw(`${gameId} = game_id AND 1 = player`)); //TODO: needs to be updated with user id instead of 1 or 2
+  } else {
+    return await knex('hex')
+      .where(knex.raw(`${gameId} = game_id AND 2 = player`)); //TODO: needs to be updated with user id instead of 1 or 2
+  }
 }
 
 /////////////////////// Deletes hexes if game has ended ///////////////////////
@@ -699,17 +692,21 @@ const getGameByGameIndex = async (gameIndex) => {
     .where(knex.raw(`'${gameIndex}' = game_index`));
 }
 
-/////////////////////// Force game to end when player leaves the room ///////////////////////
-const forceEndGame = async (gameIndex) => {
+/////////////////////// Deletes game when a player leaves the room ///////////////////////
+const forceEndGame = async (gameIndex, saveGame) => {
   // console.log('\nforce ending the game... gameIndex: ', gameIndex, '\n');
-  let game = await getGameByGameIndex(gameIndex);
-
-  if (game.length > 0) {
-    await deleteHex(game[0].game_id); // first delete the hexes
-    await knex('games') // then delete the game
-    .where(knex.raw(`${game[0].game_id} = game_id`))
-    .del();
-    // console.log('done deleting gam from db!');
+  if (saveGame !== 'saveOnly') { // if only passing in the gameindex, then the game needs to be ended
+    let game = await getGameByGameIndex(gameIndex);
+    
+    if (game.length > 0) {
+      await deleteHex(game[0].game_id); // first delete the hexes
+      await knex('games') // then delete the game
+      .where(knex.raw(`${game[0].game_id} = game_id`))
+      .del();
+      // console.log('done deleting gam from db!');
+    }
+  } else { // else the game is being saved, do nothing!
+    return;
   }
 }
 
@@ -795,6 +792,37 @@ const getUsernames = async () => {
     .orderBy('wins', 'desc')
 }
 
+/////////////////////// Deletes game if > 1 day has passed ///////////////////////
+const deleteGames = async (gameId) => {
+  // console.log('\ndeleting games in da db\n')
+  let today = await moment(new Date()).format('YYYY-MM-DD 23:59:59');
+  let yesterday = await moment(new Date()).subtract(1, 'days').format('YYYY-MM-DD 00:00:00');
+
+  // console.log('\ntoday: ', today, '\nyesterday: ', yesterday)
+
+  let oldGames = await knex.column(knex.raw(`games.created_at, games.game_id, hex.*`))
+    .from(knex.raw(`games, hex`))
+    .where(knex.raw(`games.created_at NOT BETWEEN '${yesterday}' AND '${today}'`))
+    .andWhere(knex.raw(`games.game_id = hex.game_id`))
+    .orderByRaw(`games.created_at DESC`)
+  
+  // console.log('\nhere are the old games length:\n', oldGames)
+  
+  if (oldGames.length > 0) {
+    return Promise.all(oldGames.forEach(async (hex, i, oldGames) => {
+      // console.log('\ngame deleted....:\n', '\ngame id:\n', hex.game_id, '\nhex id:\n', hex.hex_id, )
+      await deleteHex(hex.game_id); // delete the hexes
+      await knex('games') // then delete the game
+      .where(knex.raw(`${hex.game_id} = game_id`))
+      .del()
+      console.log(`Games older than ${today} and ${yesterday} have been deleted`);
+    }));
+  } else {
+    console.log('No old games to be deleted')
+    return;
+  }
+}
+
 /////////////////////// Gets user's existing games ///////////////////////
 const retrieveUserGames = async (username, currentPlayer) => {
   let user = await getUserId(username, currentPlayer);
@@ -848,7 +876,6 @@ module.exports = {
   removeHasMetal,
   getHex,
   getGame,
-  getOldGames,
   deleteGames,
   deleteHex,
   gameComplete,

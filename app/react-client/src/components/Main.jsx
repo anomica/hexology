@@ -19,12 +19,8 @@ class Main extends React.Component {
 
   componentDidMount() {
     (async () => {
-      let endpoint = '/';
-      console.log('endpoint:', endpoint);
-      let socket = await socketIOClient(endpoint);
+      let socket = await socketIOClient('/');
       console.log('socket:', socket);
-
-      // let socket = await socketIOClient('http://127.0.0.1:8080');
       this.props.setSocket(socket);
     })();
 
