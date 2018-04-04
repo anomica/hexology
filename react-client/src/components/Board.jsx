@@ -27,7 +27,7 @@ class Board extends React.Component {
 
     this.state = {
       hex: null,
-      modalOpen: false,
+      moveModalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
       combatIcon: './images/battle.jpg',
@@ -289,7 +289,7 @@ class Board extends React.Component {
   }
 
   closeModal() {
-    this.setState({ modalOpen: false });
+    this.setState({ moveModalOpen: false });
   }
 
   skipCombatAnmiation() {
@@ -313,7 +313,7 @@ class Board extends React.Component {
     } else {
       this.handleMoveClick(this.state.hex);
       this.setState({
-        modalOpen: false
+        moveModalOpen: false
       })
     }
   }
@@ -458,22 +458,22 @@ class Board extends React.Component {
                   <Layout size={{ x: 12, y: 12 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -35 }}>
                     {this.props.boardState ? this.props.boardState.map((hex, index) => {
                       let targetClass = '';
-                      if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
-                        targetClass += 'opponent';
-                      } else if (this.props.selectedHex.index === hex.index) {
-                        targetClass += 'selected';
-                      } else if (hex.player === this.props.userPlayer || (this.props.spectator && hex.player === 'player1')) {
-                        targetClass += 'friendly';
-                      }
                       if (hex.hasGold) {
-                        targetClass += 'gold';
+                        targetClass += ' gold';
                       } else if (hex.hasWood) {
-                        targetClass += 'wood';
+                        targetClass += ' wood';
                       } else if (hex.hasMetal) {
-                        targetClass += 'metal';
+                        targetClass += ' metal';
                       }
                       if (this.props.neighbors.indexOf(hex.index) > -1) {
                         targetClass += ' neighbor';
+                      }
+                      if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
+                        targetClass += ' opponent';
+                      } else if (this.props.selectedHex.index === hex.index) {
+                        targetClass += ' selected';
+                      } else if (hex.player === this.props.userPlayer || (this.props.spectator && hex.player === 'player1')) {
+                        targetClass += ' friendly';
                       }
                       if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
                         targetClass += ' swordsmen';
@@ -559,7 +559,7 @@ class Board extends React.Component {
                   content={'Move all your troops to this hex?'}
                   cancelButton={'No, only some'}
                   onCancel={() => {
-                    this.setState({ modalOpen: true })
+                    this.setState({ moveModalOpen: true })
                     this.setState({ confirmOpen: false })
                   }}
                   confirmButton={'Yes'}
@@ -572,7 +572,7 @@ class Board extends React.Component {
                     this.handleMoveClick(this.state.hex);
                   }}/>
 
-                  <Modal open={this.state.modalOpen} size={'small'}
+                <Modal open={this.state.moveModalOpen} size={'small'}
                     style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
                     <Modal.Header>Move Troops</Modal.Header>
                     <Modal.Content>

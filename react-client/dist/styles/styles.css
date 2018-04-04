@@ -1,5 +1,4 @@
-/********* POLYGON STYLING ************/
-
+/********* HEX POLYGON STYLING ************/
 svg g {
   fill: white;
   stroke: black;
@@ -24,6 +23,22 @@ svg g > text {
   font-size: 5px;
   font-family: serif;
 }
+
+/* resource styling */
+
+g.gold > g > polygon {
+  fill: gold;
+}
+
+g.wood > g > polygon {
+  fill: green;
+}
+
+g.metal > g > polygon {
+  fill: gray;
+}
+
+/* player styling */
 
 g.friendly > g > polygon {
   fill: aqua;
@@ -65,18 +80,6 @@ g.opponentIcon > g > text {
 
 g.opponentIcon > g > polygon {
   cursor: url(https://png.icons8.com/metro/50/000000/sword.png), auto;
-}
-
-g.gold > g > polygon {
-  fill: gold;
-}
-
-g.wood > g > polygon {
-  fill: green;
-}
-
-g.metal > g > polygon {
-  fill: gray;
 }
 
 g.swordsmen > g > polygon, g.swordsmen > g > text {
