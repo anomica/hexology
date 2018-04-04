@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header, Image, Table, Icon, Button, Modal, Form, Input, Divider } from 'semantic-ui-react';
+import { Header, Image, Table, Icon, Button, Modal, Form, Input, Divider, Transition } from 'semantic-ui-react';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -22,12 +22,11 @@ class Leaderboard extends React.Component {
     this.sendEmail = this.sendEmail.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.setUser = this.setUser.bind(this);
+    this.handleSort = this.handleSort.bind(this);
   }
 
   setUser(email, username) {
     this.setState({
-      // email: email,
-      // challengeUser: username,
       modalOpen: true
     });
 
@@ -85,6 +84,7 @@ class Leaderboard extends React.Component {
       <Table
         celled
         selectable
+        sortable
         collapsing
         compact
         celled striped
@@ -115,48 +115,50 @@ class Leaderboard extends React.Component {
                 {key + 1}
               </Table.Cell>
               <Table.Cell>
-                <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}>{user.username}</Header>}>
-                  <Modal.Header>Profile: {user.username}</Modal.Header>
-                  <Modal.Content>
-                    <Modal.Description>
-                      Rank: {key + 1}
-                      <br/>
-                      Wins: {user.wins}
-                      <br/>
-                      Losses: {user.losses}
-                      <p/>
-                      {this.props.loggedInUser !== 'anonymous' && this.props.loggedInUser !== user.username
-                        ? <Button color='blue' key='blue' onClick={ () =>
-                            this.setUser(user.email, user.username)
-                          }>Challenge {user.username}!</Button>
-                        : null
-                      }
+                <Transition animation={'pulse'} duration={5000} visible={true}>
+                  <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}>{user.username}</Header>}>
+                    <Modal.Header>Profile: {user.username}</Modal.Header>
+                    <Modal.Content>
+                      <Modal.Description>
+                        Rank: {key + 1}
+                        <br/>
+                        Wins: {user.wins}
+                        <br/>
+                        Losses: {user.losses}
+                        <p/>
+                        {this.props.loggedInUser !== 'anonymous' && this.props.loggedInUser !== user.username
+                          ? <Button color='blue' key='blue' onClick={ () =>
+                              this.setUser(user.email, user.username)
+                            }>Challenge {user.username}!</Button>
+                          : null
+                        }
 
-                      <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
-                        <Modal.Header>Challenge {user.username}!</Modal.Header>
-                        <Modal.Content>
-                          <Modal.Description>
-                            <Form size={'large'} key={'small'}>
-                              <Form.Group widths='equal'>
-                                <Form.TextArea
-                                  onChange={this.handleChange}
-                                  label='Message'
-                                  name={'message'}
-                                  value={this.state.message}
-                                  placeholder='Hello there! Please join me for an awesome game of Hexology!' />
-                              </Form.Group>
-                            </Form>
-                          </Modal.Description>
-                        </Modal.Content>
-                        <Divider/>
-                        <Modal.Actions>
-                          <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
-                        </Modal.Actions>
-                      </Modal>
+                        <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
+                          <Modal.Header>Challenge {user.username}!</Modal.Header>
+                          <Modal.Content>
+                            <Modal.Description>
+                              <Form size={'large'} key={'small'}>
+                                <Form.Group widths='equal'>
+                                  <Form.TextArea
+                                    onChange={this.handleChange}
+                                    label='Message'
+                                    name={'message'}
+                                    value={this.state.message}
+                                    placeholder='Hello there! Please join me for an awesome game of Hexology!' />
+                                </Form.Group>
+                              </Form>
+                            </Modal.Description>
+                          </Modal.Content>
+                          <Divider/>
+                          <Modal.Actions>
+                            <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
+                          </Modal.Actions>
+                        </Modal>
 
-                    </Modal.Description>
-                  </Modal.Content>
-                </Modal>
+                      </Modal.Description>
+                    </Modal.Content>
+                  </Modal>
+                </Transition>
               </Table.Cell>
               <Table.Cell style={{textAlign: 'center'}}>
                 {user.wins}
