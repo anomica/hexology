@@ -303,8 +303,6 @@ class TopBar extends React.Component {
 
 
 const mapStateToProps = state => {
-  console.log('topbar state: ', state);
-  console.log('game Index: ', state.state.gameIndex)
   return {
     socket: state.state.socket,
     room: state.state.room,
