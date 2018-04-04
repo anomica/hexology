@@ -58,9 +58,12 @@ app.post('/login', passport.authenticate('local-login'), (req, res) => {
   res.status(201).json(req.user);
 });
 
-app.post('/logout', isLoggedIn, function (req, res) {
-  req.logout();
+app.post('/logout', isLoggedIn, async (req, res) => {
+  console.log('req.gameIndex:', req.body.gameIndex);
+  await db.forceEndGame(req.body.gameIndex); // game gets deleted from db
+  await room && io.to(room).emit('disconnect');
   res.clearCookie('connect.sid').status(200).redirect('/');
+  req.logout();
 });
 
 let games = {};
