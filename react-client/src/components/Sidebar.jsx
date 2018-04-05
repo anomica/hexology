@@ -106,7 +106,11 @@ class SidebarLeft extends React.Component {
   }
 
   logout() {
-    axios.post('/logout')
+    console.log('this.props.gameIndex:', this.props.gameIndex);
+    axios.post('/logout', {
+      gameIndex: this.props.gameIndex,
+      room: this.props.room
+    })
       .then(data => {
         this.props.login('anonymous');
         this.setState({ logoutModal: true });
@@ -348,7 +352,9 @@ const mapStateToProps = (state) => {
     playerTwoResources: state.state.playerTwoResources,
     showLogin: state.state.showLogin,
     loggedInUser: state.state.loggedInUser,
-    spectator: state.state.spectator
+    spectator: state.state.spectator,
+    gameIndex: state.state.gameIndex,
+    room: state.state.room
   }
 }
 
