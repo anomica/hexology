@@ -304,7 +304,6 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   socket.on('saveGame', async (request) => {
     // console.log('socket on save game:', request)
     await db.forceEndGame(request.gameIndex, 'saveOnly');
-
     await io.to(request.room).emit('saveGame', {gameSaved: true}); 
   });
 

@@ -83,10 +83,13 @@ const RoomsList = props => {
                                   <Statistic.Value>{' ' + room.player1Wins}</Statistic.Value>
                                   <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
                                 </Statistic>
-                                <Statistic>
-                                  <Statistic.Value># {' ' + room.player1Rank}</Statistic.Value>
-                                  <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
-                                </Statistic>
+                                { room.player1Rank !== undefined
+                                  ? <Statistic>
+                                      <Statistic.Value># {' ' + room.player1Rank}</Statistic.Value>
+                                      <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
+                                    </Statistic>
+                                  : <Statistic></Statistic>
+                                }
                                 <Statistic>
                                   <Statistic.Value>{' ' + room.player1Losses}</Statistic.Value>
                                   <Statistic.Label><Icon name='tint' />Losses</Statistic.Label>
@@ -113,10 +116,13 @@ const RoomsList = props => {
                                     <Statistic.Value>{' ' + room.player2Wins}</Statistic.Value>
                                     <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
                                   </Statistic>
-                                  <Statistic>
-                                    <Statistic.Value># {' ' + room.player2Rank}</Statistic.Value>
-                                    <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
-                                  </Statistic>
+                                  { room.player2Rank !== undefined
+                                    ? <Statistic>
+                                      <Statistic.Value># {' ' + room.player2Rank}</Statistic.Value>
+                                      <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
+                                    </Statistic>
+                                    : <Statistic></Statistic>
+                                  }
                                   <Statistic>
                                     <Statistic.Value>{' ' + room.player2Losses}</Statistic.Value>
                                     <Statistic.Label><Icon name='tint' />Losses</Statistic.Label>
