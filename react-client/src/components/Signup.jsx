@@ -109,48 +109,50 @@ class Signup extends React.Component {
 
   render() {
     return (
-      <Modal open={this.props.showSignup} closeIcon onClose={this.handleClose.bind(this)}>
-        <Modal.Header>Sign Up</Modal.Header>
-        <Modal.Content>
-          <Modal.Description>
-          <Form>
-            <Form.Input
-              name='username'
-              required
-              onChange={(e) => {this.handleChange(e, 'username')}}
-              label='Username'
-              type='text'
-              error={this.state.invalidUsername}
-            />
-            <Form.Input
-              name='password'
-              required
-              onChange={(e) => {this.handleChange(e, 'password')}}
-              label='Password'
-              type='password' />
-            <Form.Input
-              name='email'
-              onChange={(e) => {this.handleChange(e, 'email')}}
-              label='Email'
-              required
-              error={this.state.invalidEmail}
-              type='email' />
-            <Transition animation={'jiggle'} duration={'1000'} visible={true}>
-              <Button
-                onClick={this.signup.bind(this)}
-                type='submit'
-                style={{
-                  backgroundColor: this.state.error ? 'red' : 'green',
-                  color: 'white',
-                  float: 'right',
-                  marginBottom: '10px'
-                }}
-                >{this.state.buttonMessage}</Button>
-              </Transition>
-          </Form>
-          </Modal.Description>
-        </Modal.Content>
-      </Modal>
+      <Transition animation={'pulse'} duration={5000} visible={true}>
+        <Modal open={this.props.showSignup} closeIcon onClose={this.handleClose.bind(this)}>
+          <Modal.Header>Sign Up</Modal.Header>
+          <Modal.Content>
+            <Modal.Description>
+            <Form>
+              <Form.Input
+                name='username'
+                required
+                onChange={(e) => {this.handleChange(e, 'username')}}
+                label='Username'
+                type='text'
+                error={this.state.invalidUsername}
+              />
+              <Form.Input
+                name='password'
+                required
+                onChange={(e) => {this.handleChange(e, 'password')}}
+                label='Password'
+                type='password' />
+              <Form.Input
+                name='email'
+                onChange={(e) => {this.handleChange(e, 'email')}}
+                label='Email'
+                required
+                error={this.state.invalidEmail}
+                type='email' />
+              <Transition animation={'jiggle'} duration={'1000'} visible={true}>
+                <Button
+                  onClick={this.signup.bind(this)}
+                  type='submit'
+                  style={{
+                    backgroundColor: this.state.error ? 'red' : 'green',
+                    color: 'white',
+                    float: 'right',
+                    marginBottom: '10px'
+                  }}
+                  >{this.state.buttonMessage}</Button>
+                </Transition>
+            </Form>
+            </Modal.Description>
+          </Modal.Content>
+        </Modal>
+      </Transition>
     )
   }
 }
