@@ -124,9 +124,11 @@ class TopBar extends React.Component {
       username: this.props.loggedInUser,
       email: this.props.location.state.otherPlayerInfo.email,
       message: messageDefault,
-      room: this.props.room
+      room: this.props.room,
+      gameIndex: this.props.gameIndex,
+      otherUser: this.props.location.state.otherPlayerInfo.username
     })
-    setTimeout(() => this.setState({ modalOpen: false }), 2000);
+    setTimeout(() => this.setState({ modalOpen: false }), 3000);
   }
 
   handleChange(e, {name, value}) {
@@ -138,7 +140,7 @@ class TopBar extends React.Component {
       <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%', marginBottom: '-20px' }} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
         <div style={{right: '10px', top: '20px', position: 'absolute'}}>
-          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')
+          { (this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')) || (this.props.location && this.props.location.search.includes('='))
             ? <Modal
               open={this.state.saveOpen}
               trigger={
@@ -155,7 +157,7 @@ class TopBar extends React.Component {
             </Modal>
             : null
           }
-          {this.props.loggedInUser !== 'anonymous' && this.props.currentPlayer !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources.hasOwnProperty('wood')
+          { (this.props.loggedInUser !== 'anonymous' && this.props.currentPlayer !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources.hasOwnProperty('wood')) || (this.props.location && this.props.location.search.includes('='))
             ? <span>
                 <Button size='small' onClick={this.confirm}>Exit Game</Button>
                 <Confirm
@@ -192,7 +194,7 @@ class TopBar extends React.Component {
         {this.props.location.state // if the game has been loaded by player
           ? ( this.props.location.state.gameLoad
               ? (this.state.inviteSent
-                  ? <Segment>Invite sent to {this.props.location.state.otherPlayerInfo.email}</Segment>
+                  ? null
                   : <Segment>Invite <strong>{this.props.location.state.otherPlayerInfo.username}</strong> to resume this game!
                     <Button
                       size={'tiny'}
@@ -259,7 +261,16 @@ class TopBar extends React.Component {
                   </Modal.Content>
                   <Divider/>
                   <Modal.Actions>
-                    <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>
+
+                  <Modal trigger={<Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>}>
+                      <Modal.Header>Invite Sent</Modal.Header>
+                      <Modal.Content>
+                        <Modal.Description>
+                          Invite sent to {this.props.location.state.otherPlayerInfo.username}
+                        </Modal.Description>
+                      </Modal.Content>
+                    </Modal>
+                    
                   </Modal.Actions>
                 </Modal></Transition>
               : <Transition animation={'pulse'} duration={5000} visible={true}><Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>

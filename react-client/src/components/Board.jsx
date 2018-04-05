@@ -18,6 +18,7 @@ import OpponentBank from './OpponentBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
 import hexbot from '../hexbot/hexbot.js';
 import TimeoutModals from './TimeoutModals.jsx';
+import Login from './Login.jsx';
 
 let interval;
 
@@ -42,6 +43,7 @@ class Board extends React.Component {
       genericModalOpen: false,
       genericModalHeader: 'test',
       genericModalFalse: 'test',
+      showLogin: false
     }
   }
 
@@ -61,13 +63,27 @@ class Board extends React.Component {
           socket = await socketIOClient('http://127.0.0.1:8080');
           this.props.setSocket(socket);
         }
-        socket.emit('joinGame', {
-          room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
-          username: this.props.loggedInUser,
-          spectator: true
-        });
-        !this.props.playerAssigned && this.props.setUserPlayer('player2');
-        this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
+
+        if (window.location.href.includes('=')) { // if someone is joining to resume a game via email
+          let gameIndex = window.location.href.split('=')[1];
+          let userJoining = window.location.href.split('=')[2];
+          let room = window.location.href.split('?')[1][0] + window.location.href.split('?')[1][1];
+          await socket.emit('joinResumeGame', {
+            room: room,
+            username: userJoining,
+            gameIndex: gameIndex
+          });
+
+        } else { // joining a new game
+          socket.emit('joinGame', {
+            room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
+            username: this.props.loggedInUser,
+            spectator: true
+          });
+          !this.props.playerAssigned && this.props.setUserPlayer('player2');
+          this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
+        }
+
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
       }
