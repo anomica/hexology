@@ -122,16 +122,19 @@ class Board extends React.Component {
             }
             this.props.updateResources(move.playerOneResources, move.playerTwoResources);
             this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
-            clearInterval(interval);
-            this.setState({
-              timer: 0
-            }, () => {
-              interval = setInterval(() => {
-                this.setState({
-                  timer: this.state.timer += 1
-                })
-              }, 1000)
-            })
+            
+            if (this.props.useTimer) {
+              clearInterval(interval);
+              this.setState({
+                timer: 0
+              }, () => {
+                interval = setInterval(() => {
+                  this.setState({
+                    timer: this.state.timer += 1
+                  })
+                }, 1000)
+              })
+            }
           }, 2000);
         } else {
           this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
@@ -147,36 +150,40 @@ class Board extends React.Component {
           }
           this.props.updateResources(move.playerOneResources, move.playerTwoResources);
           this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
-          clearInterval(interval);
-          this.setState({
-            timer: 0
-          }, () => {
-            interval = setInterval(() => {
-              this.setState({
-                timer: this.state.timer += 1
-              })
-            }, 1000)
-          })
+          if (this.props.useTimer) {
+            clearInterval(interval);
+            this.setState({
+              timer: 0
+            }, () => {
+              interval = setInterval(() => {
+                this.setState({
+                  timer: this.state.timer += 1
+                })
+              }, 1000)
+            })
+          }
         }
       });
-
-      // setInterval(async () => {
-      //   if (this.state.timer === 90) {
-      //     if (this.props.userPlayer === this.props.currentPlayer) {
-      //       this.props.warningOpen(true);
-      //       setTimeout(() => this.props.warningOpen(false), 3000);
-      //     }
-      //   } else if (this.state.timer > 120) {
-      //     this.props.forfeitOpen(true);
-      //     setTimeout(() => this.props.forfeitOpen(false), 3000);
-      //     await this.nextTurn();
-      //     await this.setState({
-      //       timer: 0
-      //     })
-      //
-      //   }
-      // }, 1000)
-
+      
+      if (this.props.useTimer) {
+        setInterval(async () => {
+          if (this.state.timer === 90) {
+            if (this.props.userPlayer === this.props.currentPlayer) {
+              this.props.warningOpen(true);
+              setTimeout(() => this.props.warningOpen(false), 3000);
+            }
+          } else if (this.state.timer > 120) {
+            this.props.forfeitOpen(true);
+            setTimeout(() => this.props.forfeitOpen(false), 3000);
+            await this.nextTurn();
+            await this.setState({
+              timer: 0
+            })
+        
+          }
+        }, 1000);
+      }
+      
       socket.on('watchGame', data => {
         this.props.setSpectator(this.props.loggedInUser);
       })
@@ -708,7 +715,8 @@ const mapStateToProps = (state) => {
     spectator: state.state.spectator,
     hexbot: state.state.hexbot,
     hexbotModalOpen: state.state.hexbotModalOpen,
-    icons: state.state.icons
+    icons: state.state.icons,
+    useTimer: state.state.useTimer
   }
 }
 

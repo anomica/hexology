@@ -298,3 +298,10 @@ export const botMove = (origin, originIndex, target, targetIndex) => (
     }
   }
 )
+
+export const callTimer = bool => (
+  {
+    type: 'CALL-TIMER',
+    payload: bool
+  }
+)

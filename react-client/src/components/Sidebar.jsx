@@ -11,7 +11,7 @@ import Signup from './Signup.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
-import { toggleLoginSignup, exitGame, setRoom, login, setHexbot } from '../../src/actions/actions.js';
+import { toggleLoginSignup, exitGame, setRoom, login, setHexbot, callTimer } from '../../src/actions/actions.js';
 import axios from 'axios';
 
 class SidebarLeft extends React.Component {
@@ -119,7 +119,7 @@ class SidebarLeft extends React.Component {
   }
 
   handleChange(e, { name, value }) {
-    this.setState({ [name]: value });
+    name === 'timer' ? this.props.callTimer(true) : this.setState({ [name]: value });
   }
 
   showLoadGames() {
@@ -269,58 +269,65 @@ class SidebarLeft extends React.Component {
           </Sidebar>
 
           <Transition animation={'pulse'} duration={5000} visible={true}>
-            <Modal
-              open={this.state.newGameModalOpen}
-              size={'tiny'}
-              closeIcon
-              onClose={() => this.setState({ newGameModalOpen: false })}>
-              <Modal.Header>New Game</Modal.Header>
-              <Modal.Content>
-                <Modal.Description>
-                  <Form size={'tiny'} key={'small'}>
-                    <Form.Group widths='equal'>
-                      <Form.Select
-                        required
-                        label
-                        placeholder={'Public'}
-                        options={[{key: 'private', text: 'Private', value: 'private'}, {key: 'public', text: 'Public', value: 'public'}]}
-                        name={'gameType'}
-                        onChange={this.handleChange.bind(this)}
-                        label='Game Type'
-                      />
-                      <Form.Select
-                        required
-                        label
-                        placeholder={'No'}
-                        options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
-                        name={'hexbot'}
-                        onChange={this.handleChange.bind(this)}
-                        label='Play Against Hexbot?'
-                      />
-                    <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
-                    </Form.Group>
-                  </Form>
-                </Modal.Description>
-              </Modal.Content>
-              <Divider/>
-              <Modal.Actions>
-                <Button color={'green'} onClick={this.newGame.bind(this)}>Start Game</Button>
-              </Modal.Actions>
-            </Modal>
+          <Modal
+            open={this.state.newGameModalOpen}
+            size={'tiny'}
+            closeIcon
+            onClose={() => this.setState({ newGameModalOpen: false })}>
+            <Modal.Header>New Game</Modal.Header>
+            <Modal.Content>
+              <Modal.Description>
+                <Form size={'tiny'} key={'small'}>
+                    <Form.Select
+                      required
+                      label
+                      placeholder={'Public'}
+                      options={[{key: 'private', text: 'Private', value: 'private'}, {key: 'public', text: 'Public', value: 'public'}]}
+                      name={'gameType'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Game Type'
+                     />
+                    <Form.Select
+                      required
+                      label
+                      placeholder={'No'}
+                      options={[{ key: 'yes', text: 'Yes', value: 'yes' }, { key: 'no', text: 'No', value: 'no' }]}
+                      name={'timer'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Play With Timer?'
+                    />
+                    <Form.Select
+                      required
+                      label
+                      placeholder={'No'}
+                      options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
+                      name={'hexbot'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Play Against Hexbot?'
+                     />
+                   <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
+                </Form>
+              </Modal.Description>
+            </Modal.Content>
+            <Divider/>
+            <Modal.Actions>
+              <Button color={'green'} onClick={this.newGame.bind(this)}>Start Game</Button>
+            </Modal.Actions>
+          </Modal>
           </Transition>
           <Transition animation={'pulse'} duration={5000} visible={true}>
-            <Modal
-              open={this.state.logoutModal}
-              size={'tiny'}
-              style={{textAlign: 'center'}}
-            >
-              <Modal.Header>Logout Successful!</Modal.Header>
-              <Modal.Content>
-                <Modal.Description>
-                  See you again soon!
-                </Modal.Description>
-              </Modal.Content>
-            </Modal>
+          <Modal
+            open={this.state.logoutModal}
+            size={'tiny'}
+            style={{textAlign: 'center'}}
+          >
+            <Modal.Header>Logout Successful!</Modal.Header>
+            <Modal.Content>
+              <Modal.Description>
+                See you again soon!
+              </Modal.Description>
+            </Modal.Content>
+          </Modal>
           </Transition>
 
             {showRules()}
@@ -346,7 +353,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup, login, setHexbot }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup, login, setHexbot, callTimer }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));

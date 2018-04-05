@@ -270,6 +270,11 @@ const reducers = (state = defaultState, action) => {
         ...state,
         playerTwo: action.payload
       }
+    case 'CALL-TIMER':
+      return {
+        ...state,
+        useTimer: action.payload
+      }
     default: return state;
   }
 }
