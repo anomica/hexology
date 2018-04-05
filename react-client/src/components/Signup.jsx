@@ -105,6 +105,10 @@ class Signup extends React.Component {
 
   handleClose() {
     this.props.toggleLoginSignup('signup');
+    this.setState({
+      invalidUsername: false,
+      invalidEmail: false
+    });
   }
 
   render() {
