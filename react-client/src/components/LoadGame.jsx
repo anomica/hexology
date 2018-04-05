@@ -166,7 +166,7 @@ class LoadGame extends React.Component {
                         <Button size='tiny' color='red' style={{marginTop: '2%'}}
                           onClick={ () => {this.show(i, game.game_id)} }
                         >Delete Game</Button>
-                        <Confirm
+                        <Transition animation={'pulse'} duration={5000} visible={true}><Confirm
                           header='Confirm Delete'
                           content="Are you sure you want to delete this game? There's no turning back!"
                           cancelButton='Nevermind'
@@ -176,7 +176,7 @@ class LoadGame extends React.Component {
                           onConfirm={ () => {
                             this.handleConfirm(this.state.gameId);
                           }}
-                        />
+                        /></Transition>
                       </Table.Cell>
                     </Table.Row>
                   )}

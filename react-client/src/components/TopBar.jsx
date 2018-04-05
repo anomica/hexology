@@ -231,11 +231,11 @@ class TopBar extends React.Component {
           </Segment>
         </Segment.Group>
           {this.props.location.state.otherPlayerInfo
-            ? <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({
+            ? <Transition animation={'pulse'} duration={5000} visible={true}><Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({
                 modalOpen: false,
                 email: this.props.location.state.otherPlayerInfo.email
               })}>
-                <Modal.Header>Email to: {this.props.location.state.otherPlayerInfo.username}</Modal.Header>
+                <Modal.Header><Icon name='envelope'/> Email to: {this.props.location.state.otherPlayerInfo.username}</Modal.Header>
                 <Modal.Content>
                   <Modal.Description>
                     <Form size={'large'} key={'small'}>
@@ -254,9 +254,9 @@ class TopBar extends React.Component {
                 <Modal.Actions>
                   <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>
                 </Modal.Actions>
-              </Modal>
-          : <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
-            <Modal.Header>Please write the recipient's email below, along with any message you would like to send.</Modal.Header>
+              </Modal></Transition>
+          : <Transition animation={'pulse'} duration={5000} visible={true}><Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
+            <Modal.Header><Icon name='envelope'/> Please write the recipient's email below, along with any message you would like to send.</Modal.Header>
             <Modal.Content>
               <Modal.Description>
                 <Form size={'large'} key={'small'}>
@@ -283,7 +283,7 @@ class TopBar extends React.Component {
             <Modal.Actions>
               <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
             </Modal.Actions>
-          </Modal>
+          </Modal></Transition>
         }
       </Segment>
     )
