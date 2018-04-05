@@ -61,6 +61,12 @@ export const exitGame = () => (
   }
 )
 
+export const initiateExit = () => (
+  {
+    type: 'INITIATE-EXIT'
+  }
+)
+
 export const setUserPlayer = (player) => (
   {
     type: 'SET-USER-PLAYER',

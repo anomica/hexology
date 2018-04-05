@@ -31,10 +31,10 @@ const RoomsList = props => {
         room.room.player1Email = room.player1Email;
         room.room.player1 = room.player1;
         room.room.player1Rank = room.player1Rank;
+        room.room.spectators = room.spectators
         props.newRoom(room);
       })
       socket.on('deleteRoom', (room) => {
-        console.log('room to be deleted:', room);
         props.deleteRoom(room);
       })
       socket.on('updateRoom', (room) => {
@@ -44,7 +44,7 @@ const RoomsList = props => {
   }
 
   refreshRooms();
-  
+
   return (
 
     <Feed style={{margin: 'auto', textAlign: 'center', width: '55%',  marginTop: 0, paddingTop: '20px'}}>
@@ -62,7 +62,9 @@ const RoomsList = props => {
               <Table.Header>
                 <Table.Row>
                   <Table.HeaderCell colSpan='2' style={{ textAlign: 'center' }}>
-                    {room.player1 && room.player2
+                    {room.gameType === 'private' ?
+                      `Game only joinable by invitation.` :
+                      room.player1 && room.player2
                       ? `Game Full`
                       : (<div><Icon loading name='spinner' /><span>Waiting for another player</span></div>)
                     }
@@ -139,7 +141,7 @@ const RoomsList = props => {
                 </Table.Row>
                 <Table.Row colSpan='2'>
                   <Table.HeaderCell colSpan='2'>
-                    {room.length === 1 ?
+                    {room.length === 1  && room.gameType === 'public' ?
                       <Button fluid onClick={() => joinGame(roomName)} color="green">Join Game</Button> :
                       <Button fluid color="red" onClick={() => joinGame(roomName, 'spectator', props.rooms[roomName].gameIndex)}>Watch Game</Button>
                     }
@@ -148,7 +150,7 @@ const RoomsList = props => {
             </Table.Body>
             </Table>
           )
-        
+
         })
         : <div>No games currently open. Start a new one!</div>}
       </Feed>

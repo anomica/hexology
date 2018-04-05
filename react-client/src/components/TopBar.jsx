@@ -4,7 +4,7 @@ import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
 import { List, Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm, Grid, Transition } from 'semantic-ui-react';
-import { exitGame, setRoom, deleteRoom, resetBoard, setHexbot, callTimer } from '../../src/actions/actions.js';
+import { exitGame, setRoom, deleteRoom, resetBoard, setHexbot, callTimer, initiateExit } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
 import DeployTroops from './DeployTroops.jsx';
 import UserPlayerBank from './UserPlayerBank.jsx';
@@ -76,6 +76,8 @@ class TopBar extends React.Component {
   }
 
   exitGame(exit) {
+    this.props.initiateExit();
+    setTimeout(() => this.props.initiateExit(), 1000);
     if (exit === 'saveOnExit') { // saves the game in the db on exit
       this.props.socket.emit('saveExit', {
         room: this.props.room,
@@ -83,7 +85,7 @@ class TopBar extends React.Component {
         gameSaved: true
       });
       return;
-    } 
+    }
     this.props.socket.emit('saveExit', {
       room: this.props.room,
       gameIndex: this.props.gameIndex,
@@ -128,7 +130,7 @@ class TopBar extends React.Component {
             ? <Modal
               open={this.state.saveOpen}
               trigger={
-                <Button 
+                <Button
                   size='small'
                   style={{marginRight: '5px'}}
                   onClick={this.saveGame}
@@ -159,7 +161,7 @@ class TopBar extends React.Component {
         </div>
         <Header as='h4' style={{ marginTop: '-10px' }}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
 
-        {this.props.boardState ? null :
+        {this.props.boardState || this.props.spectator ? null :
           (this.state.inviteSent ? <Segment>Invite sent to {this.state.email}</Segment> :
             <Segment>Want to play with a friend?
               <Button
@@ -303,7 +305,7 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ exitGame, setRoom, deleteRoom, resetBoard, setHexbot, callTimer }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, deleteRoom, resetBoard, setHexbot, callTimer, initiateExit }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TopBar));

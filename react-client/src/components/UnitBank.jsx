@@ -63,31 +63,28 @@ class UnitBank extends React.Component {
       {
         text: 'Swordsmen',
         value: 'swordsmen',
-        image: { avatar: true, src: 'https://png.icons8.com/metro/50/000000/sword.png' }
+        image: { avatar: true, src: './images/sword.png' }
       },
       {
         text: 'Archers',
         value: 'archers',
-        image: { avatar: false, src: 'https://png.icons8.com/windows/50/000000/archer.png' }
+        image: { avatar: false, src: './images/archer.png' }
       },
       {
         text: 'Knights',
         value: 'knights',
-        image: { avatar: false, src: 'https://png.icons8.com/ios/50/000000/knight-shield-filled.png' }
+        image: { avatar: false, src: './images/knight.png' }
       }
-      
-    ]
 
-    console.log(this.props.room);
-    console.log('this.props.rooms:', this.props.rooms);
+    ]
 
     return (
       <div>
-        {this.props.boardState ? 
+        {this.props.boardState ?
           <List>
             <List.Header>{this.props.userPlayer === 'player1' ? `Player 2's Bank:` : `Player 1's Bank':`}</List.Header>
             <List.Item>
-              <Image src="https://cdn2.iconfinder.com/data/icons/finance_icons/PNG/png64/gold_bullion.png" />
+              <Image src="./images/gold-bar.svg" />
               <List.Content>
                 <List.Header>
                   {this.props.userPlayer === 'player1' ? this.props.playerTwoResources.gold + ' gold' : this.props.playerOneResources.gold + ' gold'}
@@ -95,7 +92,7 @@ class UnitBank extends React.Component {
               </List.Content>
             </List.Item>
             <List.Item>
-              <Image src="https://cdn4.iconfinder.com/data/icons/free-game-icons/64/Tree.png" />
+              <Image src="./images/wood-pile.svg" />
               <List.Content>
                 <List.Header>
                   {this.props.userPlayer === 'player1' ? this.props.playerTwoResources.wood + ' wood' : this.props.playerOneResources.wood + ' wood'}
@@ -103,7 +100,7 @@ class UnitBank extends React.Component {
               </List.Content>
             </List.Item>
             <List.Item>
-              <Image src="https://cdn1.iconfinder.com/data/icons/CrystalClear/64x64/apps/Service-Manager.png" />
+              <Image src="./images/metal-bar.svg" />
               <List.Content>
                 <List.Header>
                   {this.props.userPlayer === 'player1' ? this.props.playerTwoResources.metal + ' metal' : this.props.playerOneResources.metal + ' metal'}
@@ -111,7 +108,7 @@ class UnitBank extends React.Component {
               </List.Content>
             </List.Item>
             <List.Item>
-              <Image src="https://png.icons8.com/metro/50/000000/sword.png" />
+              <Image src="./images/sword.png" />
               <List.Content>
                 <List.Header>
                   {this.props.userPlayer === 'player1' ? this.props.playerTwoUnitBank.swordsmen + ' swordsmen' : this.props.playerOneUnitBank.swordsmen + ' swordsmen'}
@@ -119,7 +116,7 @@ class UnitBank extends React.Component {
               </List.Content>
             </List.Item>
             <List.Item>
-              <Image src="https://png.icons8.com/windows/50/000000/archer.png" />
+              <Image src="./images/archer.png" />
               <List.Content>
                 <List.Header>
                   {this.props.userPlayer === 'player1' ? this.props.playerTwoUnitBank.archers + ' archers' : this.props.playerOneUnitBank.archers + ' archers'}
@@ -127,7 +124,7 @@ class UnitBank extends React.Component {
               </List.Content>
             </List.Item>
             <List.Item>
-              <Image src="https://png.icons8.com/ios/50/000000/knight-shield-filled.png" />
+              <Image src="./images/knight.png" />
               <List.Content>
                 <List.Header>
                   {this.props.userPlayer === 'player1' ? this.props.playerTwoUnitBank.knights + ' knights' : this.props.playerOneUnitBank.knights + ' knights'}
@@ -141,7 +138,7 @@ class UnitBank extends React.Component {
           </Modal.Header>
           <Modal.Content>
             <Dropdown placeholder='Select Unit' fluid selection options={dropDown} />
-          </Modal.Content>  
+          </Modal.Content>
           <Modal.Content style={styles.modal}>
             <Input placeholder='quantity' onChange={(e) => {this.setState({quantity: Number(e.target.value)})}} />
           </Modal.Content>

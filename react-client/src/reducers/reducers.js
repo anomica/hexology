@@ -34,7 +34,6 @@ const reducers = (state = defaultState, action) => {
         room: action.payload
       }
     case 'DELETE-ROOM':
-    console.log('action.payload:', action.payload);
       let newRooms = Object.create(state.rooms);
       delete newRooms[action.payload]
       return {
@@ -58,6 +57,11 @@ const reducers = (state = defaultState, action) => {
         ...state,
         room: null,
         socket: null,
+      }
+    case 'INITIATE-EXIT':
+      return {
+        ...state,
+        initiatedExit: !state.initiatedExit
       }
     case 'SET-SPECTATOR':
       return {

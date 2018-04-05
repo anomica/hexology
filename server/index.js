@@ -306,7 +306,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   socket.on('saveGame', async (request) => {
     // console.log('socket on save game:', request)
     await db.forceEndGame(request.gameIndex, 'saveOnly');
-    await io.to(request.room).emit('saveGame', {gameSaved: true}); 
+    await io.to(request.room).emit('saveGame', {gameSaved: true});
   });
 
   socket.on('challenge', async (request) => {
@@ -370,6 +370,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let newRoom = `*${roomNum}`;
     room = newRoom;
     let gameType = request.gameType;
+    let spectators = (request.spectators === 'yes' ? true : false);
     await socket.join(newRoom); // create a new room
     io.sockets.adapter.rooms[newRoom].type = gameType;
     io.sockets.adapter.rooms[newRoom].player1 = request.username;
@@ -377,6 +378,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.sockets.adapter.rooms[newRoom].player1Losses = user[0].losses;
     io.sockets.adapter.rooms[newRoom].player1Email = user[0].email;
     io.sockets.adapter.rooms[newRoom].player1Rank = 1 + userRank;
+    io.sockets.adapter.rooms[newRoom].gameType = gameType;
 
     await io.to(newRoom).emit('newGame', {
       room: newRoom,
@@ -385,15 +387,15 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       player1Email: user[0].email,
       player1Rank: 1 + userRank
     }); // and send back a string to initialize for player 1
-
-    gameType === 'public' && await socket.broadcast.emit('newRoom', {
+    spectators && await socket.broadcast.emit('newRoom', {
       roomName: room,
       room: io.sockets.adapter.rooms[newRoom],
       player1: request.username,
       player1Wins: user[0].wins,
       player1Losses: user[0].losses,
       player1Email: user[0].email,
-      player1Rank: 1 + userRank
+      player1Rank: 1 + userRank,
+      gameType: gameType
      });
 
     roomNum++; // increment room count to assign new room
@@ -502,8 +504,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   socket.on('watchGame', data => {
     socket.join(data.room);
     const game = games[data.gameIndex];
-    game.user = data.username;
-    io.to(socket.id).emit('gameCreated', games[data.gameIndex]);
+    if (game) {
+      game.user = data.username;
+      io.to(socket.id).emit('gameCreated', games[data.gameIndex]);
+    }
   })
 
   socket.on('setLoggedInUser', data => {
@@ -600,7 +604,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
     } else if (data.gameIndex) { // otherwise, the game wasn't saved
       await db.forceEndGame(data.gameIndex); // game gets deleted from db
-    } 
+    }
     io.to(data.room).emit('exitGame');
   })
 
