@@ -51,37 +51,39 @@ class Login extends React.Component {
 
   render() {
     return (
-      <Modal open={this.props.showLogin} closeIcon onClose={this.handleClose.bind(this)}>
-        <Modal.Header>Login</Modal.Header>
-        <Modal.Content>
-          <Modal.Description>
-          <Form>
-            <Form.Input
-              label='Username'
-              type='text'
-              onChange={(e) => this.handleChange(e, 'username')}
-            />
-            <Form.Input
-              label='Password'
-              type='password'
-              onChange={(e) => this.handleChange(e, 'password')}
-            />
-          <Transition name={'jiggle'} duration={500} display={this.state.error}>
-            <Button
-              style={{
-                backgroundColor: this.state.error ? 'red' : 'green',
-                color: 'white',
-                float: 'right',
-                marginBottom: '10px'
-              }}
-              onClick={this.handleSubmit.bind(this)}
-              type='submit'
-            >{this.state.buttonMessage}</Button>
-          </Transition>
-          </Form>
-          </Modal.Description>
-        </Modal.Content>
-      </Modal>
+      <Transition animation={'pulse'} duration={5000} visible={true}>
+        <Modal open={this.props.showLogin} closeIcon onClose={this.handleClose.bind(this)}>
+          <Modal.Header>Login</Modal.Header>
+          <Modal.Content>
+            <Modal.Description>
+            <Form>
+              <Form.Input
+                label='Username'
+                type='text'
+                onChange={(e) => this.handleChange(e, 'username')}
+              />
+              <Form.Input
+                label='Password'
+                type='password'
+                onChange={(e) => this.handleChange(e, 'password')}
+              />
+            <Transition name={'jiggle'} duration={500} display={this.state.error}>
+              <Button
+                style={{
+                  backgroundColor: this.state.error ? 'red' : 'green',
+                  color: 'white',
+                  float: 'right',
+                  marginBottom: '10px'
+                }}
+                onClick={this.handleSubmit.bind(this)}
+                type='submit'
+              >{this.state.buttonMessage}</Button>
+            </Transition>
+            </Form>
+            </Modal.Description>
+          </Modal.Content>
+        </Modal>
+      </Transition>
     )
   }
 }

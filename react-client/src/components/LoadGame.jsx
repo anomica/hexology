@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Button, Modal, Table, Confirm } from 'semantic-ui-react';
+import { Button, Modal, Table, Confirm, Transition } from 'semantic-ui-react';
 import { withRouter } from 'react-router';
 import { setRoom } from '../../src/actions/actions.js';
 
@@ -90,21 +90,22 @@ class LoadGame extends React.Component {
 
   render() {
     return (
+      <Transition animation={'pulse'} duration={5000} visible={true}>
       <Modal
         open={this.props.open}
         onClose={this.props.close}
         closeIcon
       >
         <Modal.Header>My Current Games</Modal.Header>
-        <Modal.Content image scrolling>
+        <Modal.Content scrolling>
           <Modal.Description>
           { (this.state.games.length > 0)
             ? <Table celled striped selectable color='green' key='green'>
                 <Table.Header>
                   <Table.Row>
                     <Table.HeaderCell rowSpan='2' style={{textAlign: 'center'}}>Game</Table.HeaderCell>
-                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player One</Table.HeaderCell>
-                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player Two</Table.HeaderCell>
+                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player 1</Table.HeaderCell>
+                    <Table.HeaderCell colSpan='2' style={{textAlign: 'center'}}>Player 2</Table.HeaderCell>
                     <Table.HeaderCell rowSpan='2' style={{textAlign: 'center'}}>Current Turn</Table.HeaderCell>
                     <Table.HeaderCell rowSpan='2'/>
                   </Table.Row>
@@ -132,7 +133,6 @@ class LoadGame extends React.Component {
                               <div><strong>Player 2: {game.player2_username}</strong></div>
                             </div>
                         }
-                        Room ID: {game.room_id}
                       </Table.Cell>
                       <Table.Cell>
                         Gold: {game.p1_gold}
@@ -166,7 +166,7 @@ class LoadGame extends React.Component {
                         <Button size='tiny' color='red' style={{marginTop: '2%'}}
                           onClick={ () => {this.show(i, game.game_id)} }
                         >Delete Game</Button>
-                        <Confirm
+                        <Transition animation={'pulse'} duration={5000} visible={true}><Confirm
                           header='Confirm Delete'
                           content="Are you sure you want to delete this game? There's no turning back!"
                           cancelButton='Nevermind'
@@ -176,7 +176,7 @@ class LoadGame extends React.Component {
                           onConfirm={ () => {
                             this.handleConfirm(this.state.gameId);
                           }}
-                        />
+                        /></Transition>
                       </Table.Cell>
                     </Table.Row>
                   )}
@@ -187,6 +187,7 @@ class LoadGame extends React.Component {
           </Modal.Description>
         </Modal.Content>
       </Modal>
+      </Transition>
     )
   }
 }

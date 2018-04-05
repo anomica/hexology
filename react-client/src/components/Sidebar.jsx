@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal, Transition } from 'semantic-ui-react';
+import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal, Transition, Statistic } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
@@ -30,6 +30,7 @@ class SidebarLeft extends React.Component {
       loadGameModal: false,
       userWins: null,
       userLosses: null,
+      userRank: null,
       disabled: window.location.href.indexOf('game') === -1 ? false : true,
       hexbot: false
     }
@@ -51,7 +52,8 @@ class SidebarLeft extends React.Component {
       // console.log('data yo: ',data)
       this.setState({
         userWins: data.user.wins,
-        userLosses: data.user.losses
+        userLosses: data.user.losses,
+        userRank: data.user.rank
       });
     })
   }
@@ -123,11 +125,13 @@ class SidebarLeft extends React.Component {
   showLoadGames() {
     if (this.state.loadGameModal) {
       return (
-        <LoadGame
-          open={this.state.loadGameModal}
-          close={this.toggleLoadGames}
-          username={this.props.loggedInUser}
-        />
+        <Transition animation={'pulse'} duration={5000} visible={true}>
+          <LoadGame
+            open={this.state.loadGameModal}
+            close={this.toggleLoadGames}
+            username={this.props.loggedInUser}
+          />
+        </Transition>
       )
     }
   }
@@ -136,7 +140,7 @@ class SidebarLeft extends React.Component {
     const showRules = () => { // Shows rules modal if rules menu item is clicked
       if (this.state.rules) {
         return (
-          <Rules open={this.state.rules} close={this.toggleRules} />
+            <Rules open={this.state.rules} close={this.toggleRules} />
         )
       }
     }
@@ -205,11 +209,21 @@ class SidebarLeft extends React.Component {
                   <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
                     <Modal.Header><Icon name='user' /> {this.props.loggedInUser}</Modal.Header>
                     <Modal.Content>
-                      <Modal.Description style={{fontSize: '14pt'}}>
-                        <strong>Wins:</strong> {this.state.userWins}
-                        <br/>
-                        <strong>Losses:</strong> {this.state.userLosses}
-                        <p/>
+                      <Modal.Description style={{fontSize: '14pt', textAlign: 'center', margin: 'auto'}}>
+                        <Statistic.Group widths='three' style={{marginRight: '15%', marginLeft: '15%'}}>
+                          <Statistic>
+                            <Statistic.Value>{this.state.userWins}</Statistic.Value>
+                            <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
+                          </Statistic>
+                          <Statistic>
+                            <Statistic.Value># {this.state.userRank}</Statistic.Value>
+                            <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
+                          </Statistic>
+                          <Statistic>
+                            <Statistic.Value>{this.state.userLosses}</Statistic.Value>
+                            <Statistic.Label><Icon name='tint' />Losses</Statistic.Label>
+                          </Statistic>
+                        </Statistic.Group>
                       </Modal.Description>
                     </Modal.Content>
                   </Modal>
@@ -254,6 +268,7 @@ class SidebarLeft extends React.Component {
             </Menu.Item>
           </Sidebar>
 
+          <Transition animation={'pulse'} duration={5000} visible={true}>
           <Modal
             open={this.state.newGameModalOpen}
             size={'tiny'}
@@ -299,6 +314,8 @@ class SidebarLeft extends React.Component {
               <Button color={'green'} onClick={this.newGame.bind(this)}>Start Game</Button>
             </Modal.Actions>
           </Modal>
+          </Transition>
+          <Transition animation={'pulse'} duration={5000} visible={true}>
           <Modal
             open={this.state.logoutModal}
             size={'tiny'}
@@ -311,6 +328,7 @@ class SidebarLeft extends React.Component {
               </Modal.Description>
             </Modal.Content>
           </Modal>
+          </Transition>
 
             {showRules()}
             {this.showLoadGames()}
