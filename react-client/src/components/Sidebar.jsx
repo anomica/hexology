@@ -32,7 +32,8 @@ class SidebarLeft extends React.Component {
       userLosses: null,
       userRank: null,
       disabled: window.location.href.indexOf('game') === -1 ? false : true,
-      hexbot: false
+      hexbot: 'no',
+      spectators: 'yes'
     }
 
     this.toggleMenu = this.toggleMenu.bind(this);
@@ -74,17 +75,19 @@ class SidebarLeft extends React.Component {
     (async () => {
       let username = await this.props.loggedInUser;
       if (username) {
-        if (this.state.hexbot) {
+        if (this.state.hexbot === 'yes') {
           this.props.setHexbot(true);
           this.props.socket.emit('botGame', {
             username: this.props.setLoggedInUser || 'anonymous',
-            type: 'private'
+            type: 'private',
+            spectators: this.state.spectators
           })
         } else {
           this.props.socket.emit('newGame', {
             gameType: this.state.gameType,
             username: this.props.loggedInUser,
-            socketId: this.props.socket.id
+            socketId: this.props.socket.id,
+            spectators: this.state.spectators
           });
         }
         this.props.socket.on('newGame', data => {
@@ -106,7 +109,6 @@ class SidebarLeft extends React.Component {
   }
 
   logout() {
-    console.log('this.props.gameIndex:', this.props.gameIndex);
     axios.post('/logout', {
       gameIndex: this.props.gameIndex,
       room: this.props.room
@@ -285,8 +287,8 @@ class SidebarLeft extends React.Component {
                     <Form.Select
                       required
                       label
-                      placeholder={'Public'}
-                      options={[{key: 'private', text: 'Private', value: 'private'}, {key: 'public', text: 'Public', value: 'public'}]}
+                      defaultValue={'public'}
+                      options={[{key: 'public', text: 'Public', value: 'public'}, {key: 'private', text: 'Private (not joinable except by invite)', value: 'private'}]}
                       name={'gameType'}
                       onChange={this.handleChange.bind(this)}
                       label='Game Type'
@@ -294,8 +296,17 @@ class SidebarLeft extends React.Component {
                     <Form.Select
                       required
                       label
-                      placeholder={'No'}
-                      options={[{ key: 'yes', text: 'Yes', value: 'yes' }, { key: 'no', text: 'No', value: 'no' }]}
+                      defaultValue={'yes'}
+                      options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
+                      name={'spectators'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Allow Spectators'
+                     />
+                    <Form.Select
+                      required
+                      label
+                      defaultValue={'no'}
+                      options={[{ key: 'no', text: 'No', value: 'no' }, { key: 'yes', text: 'Yes', value: 'yes' }]}
                       name={'timer'}
                       onChange={this.handleChange.bind(this)}
                       label='Play With Timer?'
@@ -303,13 +314,13 @@ class SidebarLeft extends React.Component {
                     <Form.Select
                       required
                       label
-                      placeholder={'No'}
-                      options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
+                      defaultValue={'no'}
+                      options={[{key: 'no', text: 'No', value: 'no'}, {key: 'yes', text: 'Yes', value: 'yes'}]}
                       name={'hexbot'}
                       onChange={this.handleChange.bind(this)}
                       label='Play Against Hexbot?'
                      />
-                   <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
+                   <Image src='./images/hexbot.jpg'/>
                 </Form>
               </Modal.Description>
             </Modal.Content>

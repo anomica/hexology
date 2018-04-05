@@ -33,7 +33,8 @@ const DefaultState = {
   hexbot: false,
   warningModalOpen: false,
   forfeitModalOpen: false,
-  icons: false
+  icons: false,
+  initiatedExit: false
 }
 
 export default DefaultState;

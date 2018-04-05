@@ -21,9 +21,9 @@ class DeployTroops extends React.Component {
     })
   }
 
-  setValue(e, data) { 
-    this.setState({ 
-      unit: data.value 
+  setValue(e, data) {
+    this.setState({
+      unit: data.value
     });
   }
 
@@ -54,11 +54,11 @@ class DeployTroops extends React.Component {
         room: this.props.room
       })
       this.handleClose();
-    } else { 
+    } else {
       this.setState({
         showWarning: true
       })
-    } 
+    }
   }
 
   render() {
@@ -66,17 +66,17 @@ class DeployTroops extends React.Component {
       {
         text: 'Swordsmen',
         value: 'swordsmen',
-        image: { avatar: true, src: 'https://png.icons8.com/metro/50/000000/sword.png' }
+        image: { avatar: true, src: './images/sword.png' }
       },
       {
         text: 'Archers',
         value: 'archers',
-        image: { avatar: false, src: 'https://png.icons8.com/windows/50/000000/archer.png' }
+        image: { avatar: false, src: './images/archer.png' }
       },
       {
         text: 'Knights',
         value: 'knights',
-        image: { avatar: false, src: 'https://png.icons8.com/ios/50/000000/knight-shield-filled.png' }
+        image: { avatar: false, src: './images/knight.png' }
       }
     ];
 
@@ -88,8 +88,8 @@ class DeployTroops extends React.Component {
             Choose unit type and quantity
             </Modal.Header>
           <Modal.Content>
-            <Dropdown 
-              placeholder='Select Unit' 
+            <Dropdown
+              placeholder='Select Unit'
               options={dropDown}
               onChange={this.setValue.bind(this)}
               selection
@@ -98,7 +98,7 @@ class DeployTroops extends React.Component {
           <Modal.Content>
             <Input placeholder='quantity' onChange={(e) => { this.setState({ quantity: Number(e.target.value), showWarning: false }) }} />
           </Modal.Content>
-          {this.state.showWarning ? 
+          {this.state.showWarning ?
             <Modal.Content>Please enter a valid quantity</Modal.Content> :
             <Modal.Content></Modal.Content>
           }

@@ -4,9 +4,9 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, Radio } from 'semantic-ui-react';
-import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, 
-         menuToggle, setUserPlayer, selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex, 
-         updateResources, swordsmen, iconsToggle, archers, knights, updateUnitCounts, switchPlayer, drawBoard, 
+import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket,
+         menuToggle, setUserPlayer, selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex,
+         updateResources, swordsmen, iconsToggle, archers, knights, updateUnitCounts, switchPlayer, drawBoard,
          setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove, exitGame, deleteRoom, setHexbot, callTimer } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
@@ -139,7 +139,7 @@ class Board extends React.Component {
             }
             this.props.updateResources(move.playerOneResources, move.playerTwoResources);
             this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
-            
+
             if (this.props.useTimer) {
               clearInterval(interval);
               this.setState({
@@ -181,7 +181,7 @@ class Board extends React.Component {
           }
         }
       });
-      
+
       if (this.props.useTimer) {
         setInterval(async () => {
           if (this.state.timer === 90) {
@@ -196,11 +196,11 @@ class Board extends React.Component {
             await this.setState({
               timer: 0
             })
-        
+
           }
         }, 1000);
       }
-      
+
       socket.on('watchGame', data => {
         this.props.setSpectator(this.props.loggedInUser);
       })
@@ -299,7 +299,6 @@ class Board extends React.Component {
         }, 2500);
       });
       socket.on('exitGame', () => {
-        console.log('in exit game');
         this.props.socket.emit('leaveRoom', {
           room: this.props.room
         });
@@ -693,7 +692,7 @@ class Board extends React.Component {
         </Transition>
         <Transition animation={'fade up'} duration={'3500'} visible={this.state.disconnectModalOpen}>
           <Modal open={this.state.disconnectModalOpen} size={'small'} style={{ textAlign: 'center' }}>
-            <Modal.Header>Your opponent has left the room.</Modal.Header>
+            <Modal.Header>{this.props.spectator ? 'The game was ended by the host.' : this.props.initiatedExit ? 'You ended the game.' : 'Your opponent has left the room.'}</Modal.Header>
             <Modal.Content>
               You are being rerouted to the lobby.
             </Modal.Content>
@@ -744,7 +743,8 @@ const mapStateToProps = (state) => {
     hexbot: state.state.hexbot,
     hexbotModalOpen: state.state.hexbotModalOpen,
     icons: state.state.icons,
-    useTimer: state.state.useTimer
+    useTimer: state.state.useTimer,
+    initiatedExit: state.state.initiatedExit
   }
 }
 
