@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal } from 'semantic-ui-react';
+import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal, Transition } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
@@ -11,7 +11,7 @@ import Signup from './Signup.jsx';
 import UnitShop from './UnitShop.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
-import { toggleLoginSignup, exitGame, setRoom, login, setHexbot } from '../../src/actions/actions.js';
+import { toggleLoginSignup, exitGame, setRoom, login, setHexbot, callTimer } from '../../src/actions/actions.js';
 import axios from 'axios';
 
 class SidebarLeft extends React.Component {
@@ -118,7 +118,7 @@ class SidebarLeft extends React.Component {
   }
 
   handleChange(e, { name, value }) {
-    this.setState({ [name]: value });
+    name === 'timer' ? this.props.callTimer(true) : this.setState({ [name]: value });
   }
 
   showLoadGames() {
@@ -202,19 +202,19 @@ class SidebarLeft extends React.Component {
                 this.setState({ profile: !this.state.profile })}}>
                 <Icon name='hand victory'/>
                 Welcome, {this.props.loggedInUser}!
-                <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
-                  <Modal.Header>Profile: {this.props.loggedInUser}</Modal.Header>
-                  <Modal.Content>
-                    <Modal.Description>
-                      Rank: TBD
-                      <br/>
-                      Wins: {this.state.userWins}
-                      <br/>
-                      Losses: {this.state.userLosses}
-                      <p/>
-                    </Modal.Description>
-                  </Modal.Content>
-                </Modal>
+                <Transition animation={'pulse'} duration={5000} visible={true}>
+                  <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
+                    <Modal.Header><Icon name='user' /> {this.props.loggedInUser}</Modal.Header>
+                    <Modal.Content>
+                      <Modal.Description style={{fontSize: '14pt'}}>
+                        <strong>Wins:</strong> {this.state.userWins}
+                        <br/>
+                        <strong>Losses:</strong> {this.state.userLosses}
+                        <p/>
+                      </Modal.Description>
+                    </Modal.Content>
+                  </Modal>
+                </Transition>
               </Menu.Item>
             }
 
@@ -264,7 +264,6 @@ class SidebarLeft extends React.Component {
             <Modal.Content>
               <Modal.Description>
                 <Form size={'tiny'} key={'small'}>
-                  <Form.Group widths='equal'>
                     <Form.Select
                       required
                       label
@@ -278,13 +277,21 @@ class SidebarLeft extends React.Component {
                       required
                       label
                       placeholder={'No'}
+                      options={[{ key: 'yes', text: 'Yes', value: 'yes' }, { key: 'no', text: 'No', value: 'no' }]}
+                      name={'timer'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Play With Timer?'
+                    />
+                    <Form.Select
+                      required
+                      label
+                      placeholder={'No'}
                       options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
                       name={'hexbot'}
                       onChange={this.handleChange.bind(this)}
                       label='Play Against Hexbot?'
                      />
                    <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
-                  </Form.Group>
                 </Form>
               </Modal.Description>
             </Modal.Content>
@@ -329,7 +336,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup, login, setHexbot }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, toggleLoginSignup, login, setHexbot, callTimer }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SidebarLeft));

@@ -47,6 +47,11 @@ const reducers = (state = defaultState, action) => {
         ...state,
         menuVisible: !state.menuVisible
       }
+    case 'ICONS-TOGGLE':
+      return {
+        ...state,
+        icons: !state.icons
+      }
     case 'EXIT-GAME':
       return {
         ...state,
@@ -264,6 +269,11 @@ const reducers = (state = defaultState, action) => {
       return {
         ...state,
         playerTwo: action.payload
+      }
+    case 'CALL-TIMER':
+      return {
+        ...state,
+        useTimer: action.payload
       }
     default: return state;
   }

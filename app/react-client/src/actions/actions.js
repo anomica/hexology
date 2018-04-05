@@ -49,6 +49,12 @@ export const menuToggle = () => (
   }
 )
 
+export const iconsToggle = () => (
+  {
+    type: 'ICONS-TOGGLE'
+  }
+)
+
 export const exitGame = () => (
   {
     type: 'EXIT-GAME'
@@ -290,5 +296,12 @@ export const botMove = (origin, originIndex, target, targetIndex) => (
       target: target,
       targetIndex: targetIndex
     }
+  }
+)
+
+export const callTimer = bool => (
+  {
+    type: 'CALL-TIMER',
+    payload: bool
   }
 )

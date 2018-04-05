@@ -3,9 +3,9 @@ import { connect } from 'react-redux';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
-         Icon, Form, Checkbox, Divider, Label, Grid, } from 'semantic-ui-react';
+         Icon, Form, Checkbox, Divider, Label, Grid, Radio } from 'semantic-ui-react';
 import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
-         highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen,
+         highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen, iconsToggle,
          archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
@@ -14,7 +14,7 @@ import SidebarLeft from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 import DefaultState from '../store/DefaultState.js';
 import UnitShop from './UnitShop.jsx';
-import UnitBank from './UnitBank.jsx';
+import OpponentBank from './OpponentBank.jsx';
 import ChatWindow from './ChatWindow.jsx';
 import hexbot from '../hexbot/hexbot.js';
 import TimeoutModals from './TimeoutModals.jsx';
@@ -27,10 +27,10 @@ class Board extends React.Component {
 
     this.state = {
       hex: null,
-      modalOpen: false,
+      moveModalOpen: false,
       combatModalOpen: false,
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
+      combatIcon: './images/battle.jpg',
       confirmOpen: false,
       disconnectModalOpen: false,
       tempSwordsmen: 0,
@@ -39,6 +39,9 @@ class Board extends React.Component {
       timer:0,
       turnsForfeited: 0,
       hexbotModalOpen: false,
+      genericModalOpen: false,
+      genericModalHeader: 'test',
+      genericModalFalse: 'test',
     }
   }
 
@@ -110,7 +113,7 @@ class Board extends React.Component {
             if (move.tie) {
               setTimeout(() => this.setState({
                 combatMessage: 'Combat ends in a bitter draw.',
-                combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
+                combatIcon: './images/white-flag.jpg'
               }), 2500);
               setTimeout(() => this.resetCombatModal(), 5001);
             }
@@ -119,6 +122,35 @@ class Board extends React.Component {
             }
             this.props.updateResources(move.playerOneResources, move.playerTwoResources);
             this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
+            
+            if (this.props.useTimer) {
+              clearInterval(interval);
+              this.setState({
+                timer: 0
+              }, () => {
+                interval = setInterval(() => {
+                  this.setState({
+                    timer: this.state.timer += 1
+                  })
+                }, 1000)
+              })
+            }
+          }, 2000);
+        } else {
+          this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
+          if (move.tie) {
+            setTimeout(() => this.setState({
+              combatMessage: 'Combat ends in a bitter draw.',
+              combatIcon: './images/white-flag.jpg'
+            }), 2500);
+            setTimeout(() => this.resetCombatModal(), 5001);
+          }
+          if (move.updatedUnitCounts) {
+            this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
+          }
+          this.props.updateResources(move.playerOneResources, move.playerTwoResources);
+          this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
+          if (this.props.useTimer) {
             clearInterval(interval);
             this.setState({
               timer: 0
@@ -129,51 +161,29 @@ class Board extends React.Component {
                 })
               }, 1000)
             })
-          }, 2000);
-        } else {
-          this.props.moveUnits(move.updatedOrigin, move.originIndex, move.updatedTarget, move.targetIndex); // it passes to move function
-          if (move.tie) {
-            setTimeout(() => this.setState({
-              combatMessage: 'Combat ends in a bitter draw.',
-              combatIcon: 'http://redironbrand.com/359-thickbox_default/-golf-pin-flag.jpg'
-            }), 2500);
-            setTimeout(() => this.resetCombatModal(), 5001);
           }
-          if (move.updatedUnitCounts) {
-            this.props.updateUnitCounts(move.updatedUnitCounts.playerOneTotalUnits, move.updatedUnitCounts.playerOneTotalUnits);
-          }
-          this.props.updateResources(move.playerOneResources, move.playerTwoResources);
-          this.nextTurn(); // then flips turn to next turn, which also triggers reinforce/supply
-          clearInterval(interval);
-          this.setState({
-            timer: 0
-          }, () => {
-            interval = setInterval(() => {
-              this.setState({
-                timer: this.state.timer += 1
-              })
-            }, 1000)
-          })
         }
       });
-
-      // setInterval(async () => {
-      //   if (this.state.timer === 90) {
-      //     if (this.props.userPlayer === this.props.currentPlayer) {
-      //       this.props.warningOpen(true);
-      //       setTimeout(() => this.props.warningOpen(false), 3000);
-      //     }
-      //   } else if (this.state.timer > 120) {
-      //     this.props.forfeitOpen(true);
-      //     setTimeout(() => this.props.forfeitOpen(false), 3000);
-      //     await this.nextTurn();
-      //     await this.setState({
-      //       timer: 0
-      //     })
-      //
-      //   }
-      // }, 1000)
-
+      
+      if (this.props.useTimer) {
+        setInterval(async () => {
+          if (this.state.timer === 90) {
+            if (this.props.userPlayer === this.props.currentPlayer) {
+              this.props.warningOpen(true);
+              setTimeout(() => this.props.warningOpen(false), 3000);
+            }
+          } else if (this.state.timer > 120) {
+            this.props.forfeitOpen(true);
+            setTimeout(() => this.props.forfeitOpen(false), 3000);
+            await this.nextTurn();
+            await this.setState({
+              timer: 0
+            })
+        
+          }
+        }, 1000);
+      }
+      
       socket.on('watchGame', data => {
         this.props.setSpectator(this.props.loggedInUser);
       })
@@ -213,7 +223,7 @@ class Board extends React.Component {
           combatMessage = 'You are victorious!';
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
-          combatIcon: 'https://royalarmouries.files.wordpress.com/2015/10/di-2015-3939.jpg'
+          combatIcon: './images/victory.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
@@ -224,7 +234,7 @@ class Board extends React.Component {
           combatMessage = 'Your armies have been bested.';
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
-          combatIcon: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Black_Knight_Holy_Grail.png'
+          combatIcon: './images/loss.png'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), this.props.hexbot && this.props.currentPlayer === 'player2' ? 7001 : 5001);
       })
@@ -244,7 +254,7 @@ class Board extends React.Component {
           combatMessage = 'Congratulations! You have won the battle, and the day!';
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
-          combatIcon: 'https://i.pinimg.com/originals/4c/a1/d5/4ca1d5daf9d24d341fe3f9d346bb98ba.jpg'
+          combatIcon: './images/game-victory.jpg'
         }), 2500);
         setTimeout(() => this.resetCombatModal(), 5001);
       });
@@ -255,13 +265,21 @@ class Board extends React.Component {
           combatMessage = 'Your armies have been bested, and your enemy is victorious. Better luck next time.';
         setTimeout(() => this.setState({
           combatMessage: combatMessage,
-          combatIcon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Skull_and_crossbones.svg/2000px-Skull_and_crossbones.svg.png'
+          combatIcon: './images/game-loss.png'
         }), this.props.hexbot && this.props.currentPlayer === 'player2' ? 4500 : 2500);
         setTimeout(() => this.resetCombatModal(), this.props.hexbot && this.props.currentPlayer === 'player2' ? 7001 : 5001);
       });
 
       socket.on('failure', () => { // should only happen if the server finds that its board state does not match what the client sends w/ request
-        alert('aaaaaaaaaaaaaaaaaaaaah cheating detected aaaaaaaaaaaaaaaah')
+        this.setState({
+          genericModalOpen: true,
+          genericModalHeader: 'Cheating Detected',
+          genericModalMessage: 'You are being redirected to the home page. Please don\'t cheat, it makes Hexbot sad :('
+        })
+        setTimeout(() => {
+          this.props.history.push('/');
+          this.props.resetBoard();
+        }, 2500);
       });
       socket.on('disconnect', () => {
         clearInterval(interval);
@@ -284,12 +302,19 @@ class Board extends React.Component {
   resetCombatModal() {
     this.setState({
       combatMessage: 'May the strongest prevail!',
-      combatIcon: 'http://powerpictures.crystalgraphics.com/photo/crossed_swords_isolated_on_white_duel_symbol_cg2p03692744c_th.jpg',
-    })
+      combatIcon: './images/battle.jpg',
+    });
   }
 
-  closeModal() {
-    this.setState({ modalOpen: false });
+  resetGenericModal() {
+    this.setState({
+      genericModalHeader: '',
+      genericModalMessage: '',
+    });
+  }
+
+  closeMoveModal() {
+    this.setState({ moveModalOpen: false });
   }
 
   skipCombatAnmiation() {
@@ -308,12 +333,16 @@ class Board extends React.Component {
     let hex = this.props.selectedHex;
     if (hex.swordsmen < this.state.tempSwordsmen || hex.archers < this.state.tempArchers || hex.knights < this.state.tempKnights) {
       resetState();
-      alert('you cannot enter a number higher of units than you currently have');
+      this.setState({
+        genericModalOpen: true,
+        genericModalHeader: 'Invalid Number',
+        genericModalMessage: 'Please select a number of units less than or equal to the number units on the hex.'
+      })
       return false;
     } else {
       this.handleMoveClick(this.state.hex);
       this.setState({
-        modalOpen: false
+        moveModalOpen: false
       })
     }
   }
@@ -383,7 +412,11 @@ class Board extends React.Component {
 
       this.sendMoveRequest(updatedOrigin, originIndex, updatedTarget, targetIndex); // send information to be sent over socket
     } else { //  if selected hex is not a neighbor,
-      alert('Please select a valid move.') // alert player they can't move there
+      this.setState({
+        genericModalOpen: true,
+        genericModalHeader: 'Invalid Move',
+        genericModalMessage: 'Please select a hex contiguous with one of the hexes you control.'
+      }) // alert player they can't move there
     }
   }
 
@@ -436,8 +469,18 @@ class Board extends React.Component {
   render() {
     return (
       <div>
-        <Button style={{float: 'left', zIndex: '100', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle}>Menu</Button>
+        {this.props.icons ?
+          <Label style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '130px', left: '47.5px'}}>Colors</Label> :
+          <Label style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '130px', left: '50px'}}>Icons</Label>
+        }
+        <Radio style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '100px', left: '50px'}} onClick={this.props.iconsToggle} toggle/>
+        <Button style={{float: 'left', zIndex: '10000', position: 'fixed', bottom: '50px', left: '35px'}} onClick={this.props.menuToggle} >Menu</Button>
         <Grid>
+
+          <Grid.Column width={2}>
+            <SidebarLeft />
+          </Grid.Column>
+
           <Grid.Row>
             <Grid.Column width={2}>
               <SidebarLeft />
@@ -450,23 +493,25 @@ class Board extends React.Component {
             <Grid.Column width={this.props.menuVisible ? 14 : 15}>
               <div className="Board">
                 <HexGrid height={800} viewBox="-50 -50 150 150">
-                  <Layout size={{ x: 11, y: 11 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -30 }}>
+                  <Layout size={{ x: 12, y: 12 }} flat={false} spacing={1.2} origin={{ x: 7.5, y: -35 }}>
                     {this.props.boardState ? this.props.boardState.map((hex, index) => {
                       let targetClass = '';
-                      if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
-                        targetClass += 'opponent';
-                      } else if (this.props.selectedHex.index === hex.index) {
-                        targetClass += 'selected';
-                      } else if (hex.player === this.props.userPlayer || (this.props.spectator && hex.player === 'player1')) {
-                        targetClass += 'friendly';
-                      } else if (this.props.neighbors.indexOf(hex.index) > -1) {
-                        targetClass += 'neighbor';
-                      } else if (hex.hasGold) {
-                        targetClass += 'gold';
+                      if (hex.hasGold) {
+                        targetClass += ' gold';
                       } else if (hex.hasWood) {
-                        targetClass += 'wood';
+                        targetClass += ' wood';
                       } else if (hex.hasMetal) {
-                        targetClass += 'metal';
+                        targetClass += ' metal';
+                      }
+                      if (this.props.neighbors.indexOf(hex.index) > -1) {
+                        targetClass += ' neighbor';
+                      }
+                      if ((!this.props.spectator && hex.player !== null && hex.player !== this.props.userPlayer) || (this.props.spectator && hex.player === 'player2')) { // logic for assigning CSS classes
+                        targetClass += ' opponent';
+                      } else if (this.props.selectedHex.index === hex.index) {
+                        targetClass += ' selected';
+                      } else if (hex.player === this.props.userPlayer || (this.props.spectator && hex.player === 'player1')) {
+                        targetClass += ' friendly';
                       }
                       if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'swordsmen') {
                         targetClass += ' swordsmen';
@@ -475,7 +520,42 @@ class Board extends React.Component {
                       } else if (hex.player === this.props.userPlayer && this.props.deployment && this.props.deployment.unit === 'knights') {
                         targetClass += ' knight';
                       }
-                      return <Hexagon
+                      let hexagon = this.props.icons ?
+                      <Hexagon
+                        key={uuidv4()}
+                        onClick={() => {
+                          this.props.deployment && hex.player === this.props.userPlayer ? this.addUnitsToHex(index, hex) :
+                          this.handleClick(hex);
+                          this.setState({ hex: hex });
+                        }}
+                        className={targetClass.indexOf('neighbor') > -1 && targetClass.indexOf('opponent') > -1 ? 'opponentIcon' :
+                                   targetClass.indexOf('neighbor') > -1 ? 'neighborIcon' : null}
+                        fill={targetClass.indexOf('gold') > -1 && targetClass.indexOf('neighbor') > -1 ? 'gold-bar-neighbor' :
+                              targetClass.indexOf('wood') > -1 && targetClass.indexOf('neighbor') > -1 ? 'wood-pile-neighbor' :
+                              targetClass.indexOf('metal') > -1 && targetClass.indexOf('neighbor') > -1 ? 'metal-bar-neighbor' :
+                              targetClass.indexOf('opponent') > -1 && targetClass.indexOf('neighbor') > -1 ? 'opponent-neighbor' :
+                              targetClass.indexOf('gold') > -1 && targetClass.indexOf('opponent') > -1 ? 'gold-bar-opponent' :
+                              targetClass.indexOf('wood') > -1 && targetClass.indexOf('opponent') > -1 ? 'wood-pile-opponent' :
+                              targetClass.indexOf('metal') > -1 && targetClass.indexOf('opponent') > -1 ? 'metal-bar-opponent' :
+                              targetClass.indexOf('gold') > -1 && targetClass.indexOf('friendly') > -1 ? 'gold-bar-friendly' :
+                              targetClass.indexOf('wood') > -1 && targetClass.indexOf('friendly') > -1 ? 'wood-pile-friendly' :
+                              targetClass.indexOf('metal') > -1 && targetClass.indexOf('friendly') > -1 ? 'metal-bar-friendly' :
+                              targetClass.indexOf('neighbor') > -1 ? 'neighbor' :
+                              targetClass.indexOf('selected') > -1 ? 'friendly-selected' :
+                              targetClass.indexOf('gold') > -1 ? 'gold-bar' :
+                              targetClass.indexOf('wood') > -1 ? 'wood-pile' :
+                              targetClass.indexOf('metal') > -1 ? 'metal-bar' :
+                              targetClass.indexOf('friendly') > -1 ? 'friendly' :
+                              targetClass.indexOf('opponent') > -1 ? 'opponent' :
+                              null}
+                        q={hex.coordinates[0]}
+                        r={hex.coordinates[1]}
+                        s={hex.coordinates[2]}>
+                        <Text>
+                          {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
+                        </Text>
+                      </Hexagon> :
+                      <Hexagon
                         key={uuidv4()}
                         className={targetClass}
                         onClick={() => {
@@ -489,9 +569,27 @@ class Board extends React.Component {
                         <Text>
                           {`${hex.swordsmen.toString()}, ${hex.archers.toString()}, ${hex.knights.toString()}`}
                         </Text>
-                      </Hexagon>
+                      </Hexagon>;
+                      return hexagon;
                     }): <div></div>}
                   </Layout>
+                  <Pattern id="gold-bar" link="./images/gold-bar.svg" />
+                  <Pattern id="wood-pile" link="./images/wood-pile.svg" />
+                  <Pattern id="metal-bar" link="./images/metal-bar.svg" />
+                  <Pattern id="friendly" link="./images/friendly.svg" />
+                  <Pattern id="opponent" link="./images/opponent.svg" />
+                  <Pattern id="neighbor" link="./images/neighbor.svg" />
+                  <Pattern id="friendly-selected" link="./images/friendly-selected.svg" />
+                  <Pattern id="gold-bar-neighbor" link="./images/gold-bar-neighbor.svg" />
+                  <Pattern id="wood-pile-neighbor" link="./images/wood-pile-neighbor.svg" />
+                  <Pattern id="metal-bar-neighbor" link="./images/metal-bar-neighbor.svg" />
+                  <Pattern id="opponent-neighbor" link="./images/opponent-neighbor.svg" />
+                  <Pattern id="gold-bar-friendly" link="./images/gold-bar-friendly.svg" />
+                  <Pattern id="gold-bar-opponent" link="./images/gold-bar-opponent.svg" />
+                  <Pattern id="wood-pile-friendly" link="./images/wood-pile-friendly.svg" />
+                  <Pattern id="wood-pile-opponent" link="./images/wood-pile-opponent.svg" />
+                  <Pattern id="metal-bar-friendly" link="./images/metal-bar-friendly.svg" />
+                  <Pattern id="metal-bar-opponent" link="./images/metal-bar-opponent.svg" />
                 </HexGrid>
                 <Confirm
                   open={this.state.confirmOpen}
@@ -499,7 +597,7 @@ class Board extends React.Component {
                   content={'Move all your troops to this hex?'}
                   cancelButton={'No, only some'}
                   onCancel={() => {
-                    this.setState({ modalOpen: true })
+                    this.setState({ moveModalOpen: true })
                     this.setState({ confirmOpen: false })
                   }}
                   confirmButton={'Yes'}
@@ -512,8 +610,8 @@ class Board extends React.Component {
                     this.handleMoveClick(this.state.hex);
                   }}/>
 
-                  <Modal open={this.state.modalOpen} size={'small'}
-                    style={{ textAlign: 'center' }} closeIcon onClose={this.closeModal.bind(this)}>
+                <Modal open={this.state.moveModalOpen} size={'small'}
+                    style={{ textAlign: 'center' }} closeIcon onClose={this.closeMoveModal.bind(this)}>
                     <Modal.Header>Move Troops</Modal.Header>
                     <Modal.Content>
                       <Modal.Description>
@@ -535,10 +633,7 @@ class Board extends React.Component {
               </Grid.Column>
               <Grid.Column width={2}>
                 <ChatWindow/>
-                {this.props.currentPlayer === this.props.userPlayer ?
-                  <UnitBank />
-                  : <div></div>
-              }
+                <OpponentBank />
             </Grid.Column>
           </Grid.Row>
         </Grid>
@@ -558,12 +653,12 @@ class Board extends React.Component {
         <Transition animation={'fade up'} duration={'1500'} visible={this.props.hexbotModalOpen}>
           <Modal open={this.props.hexbotModalOpen} size={'small'} style={{ textAlign: 'center' }}>
             <Modal.Header>
-              <Image style={{maxHeight: '200px', display: 'inline'}} src={'https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'} />
+              <Image style={{maxHeight: '200px', display: 'inline'}} src={'./images/hexbot.jpg'} />
               Hexbot is thinking...
             </Modal.Header>
             <Modal.Content>
               <Segment>
-                <Image style={{maxHeight: '400px', margin: 'auto'}} src={'http://www.netanimations.net/large%20gears.gif'}/>
+                <Image style={{maxHeight: '400px', margin: 'auto'}} src={'./images/gears.gif'}/>
               </Segment>
             </Modal.Content>
           </Modal>
@@ -573,6 +668,23 @@ class Board extends React.Component {
             <Modal.Header>Your opponent has left the room.</Modal.Header>
             <Modal.Content>
               You are being rerouted to the lobby.
+            </Modal.Content>
+          </Modal>
+        </Transition>
+        <Transition animation={'fade up'} duration={'1000'} visible={this.state.genericModalOpen}>
+          <Modal
+            open={this.state.genericModalOpen}
+            closeIcon
+            onClose={() => {
+              this.setState({ genericModalOpen: false });
+              this.resetGenericModal();
+            }}
+            size={'small'}
+            style={{ textAlign: 'center' }}
+          >
+            <Modal.Header>{this.state.genericModalHeader}</Modal.Header>
+            <Modal.Content>
+              {this.state.genericModalMessage}
             </Modal.Content>
           </Modal>
         </Transition>
@@ -602,13 +714,15 @@ const mapStateToProps = (state) => {
     playerTwo: state.state.playerTwo,
     spectator: state.state.spectator,
     hexbot: state.state.hexbot,
-    hexbotModalOpen: state.state.hexbotModalOpen
+    hexbotModalOpen: state.state.hexbotModalOpen,
+    icons: state.state.icons,
+    useTimer: state.state.useTimer
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
-    highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex,
+    highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex, iconsToggle,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
     setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove }, dispatch);
 }

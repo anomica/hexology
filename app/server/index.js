@@ -591,10 +591,10 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('leaveRoom', async (data) => {
     // console.log('left the room');
-    if (data.gameSaved) { // if the game was saved when leaving the room
+    if (data.gameSaved && data.gameIndex) { // if the game was saved when leaving the room
       // console.log('LEAVE ROOM requested game to be saved....')
       await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
-    } else { // otherwise, the game wasn't saved
+    } else if (data.gameIndex) { // otherwise, the game wasn't saved
       // console.log('LEAVE ROOM game was not saved by user...')
       await db.forceEndGame(data.gameIndex); // game gets deleted from db
     }
@@ -605,16 +605,29 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('disconnect', async (data) => {
-    if (data.gameSaved) { // if the game was saved when leaving the room
-      // console.log('DISCONNECT requested game to be saved....')
+    console.log('data on disconnect: ', data)
+    if (data.gameSaved && data.gameIndex) { // if the game was saved when leaving the room
+      console.log('DISCONNECT requested game to be saved....')
       await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
-    } else { // otherwise, the game wasn't saved
-      // console.log('DISCONNECT game was not saved by user...')
+    } else if (data.gameIndex) { // otherwise, the game wasn't saved
+      console.log('DISCONNECT game was not saved by user...')
       await db.forceEndGame(data.gameIndex); // game gets deleted from db
     }
     await room && io.to(room).emit('disconnect');
     console.log('user disconnected');
   });
+
+//   socket.on('deleteGame', async (data) => {
+//     console.log('delete game data: ', data)
+//     if (data.gameSaved && data.gameIndex) { // if the game was saved when leaving the room
+//       console.log('DISCONNECT requested game to be saved....')
+//       await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
+//     } else if (data.gameIndex) { // otherwise, the game wasn't saved
+//       console.log('DISCONNECT game was not saved by user...')
+//       await db.forceEndGame(data.gameIndex); // game gets deleted from db
+//     }
+//     await room && io.to(room).emit('deleteGame');
+//   })
 });
 
 // assignLoggedInUser function: If using game object on server
@@ -651,26 +664,13 @@ const assignLoggedInUser = async (username, player, gameIndex, room) => { // nee
 
 const fetchUserGames = async (username, socketId) => {
   let userGames = await db.retrieveUserGames(username);
-  // let user = await db.getUserId(username);
-  // userGames.map( async (game, i) => {
-  //   if (game.player1 === user[0].user_id) { // if user id = player1
-  //     // let playerTwo = await db.findUserById(userGames[i].player2);
-  //     userGames[i].player1_username = username;
-  //     userGames[i].player2_username = ;
-  //   } else if (game.player2 === user[0].user_id) { // if user id = player2
-  //     // let playerOne = await db.findUserById(userGames[i].player1);
-  //     userGames[i].player1_username = `(ID: ${game.player1})`;
-  //     userGames[i].player2_username = username;
-  //   }
-  // })
-  // console.log('\nusergames:\n', userGames)
   await io.to(socketId).emit('getUserGames', {
     games: userGames
   })
 }
 
 const updateUserGamesList = async (username, gameId, socketId) => {
-  await db.deleteGames(gameId); // first delete the game/hexes
+  await db.deleteUserGame(gameId); // first delete the game/hexes
   let updatedGames = await db.retrieveUserGames(username); // then get the updated list of games
   await io.to(socketId).emit('updateUserGamesList', {
     games: updatedGames
@@ -2049,7 +2049,7 @@ const reinforceHexes = async (gameIndex, currentPlayer, targetIndex, room) => {
 }
 
 const deleteOldGames = async () => {
-  await db.deleteGames();
+  await db.deleteOldGames();
 }
 
 // Check for old games and marks them as completed // (1 day = 86400000) checks every half day
