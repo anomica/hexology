@@ -82,7 +82,7 @@ class Leaderboard extends React.Component {
         compact
         celled
         striped
-        style={{ margin: 'auto' }}
+        style={{ margin: 'auto', width: '100%' }}
       >
 
         <Table.Header>
