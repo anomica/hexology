@@ -4,9 +4,10 @@ import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgri
 import { bindActionCreators } from 'redux';
 import { Segment, Confirm, Button, Header, Popup, Image, Modal, Content, Description, Sidebar, Menu, Transition,
          Icon, Form, Checkbox, Divider, Label, Grid, Radio } from 'semantic-ui-react';
-import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, menuToggle, setUserPlayer, selectHex, highlightNeighbors,
-         highlightOpponents, moveUnits, reinforceHex, updateResources, swordsmen, iconsToggle,
-         archers, knights, updateUnitCounts, switchPlayer, drawBoard, setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove } from '../../src/actions/actions.js';
+import { warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setRoom, setSocket, 
+         menuToggle, setUserPlayer, selectHex, highlightNeighbors, highlightOpponents, moveUnits, reinforceHex, 
+         updateResources, swordsmen, iconsToggle, archers, knights, updateUnitCounts, switchPlayer, drawBoard, 
+         setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove, exitGame, deleteRoom, setHexbot } from '../../src/actions/actions.js';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
 const uuidv4 = require('uuid/v4');
@@ -281,13 +282,45 @@ class Board extends React.Component {
           this.props.resetBoard();
         }, 2500);
       });
-      socket.on('disconnect', () => {
-        clearInterval(interval);
-        this.setState({ disconnectModalOpen: true });
-        setTimeout(() => {
-          this.props.history.push('/');
-          this.props.resetBoard();
-        }, 2500);
+      // socket.on('exitGame', () => {
+      //   console.log('this.props.socket', this.props.socket);
+      //   this.props.exitGame();
+      //   console.log('this.props.socket', this.props.socket);
+      //   this.props.setRoom(null);
+      //   console.log('this.props.socket', this.props.socket);
+      //   this.props.resetBoard();
+      //   console.log('this.props.socket', this.props.socket);
+      //   this.props.deleteRoom(this.props.room);
+      //   console.log('this.props.socket', this.props.socket);
+      //   this.props.setHexbot(false);
+      //   console.log('this.props.socket', this.props.socket);
+      //   this.props.socket.emit('leaveRoom', {
+      //     room: this.props.room,
+      //     gameIndex: this.props.gameIndex,
+      //     gameSaved: this.state.gameSaved
+      //   });
+      // })
+      socket.on('disconnect', async (data) => {
+        console.log('data:', data);
+        if (data.exitedProperly) {
+          await this.props.resetBoard();
+          await this.props.deleteRoom();
+          await this.props.exitGame();
+          await this.props.setHexbot(false);
+          await this.props.callTimer(false);
+          clearInterval(interval);
+          this.setState({ disconnectModalOpen: true });
+          setTimeout(() => {
+            this.props.history.push('/');
+            this.props.resetBoard();
+          }, 2500);
+        } else {
+          this.props.socket.emit('leaveRoom', {
+            room: this.props.room,
+            gameIndex: this.props.gameIndex,
+            gameSaved: this.state.gameSaved
+          });
+        }
       })
     })();
   }
@@ -724,7 +757,7 @@ const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ warningOpen, forfeitOpen, setSpectator, setLoggedInPlayer, addUnitsToHex, updateBank, setSocket, setRoom, menuToggle, setUserPlayer, selectHex,
     highlightNeighbors, drawBoard, highlightOpponents, moveUnits, reinforceHex, iconsToggle,
     updateResources, swordsmen, archers, knights, updateUnitCounts, switchPlayer,
-    setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove }, dispatch);
+    setGameIndex, resetBoard, setPlayerOne, setPlayerTwo, botMove, exitGame, deleteRoom, setHexbot }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);
