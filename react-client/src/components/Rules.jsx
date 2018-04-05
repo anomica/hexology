@@ -1,9 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button, Header, Image, Modal, Icon, List } from 'semantic-ui-react';
+import { Button, Header, Image, Modal, Icon, List, Transition } from 'semantic-ui-react';
 
 const Rules = (props) => {
   return (
+    <Transition animation={'pulse'} duration={5000} visible={true}>
     <Modal open={props.open} onClose={props.close} closeIcon>
       <Modal.Header>Rules</Modal.Header>
       <Modal.Content>
@@ -50,6 +51,7 @@ const Rules = (props) => {
         </Modal.Description>
       </Modal.Content>
     </Modal>
+    </Transition>
   )
 }
 
