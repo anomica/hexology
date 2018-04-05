@@ -76,39 +76,19 @@ class TopBar extends React.Component {
   }
 
   exitGame(exit) {
-    // this.props.exitGame();
-    // console.log('this.props.socket', this.props.socket)
-    // this.props.setRoom(null); // this is redundant
-    // console.log('this.props.socket', this.props.socket)
-    // this.props.resetBoard();
-    // console.log('this.props.socket', this.props.socket)
-    // this.props.deleteRoom(this.props.room); // this needs to go before reset room
-    // console.log('this.props.socket', this.props.socket)
-    // this.props.setHexbot(false);
-    // console.log('this.props.room', this.props.room);
-    // console.log('this.props.socket', this.props.socket)
-    if (exit === 'saveOnExit') { // saves the game in the db on exit // how are these possible
-      this.props.socket.emit('disconnect', { // why are these both being called?
-        gameIndex: this.props.gameIndex,
-        gameSaved: true
-      });
-      this.props.socket.emit('leaveRoom', {
+    if (exit === 'saveOnExit') { // saves the game in the db on exit
+      this.props.socket.emit('saveExit', {
         room: this.props.room,
         gameIndex: this.props.gameIndex,
         gameSaved: true
       });
       return;
     } 
-    this.props.socket.emit('disconnect', { // deletes game from db
-      gameIndex: this.props.gameIndex,
-      gameSaved: this.state.gameSaved
-    });
-    this.props.socket.emit('leaveRoom', {
+    this.props.socket.emit('saveExit', {
       room: this.props.room,
       gameIndex: this.props.gameIndex,
       gameSaved: this.state.gameSaved
     });
-    this.props.history.push('/');
   }
 
   sendEmail() {

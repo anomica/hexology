@@ -59,9 +59,8 @@ app.post('/login', passport.authenticate('local-login'), (req, res) => {
 });
 
 app.post('/logout', isLoggedIn, async (req, res) => {
-  console.log('req.gameIndex:', req.body.gameIndex);
   await db.forceEndGame(req.body.gameIndex); // game gets deleted from db
-  await room && io.to(room).emit('disconnect');
+  await io.to(req.body.room).emit('exitGame');
   res.clearCookie('connect.sid').status(200).redirect('/');
   req.logout();
 });
@@ -588,31 +587,25 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('leaveRoom', async (data) => {
-    // console.log('left the room');
-    console.log('data.room', data.room);
-    if (data.gameSaved && data.gameIndex) { // if the game was saved when leaving the room
-      // console.log('LEAVE ROOM requested game to be saved....')
-      await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
-    } else if (data.gameIndex) { // otherwise, the game wasn't saved
-      // console.log('LEAVE ROOM game was not saved by user...')
-      await db.forceEndGame(data.gameIndex); // game gets deleted from db
-    }
-    await socket.leave(data.room);
+    console.log('in leave room')
+    await io.to(data.room).emit('disconnect');
+    console.log('room:', room);
     await socket.broadcast.emit('deleteRoom', data.room);
-    if (data.gameIndex) {
-      await room && io.to(room).emit('disconnect');
-    } else {
-      await room && io.to(room).emit('disconnect', {exitedProperly: true});
-    }
+    await socket.leave(data.room);
     delete io.sockets.adapter.rooms[room];
   });
 
-  socket.on('disconnect', async (data) => {
+  socket.on('saveExit', async (data) => {
     if (data.gameSaved && data.gameIndex) { // if the game was saved when leaving the room
       await db.forceEndGame(data.gameIndex, 'saveOnly'); // game will not be deleted in the db
     } else if (data.gameIndex) { // otherwise, the game wasn't saved
       await db.forceEndGame(data.gameIndex); // game gets deleted from db
     } 
+    io.to(data.room).emit('exitGame');
+  })
+
+  socket.on('disconnect', async (data) => {
+    io.to(room).emit('exitGame');
     console.log('user disconnected');
   });
 });
