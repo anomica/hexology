@@ -209,7 +209,7 @@ class SidebarLeft extends React.Component {
                   <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
                     <Modal.Header><Icon name='user' /> {this.props.loggedInUser}</Modal.Header>
                     <Modal.Content>
-                      <Modal.Description style={{fontSize: '14pt'}}>
+                      <Modal.Description style={{fontSize: '14pt', textAlign: 'center', margin: 'auto'}}>
                         <Statistic.Group widths='three' style={{marginRight: '15%', marginLeft: '15%'}}>
                           <Statistic>
                             <Statistic.Value>{this.state.userWins}</Statistic.Value>
@@ -268,56 +268,60 @@ class SidebarLeft extends React.Component {
             </Menu.Item>
           </Sidebar>
 
-          <Modal
-            open={this.state.newGameModalOpen}
-            size={'tiny'}
-            closeIcon
-            onClose={() => this.setState({ newGameModalOpen: false })}>
-            <Modal.Header>New Game</Modal.Header>
-            <Modal.Content>
-              <Modal.Description>
-                <Form size={'tiny'} key={'small'}>
-                  <Form.Group widths='equal'>
-                    <Form.Select
-                      required
-                      label
-                      placeholder={'Public'}
-                      options={[{key: 'private', text: 'Private', value: 'private'}, {key: 'public', text: 'Public', value: 'public'}]}
-                      name={'gameType'}
-                      onChange={this.handleChange.bind(this)}
-                      label='Game Type'
-                     />
-                    <Form.Select
-                      required
-                      label
-                      placeholder={'No'}
-                      options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
-                      name={'hexbot'}
-                      onChange={this.handleChange.bind(this)}
-                      label='Play Against Hexbot?'
-                     />
-                   <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
-                  </Form.Group>
-                </Form>
-              </Modal.Description>
-            </Modal.Content>
-            <Divider/>
-            <Modal.Actions>
-              <Button color={'green'} onClick={this.newGame.bind(this)}>Start Game</Button>
-            </Modal.Actions>
-          </Modal>
-          <Modal
-            open={this.state.logoutModal}
-            size={'tiny'}
-            style={{textAlign: 'center'}}
-          >
-            <Modal.Header>Logout Successful!</Modal.Header>
-            <Modal.Content>
-              <Modal.Description>
-                See you again soon!
-              </Modal.Description>
-            </Modal.Content>
-          </Modal>
+          <Transition animation={'pulse'} duration={5000} visible={true}>
+            <Modal
+              open={this.state.newGameModalOpen}
+              size={'tiny'}
+              closeIcon
+              onClose={() => this.setState({ newGameModalOpen: false })}>
+              <Modal.Header>New Game</Modal.Header>
+              <Modal.Content>
+                <Modal.Description>
+                  <Form size={'tiny'} key={'small'}>
+                    <Form.Group widths='equal'>
+                      <Form.Select
+                        required
+                        label
+                        placeholder={'Public'}
+                        options={[{key: 'private', text: 'Private', value: 'private'}, {key: 'public', text: 'Public', value: 'public'}]}
+                        name={'gameType'}
+                        onChange={this.handleChange.bind(this)}
+                        label='Game Type'
+                      />
+                      <Form.Select
+                        required
+                        label
+                        placeholder={'No'}
+                        options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
+                        name={'hexbot'}
+                        onChange={this.handleChange.bind(this)}
+                        label='Play Against Hexbot?'
+                      />
+                    <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
+                    </Form.Group>
+                  </Form>
+                </Modal.Description>
+              </Modal.Content>
+              <Divider/>
+              <Modal.Actions>
+                <Button color={'green'} onClick={this.newGame.bind(this)}>Start Game</Button>
+              </Modal.Actions>
+            </Modal>
+          </Transition>
+          <Transition animation={'pulse'} duration={5000} visible={true}>
+            <Modal
+              open={this.state.logoutModal}
+              size={'tiny'}
+              style={{textAlign: 'center'}}
+            >
+              <Modal.Header>Logout Successful!</Modal.Header>
+              <Modal.Content>
+                <Modal.Description>
+                  See you again soon!
+                </Modal.Description>
+              </Modal.Content>
+            </Modal>
+          </Transition>
 
             {showRules()}
             {this.showLoadGames()}

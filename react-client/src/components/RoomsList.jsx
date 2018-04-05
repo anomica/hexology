@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Segment, Image, Feed, Label, Button, Modal, Header, Icon, Table, Statistic } from 'semantic-ui-react';
+import { Segment, Image, Feed, Label, Button, Modal, Header, Icon, Table, Statistic, Transition } from 'semantic-ui-react';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
 import Leaderboard from './Leaderboard.jsx';
@@ -74,7 +74,7 @@ const RoomsList = props => {
                   <Table.Cell>Player 1</Table.Cell>
                   <Table.Cell>
                     { room.player1 !== 'anonymous'
-                      ? <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}><Icon name='user' />{' ' + room.player1}</Header>}>
+                      ? <Transition animation={'pulse'} duration={5000} visible={true}><Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}><Icon name='user' />{' ' + room.player1}</Header>}>
                         <Modal.Header><Icon name='user'/>{' ' + room.player1}</Modal.Header>
                         <Modal.Content>
                           <Modal.Description>
@@ -94,7 +94,7 @@ const RoomsList = props => {
                               </Statistic.Group>
                           </Modal.Description>
                         </Modal.Content>
-                      </Modal>
+                      </Modal></Transition>
                       : <span><Icon name='user outline' />{' ' + room.player1}</span>
                     }
                   </Table.Cell>
@@ -104,10 +104,10 @@ const RoomsList = props => {
                   <Table.Cell>
                     { room.player2
                       ? room.player2 !== 'anonymous'
-                        ? <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}><Icon name='user' />{' ' + room.player2}</Header>}>
+                        ? <Transition animation={'pulse'} duration={5000} visible={true}><Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}><Icon name='user' />{' ' + room.player2}</Header>}>
                           <Modal.Header><Icon name='user'/> {' ' + room.player2}</Modal.Header>
                           <Modal.Content>
-                            <Modal.Description>
+                            <Modal.Description style={{fontSize: '14pt', textAlign: 'center', margin: 'auto'}}>
                               <Statistic.Group widths='three' style={{marginRight: '15%', marginLeft: '15%'}}>
                                   <Statistic>
                                     <Statistic.Value>{' ' + room.player2Wins}</Statistic.Value>
@@ -124,7 +124,7 @@ const RoomsList = props => {
                                 </Statistic.Group>
                             </Modal.Description>
                           </Modal.Content>
-                        </Modal>
+                        </Modal></Transition>
                         : <span><Icon name='user outline' />{' ' + room.player2}</span>
                       : ' Not yet assigned'
                     }
