@@ -134,7 +134,7 @@ class Leaderboard extends React.Component {
                             } style={{marginTop: '5%'}} icon><Icon name='mail outline'/> Challenge {user.username}!</Button>
                           : null
                         }
-                        <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
+                        <Transition animation={'pulse'} duration={5000} visible={true}><Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
                           <Modal.Header><Icon name='envelope'/> Challenge {user.username}!</Modal.Header>
                           <Modal.Content>
                             <Modal.Description>
@@ -154,8 +154,7 @@ class Leaderboard extends React.Component {
                           <Modal.Actions>
                             <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
                           </Modal.Actions>
-                        </Modal>
-
+                        </Modal></Transition>
                       </Modal.Description>
                     </Modal.Content>
                   </Modal>
