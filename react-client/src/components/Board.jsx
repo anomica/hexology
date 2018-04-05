@@ -283,24 +283,12 @@ class Board extends React.Component {
         }, 2500);
       });
       socket.on('exitGame', () => {
-        // console.log('this.props.socket', this.props.socket);
-        // this.props.exitGame();
-        // console.log('this.props.socket', this.props.socket);
-        // this.props.setRoom(null);
-        // console.log('this.props.socket', this.props.socket);
-        // this.props.resetBoard();
-        // console.log('this.props.socket', this.props.socket);
-        // this.props.deleteRoom(this.props.room);
-        // console.log('this.props.socket', this.props.socket);
-        // this.props.setHexbot(false);
-        // console.log('this.props.socket', this.props.socket);
         console.log('in exit game');
         this.props.socket.emit('leaveRoom', {
           room: this.props.room
         });
       })
       socket.on('disconnect', async () => {
-        console.log('in disconnect');
         await this.props.resetBoard();
         await this.props.deleteRoom();
         await this.props.exitGame();
