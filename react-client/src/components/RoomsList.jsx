@@ -34,6 +34,7 @@ const RoomsList = props => {
         props.newRoom(room);
       })
       socket.on('deleteRoom', (room) => {
+        console.log('room to be deleted:', room);
         props.deleteRoom(room);
       })
       socket.on('updateRoom', (room) => {

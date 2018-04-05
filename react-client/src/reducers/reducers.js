@@ -34,6 +34,7 @@ const reducers = (state = defaultState, action) => {
         room: action.payload
       }
     case 'DELETE-ROOM':
+    console.log('action.payload:', action.payload);
       let newRooms = Object.create(state.rooms);
       delete newRooms[action.payload]
       return {
