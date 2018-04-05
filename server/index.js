@@ -295,12 +295,19 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   let room; // track room that client is in, when they enter a room, to help with disconnect
 
-  socket.on('sendEmail', request => {
+  socket.on('sendEmail', async (request) => {
     let username = request.username;
     let email = request.email;
     let message = request.message;
     let room = request.room;
-    emailHandler.sendEmail(username, email, room, message);
+    if (request.gameIndex) {
+      let game = await db.getGame(null, request.gameIndex) // to get game id
+      let gameIndex = request.gameIndex;
+      let usernameToEmail = request.otherUser;
+      emailHandler.sendEmail(username, email, room, message, gameIndex, usernameToEmail);
+    } else {
+      emailHandler.sendEmail(username, email, room, message);
+    }
   });
 
   socket.on('saveGame', async (request) => {
@@ -402,26 +409,26 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   });
 
   socket.on('joinGame', async (data) => {
-    let userInfoPlayer2 = await db.getUserId(data.username);
-    let player2Rank = await db.getUserRank(data.username);
     await socket.join(data.room);
     const board = await gameInit(5, 4);
     let gameIndex = uuidv4();
     room = data.room;
-
-    let userInfoPlayer1 = await db.getUserId(io.sockets.adapter.rooms[room].player1);
-    let player1Rank = await db.getUserRank(io.sockets.adapter.rooms[room].player1);
-
-    io.sockets.adapter.rooms[room].player1Wins = userInfoPlayer1[0].wins;
-    io.sockets.adapter.rooms[room].player1Losses = userInfoPlayer1[0].losses;
-    io.sockets.adapter.rooms[room].player1Email = userInfoPlayer1[0].email;
-    io.sockets.adapter.rooms[room].player1Rank = 1 + player1Rank;
-
     io.sockets.adapter.rooms[room].player2 = data.username;
-    io.sockets.adapter.rooms[room].player2Wins = userInfoPlayer2[0].wins;
-    io.sockets.adapter.rooms[room].player2Losses = userInfoPlayer2[0].losses;
-    io.sockets.adapter.rooms[room].player2Email = userInfoPlayer2[0].email;
-    io.sockets.adapter.rooms[room].player2Rank = 1 + player2Rank;
+
+    if (data.username !== 'anonymous') {
+      let userInfoPlayer2 = await db.getUserId(data.username);
+      let player2Rank = await db.getUserRank(data.username);
+      let userInfoPlayer1 = await db.getUserId(io.sockets.adapter.rooms[room].player1);
+      let player1Rank = await db.getUserRank(io.sockets.adapter.rooms[room].player1);
+      io.sockets.adapter.rooms[room].player1Wins = userInfoPlayer1[0].wins;
+      io.sockets.adapter.rooms[room].player1Losses = userInfoPlayer1[0].losses;
+      io.sockets.adapter.rooms[room].player1Email = userInfoPlayer1[0].email;
+      io.sockets.adapter.rooms[room].player1Rank = 1 + player1Rank;
+      io.sockets.adapter.rooms[room].player2Wins = userInfoPlayer2[0].wins;
+      io.sockets.adapter.rooms[room].player2Losses = userInfoPlayer2[0].losses;
+      io.sockets.adapter.rooms[room].player2Email = userInfoPlayer2[0].email;
+      io.sockets.adapter.rooms[room].player2Rank = 1 + player2Rank;
+    }
 
     socket.broadcast.emit('updateRoom', {
       roomName: room,
@@ -504,11 +511,20 @@ io.on('connection', async (socket) => { // initialize socket on user connection
   socket.on('watchGame', data => {
     socket.join(data.room);
     const game = games[data.gameIndex];
-    if (game) {
-      game.user = data.username;
-      io.to(socket.id).emit('gameCreated', games[data.gameIndex]);
-    }
-  })
+    game.user = data.username;
+    io.to(socket.id).emit('gameCreated', games[data.gameIndex]);
+  });
+
+  socket.on('joinResumeGame', async (data) => {
+    // console.log('join resume game data:', data);
+    socket.join(data.room);
+    const game = await loadSelectedGame(data.gameIndex, data.room, null, data.room, data.username);
+    game.user = data.username;
+    await io.to(socket.id).emit('loadGameBoard', {
+      game: game,
+      username: data.username
+    });
+  });
 
   socket.on('setLoggedInUser', data => {
     assignLoggedInUser(data.username, data.player, data.gameIndex, data.room);
@@ -533,7 +549,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let userPlayer = data.userPlayer;
     let newRoom = `*${roomNum}`;
     room = newRoom;
-    loadSelectedGame(gameIndex, oldRoom, socketID, newRoom, username);
+    let currentGame = await loadSelectedGame(gameIndex, oldRoom, socketID, newRoom, username);
     let otherPlayer = await db.getOtherUserStuff(gameIndex, username);
     socket.join(newRoom); // create a new room
     socket.emit('updateRoom', {
@@ -545,6 +561,12 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       room: io.sockets.adapter.rooms[newRoom]
       // player1: request.username
      });
+
+     await io.to(newRoom).emit('loadGameBoard', {
+      game: currentGame,
+      username: username
+    });
+
     roomNum++; // increment room count to assign new room
   });
 
@@ -669,7 +691,7 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username)
   await db.updateRoomNum(gameIndex, newRoom);
   userPlayer = await db.getUserPlayer(gameIndex, username);
 
-  let currentGame = {
+  let currentGame = await {
     board: [],
     gameIndex: gameIndex,
     playerOneResources: {
@@ -697,11 +719,10 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username)
     playerOneTotalUnits: game[0].p1_total_units,
     playerTwoTotalUnits: game[0].p2_total_units,
     currentPlayer: 'player' + game[0].current_player,
-    userPlayer: userPlayer, // TODO: should be whoever the user is logged in as (as 'player1' or 'player2')
+    userPlayer: userPlayer
   };
-  gameBoard.map( hex => {
+  await gameBoard.map( hex => {
     let hexPlayer = null;
-    // hexPlayer = hex.player ? ('player' + hex.player) : null;
     hexOwner = hex.hex_owner ? ('player' + hex.hex_owner) : null;
     currentGame.board.push({
       swordsmen: hex.swordsmen,
@@ -716,10 +737,7 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username)
     })
   });
 
-  await io.to(newRoom).emit('loadGameBoard', {
-    game: currentGame,
-    username: username
-  });
+  return currentGame;
 }
 
 const moveUnits = async (data, socket, hexbot) => {
@@ -1643,7 +1661,6 @@ const resolveCombat = async (originIndex, targetIndex, gameIndex, room, updatedO
       archers: (masterOrigin['0'].archers - originalAttackerArchers + Math.floor(attackerArchers / 2)) || 0,
       knights: (masterOrigin['0'].knights - originalAttackerKnights + Math.floor(attackerKnights / 2)) || 0
     };
-    console.log('***********', updatedOrigin);
 
     await db.updateHexUnits(updatedOrigin.hex_index, updatedOrigin.swordsmen, updatedOrigin.archers, updatedOrigin.knights, 'player' + updatedOrigin.player); // update the original hex's units in the db
 
