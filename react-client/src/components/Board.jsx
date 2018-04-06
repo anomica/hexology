@@ -60,7 +60,6 @@ class Board extends React.Component {
         })
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
-        console.log('this.props: ', this.props)
         if (!socket) {
           socket = await socketIOClient('http://127.0.0.1:8080');
           this.props.setSocket(socket);
