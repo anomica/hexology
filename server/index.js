@@ -493,7 +493,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
 
   socket.on('watchGame', async (data) => {
     socket.join(data.room);
-    const game = await loadSelectedGame(data.gameIndex, data.room, null, data.room, data.username);
+    const game = await loadSelectedGame(data.gameIndex, data.room, null, data.room, null);
     game.user = data.username;
     io.to(socket.id).emit('gameCreated', game);
   });
@@ -654,7 +654,7 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username)
     await db.updateRoomNum(gameIndex, newRoom);
   }
 
-  if (username === 'anonymous-spectator') {
+  if (username === 'anonymous-spectator' || username === null) {
     userPlayer = undefined;
   } else {
     userPlayer = await db.getUserPlayer(gameIndex, username);

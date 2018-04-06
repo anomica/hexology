@@ -45,8 +45,6 @@ const RoomsList = props => {
 
   refreshRooms();
 
-  console.log('props.rooms:', props.rooms);
-
   return (
 
     <Feed style={{margin: 'auto', textAlign: 'center', width: '55%',  marginTop: 0, paddingTop: '20px'}}>
