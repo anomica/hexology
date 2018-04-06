@@ -22,7 +22,6 @@ class TopBar extends React.Component {
       inviteSent: false,
       buttonMessage: 'Invite',
       gameSaved: false,
-      saveDisabled: false,
       confirmOpenModal: false
     }
 
@@ -49,9 +48,10 @@ class TopBar extends React.Component {
     this.props.socket.on('saveGame', data => {
       this.setState({
         saveOpen: true,
-        gameSaved: true,
-        saveDisabled: true
+        gameSaved: true
       });
+
+      setTimeout(() => this.setState({ saveOpen: false }), 2000);
     });
 
     setTimeout(() => this.setState({ saveOpen: false }), 2000);
@@ -137,13 +137,13 @@ class TopBar extends React.Component {
         <div style={{right: '10px', top: '20px', position: 'absolute'}}>
           { (this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')) || (this.props.location && this.props.location.search.includes('='))
             ? <Modal
+              closeIcon
               open={this.state.saveOpen}
               trigger={
                 <Button
                   size='small'
                   style={{marginRight: '5px'}}
                   onClick={this.saveGame}
-                  disabled={this.state.saveDisabled}
                 >Save Game</Button>}>
                 <Modal.Content>
                   <Modal.Description>

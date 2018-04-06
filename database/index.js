@@ -738,6 +738,14 @@ const deleteOldGames = async (gameId) => {
   }
 }
 
+/////////////////////// Gets all games to generate in the rooms list ///////////////////////
+const getAllGames = async () => {
+  console.log('getting all games')
+  return await knex.column(knex.raw(`game_index as 'gameIndex', game_id as 'gameId', room_id as 'room'`))
+    .from('games')
+    .select()
+}
+
 /////////////////////// When a user deletes an existing game from their current games list ///////////////////////
 const deleteUserGame = async (gameId) => {
   await deleteHex(gameId); // first delete the hexes
@@ -818,5 +826,6 @@ module.exports = {
   getOtherUserStuff,
   removeHexResource,
   deleteUserGame,
-  getUserRank
+  getUserRank,
+  getAllGames
 };

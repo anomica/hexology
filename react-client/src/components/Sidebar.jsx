@@ -85,6 +85,7 @@ class SidebarLeft extends React.Component {
         } else {
           this.props.socket.emit('newGame', {
             gameType: this.state.gameType,
+            gameIndex: this.props.gameIndex,
             username: this.props.loggedInUser,
             socketId: this.props.socket.id,
             spectators: this.state.spectators

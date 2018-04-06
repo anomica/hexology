@@ -226,10 +226,12 @@ const distributeResources = (board, meridianHexes) => {
   return board;
 }
 
-app.get('/rooms', (req, res) => {
+app.get('/rooms', async (req, res) => {
   rooms = io.sockets.adapter.rooms
   for (room in rooms) {
     if (rooms[room].length === 2) {
+      let games = await db.getAllGames();
+      console.log('gamesssss', games)
       for (game in games) {
         if (games[game].room === room) {
           rooms[room].gameIndex = games[game].index;
@@ -374,6 +376,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let newRoom = `*${roomNum}`;
     room = newRoom;
     let gameType = request.gameType;
+    let gameIndex = request.gameIndex;
     let spectators = (request.spectators === 'yes' ? true : false);
     await socket.join(newRoom); // create a new room
     io.sockets.adapter.rooms[newRoom].type = gameType;
@@ -383,13 +386,15 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.sockets.adapter.rooms[newRoom].player1Email = user[0].email;
     io.sockets.adapter.rooms[newRoom].player1Rank = 1 + userRank;
     io.sockets.adapter.rooms[newRoom].gameType = gameType;
+    io.sockets.adapter.rooms[newRoom].gameIndex = gameIndex;
 
     await io.to(newRoom).emit('newGame', {
       room: newRoom,
       player1Wins: user[0].wins,
       player1Losses: user[0].losses,
       player1Email: user[0].email,
-      player1Rank: 1 + userRank
+      player1Rank: 1 + userRank,
+      gameIndex: gameIndex
     }); // and send back a string to initialize for player 1
     spectators && await socket.broadcast.emit('newRoom', {
       roomName: room,
@@ -399,7 +404,8 @@ io.on('connection', async (socket) => { // initialize socket on user connection
       player1Losses: user[0].losses,
       player1Email: user[0].email,
       player1Rank: 1 + userRank,
-      gameType: gameType
+      gameType: gameType,
+      gameIndex: gameIndex
      });
 
     roomNum++; // increment room count to assign new room
@@ -411,6 +417,7 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     let gameIndex = uuidv4();
     room = data.room;
     io.sockets.adapter.rooms[room].player2 = data.username;
+    io.sockets.adapter.rooms[room].gameIndex = gameIndex;
 
     if (data.username !== 'anonymous') {
       let userInfoPlayer2 = await db.getUserId(data.username);
@@ -485,11 +492,15 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     await io.to(room).emit('gameCreated', newGameBoard); // send game board to user
   })
 
-  socket.on('watchGame', data => {
+  socket.on('watchGame', async (data) => {
+    console.log('data on watching game:', data)
     socket.join(data.room);
-    const game = games[data.gameIndex];
+    // const game = games[data.gameIndex];
+    const game = await loadSelectedGame(data.gameIndex, data.room, null, data.room, data.username);
     game.user = data.username;
-    io.to(socket.id).emit('gameCreated', games[data.gameIndex]);
+    console.log('watching this game:', game)
+    io.to(socket.id).emit('gameCreated', game);
+    // games[data.gameIndex]
   });
 
   socket.on('joinResumeGame', async (data) => { // joining a game to resume on email request
@@ -639,10 +650,20 @@ const updateUserGamesList = async (username, gameId, socketId) => {
 }
 
 const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username) => {
+  console.log('load selected game: ', `gameIndex (${gameIndex}), oldRoom (${oldRoom}), socketId (${socketId}), newRoom (${newRoom}), username (${username})`)
   let gameBoard = await db.getGameBoard(oldRoom, gameIndex); // gets hexes from db
   let game = await db.getGame(oldRoom, gameIndex); // in order to get current player from db
-  await db.updateRoomNum(gameIndex, newRoom);
-  userPlayer = await db.getUserPlayer(gameIndex, username);
+  let userPlayer;
+
+  if (oldRoom !== newRoom) {
+    await db.updateRoomNum(gameIndex, newRoom);
+  }
+  
+  if (username === 'anonymous-spectator') {
+    userPlayer = undefined;
+  } else {
+    userPlayer = await db.getUserPlayer(gameIndex, username);
+  }
 
   let currentGame = await {
     board: [],
