@@ -50,10 +50,10 @@ class Board extends React.Component {
 
   componentDidMount() {
     (async () => {
-      let socket = this.props.socket;
+      let socket = await this.props.socket;
       if (this.props.location.state && this.props.location.state.type) {
         await this.props.setSpectator(true);
-        socket.emit('watchGame', {
+        await socket.emit('watchGame', {
           room: this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1],
           username: this.props.loggedInUser,
           gameIndex: this.props.location.state.gameIndex
@@ -65,7 +65,7 @@ class Board extends React.Component {
           this.props.setSocket(socket);
         }
 
-        if (window.location.href.includes('=')) { // if someone is joining to resume a game via email
+        if (window.location.href && window.location.href.includes('=')) { // if someone is joining to resume a game via email
           let gameIndex = window.location.href.split('=')[1];
           let userJoining = window.location.href.split('=')[2];
           let room = window.location.href.split('?')[1][0] + window.location.href.split('?')[1][1];
@@ -87,6 +87,9 @@ class Board extends React.Component {
 
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
+        if (this.props.location.state.roomToJoin) { // for player1 when sending a challenge to someone on the leaderbaord
+          this.props.setRoom(this.props.location.state.roomToJoin); // sets the room
+        }
       }
 
       socket.on('loadGameBoard', data => {
