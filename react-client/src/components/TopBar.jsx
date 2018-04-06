@@ -93,11 +93,16 @@ class TopBar extends React.Component {
       });
       return;
     }
-    this.props.socket.emit('saveExit', {
-      room: this.props.room,
-      gameIndex: this.props.gameIndex,
-      gameSaved: this.state.gameSaved
-    });
+    if (!this.props.spectator) {
+      this.props.socket.emit('saveExit', {
+        room: this.props.room,
+        gameIndex: this.props.gameIndex,
+        gameSaved: this.state.gameSaved
+      });
+    }
+    if (this.props.spectator) {
+      this.props.history.push('/');
+    }
   }
 
   sendEmail() {

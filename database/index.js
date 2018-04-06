@@ -740,7 +740,6 @@ const deleteOldGames = async (gameId) => {
 
 /////////////////////// Gets all games to generate in the rooms list ///////////////////////
 const getAllGames = async () => {
-  console.log('getting all games')
   return await knex.column(knex.raw(`game_index as 'gameIndex', game_id as 'gameId', room_id as 'room'`))
     .from('games')
     .select()
