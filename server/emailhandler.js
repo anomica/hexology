@@ -22,9 +22,9 @@ const sendEmail = (username, email, room, message, gameIndex, otherUser) => {
     text: `Hello ${email}! Your friend, who goes by ${username}, wants you to join a game of Hexology. Click this link to get started, and be sure to sign in: hexology-game.herokuapp.com/game/${room}`,
     html:
       message
-        ? (gameIndex
-          ? `${message} <br> <a href="http://localhost:8080/game/room?${room}/=${gameIndex}=${otherUser}">Join the game!</a>`
-          : `${message} <br> <a href="http://localhost:8080/game/room?${room}">Join the game!</a>`)
+        ? (gameIndex // if gameindex is sent, that means a user was invited to resume an exiting game
+          ? `<h1>Hexology: The Hex Game That Runs In Your Browser</h1><br>${message}<p><a href="http://localhost:8080/game/room?${room}/=${gameIndex}=${otherUser}">Join the game!</a></p>`
+          : `<h1>Hexology: The Hex Game That Runs In Your Browser</h1><br>${message}<p><a href="http://localhost:8080/game/room?${room}">Join the game!</p>`)
         : template
   }
 
