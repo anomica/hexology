@@ -17,32 +17,20 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
-    // axios.post('/signup', {
-    //   username: 'amy11',
-    //   email: 'glova11@aol.com',
-    //   password: 'kitty'
-    // })
-    //   .then(data => {
-    //     console.log('data from signup:', data);
-    //   })
-    //   .catch(err => {
-    //     console.log('error from signup:', err);
-    //   })
     (async () => {
       let socket = await socketIOClient('http://127.0.0.1:8080');
       this.props.setSocket(socket);
     })();
 
-    // axios.get('/persistUser')
-    //   .then(data => {
-    //     console.log('data from session:', data);
-    //     if (data.data) {
-
-    //     }
-    //   })
-    //   .catch(err => {
-    //     console.log('err from persistUser:', err);
-    //   })
+    axios.get('/persistUser')
+      .then(data => {
+        if (data.data) {
+          this.props.login(data.data.username);
+        }
+      })
+      .catch(err => {
+        console.log('err from persistUser:', err);
+      })
 
     axios.get('/rooms')
       .then(rooms => {
