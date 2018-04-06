@@ -22,7 +22,8 @@ class TopBar extends React.Component {
       inviteSent: false,
       buttonMessage: 'Invite',
       gameSaved: false,
-      saveDisabled: false
+      saveDisabled: false,
+      confirmOpenModal: false
     }
 
     this.saveGame = this.saveGame.bind(this);
@@ -34,6 +35,11 @@ class TopBar extends React.Component {
   }
 
   saveGame(exit) {
+    if (exit === 'saveOnExit') {
+      this.exitGame('saveOnExit');
+      return;
+    }
+
     this.props.socket.emit('saveGame', {
       gameIndex: this.props.gameIndex,
       room: this.props.room,
@@ -48,10 +54,7 @@ class TopBar extends React.Component {
       });
     });
 
-    if (exit === 'saveOnExit') {
-      this.exitGame('saveOnExit');
-    }
-
+    setTimeout(() => this.setState({ saveOpen: false }), 2000);
   }
 
   handleSaveClose() {
@@ -66,8 +69,12 @@ class TopBar extends React.Component {
     this.saveGame('saveOnExit');
     this.setState({
       confirmOpen: false,
-      gameSaved: true
+      gameSaved: true,
+      confirmOpenModal: true
     });
+
+    setTimeout(() => this.setState({ confirmOpenModal: false }), 2000);
+
   }
 
   handleDontSave() {
@@ -138,25 +145,36 @@ class TopBar extends React.Component {
                   onClick={this.saveGame}
                   disabled={this.state.saveDisabled}
                 >Save Game</Button>}>
-              <Modal.Content>Game Saved</Modal.Content>
-              <Modal.Actions>
-                <Button positive labelPosition='right' icon='checkmark' onClick={this.handleSaveClose} content='Cool' />
-              </Modal.Actions>
-            </Modal>
+                <Modal.Content>
+                  <Modal.Description>
+                    Game Saved!
+                  </Modal.Description>
+                </Modal.Content>
+              </Modal>
             : null
           }
+
           { (this.props.loggedInUser !== 'anonymous' && this.props.currentPlayer !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources.hasOwnProperty('wood')) || (this.props.location && this.props.location.search.includes('='))
             ? <span>
                 <Button size='small' onClick={this.confirm}>Exit Game</Button>
-                <Confirm
-                  header='Save Game?'
-                  content="Do you want to save this game?"
-                  cancelButton='No'
-                  confirmButton="Yes"
-                  open={this.state.confirmOpen}
-                  onCancel={this.handleDontSave}
-                  onConfirm={this.handleSaveOnExit}
-                />
+                <Modal
+                  open={this.state.confirmOpenModal}
+                  trigger={
+                  <Confirm
+                    header='Save Game?'
+                    content="Do you want to save this game?"
+                    cancelButton='No'
+                    confirmButton="Yes"
+                    open={this.state.confirmOpen}
+                    onCancel={this.handleDontSave}
+                    onConfirm={this.handleSaveOnExit}
+                  />}>
+                  <Modal.Content>
+                    <Modal.Description>
+                      Game Saved!
+                    </Modal.Description>
+                  </Modal.Content>
+                </Modal>
               </span>
             : <Button size='tiny' onClick={this.handleDontSave}>Exit Game</Button>
           }
@@ -250,7 +268,11 @@ class TopBar extends React.Component {
                   <Divider/>
                   <Modal.Actions>
 
-                  <Modal trigger={<Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>}>
+                    <Modal trigger={
+                      <Button 
+                        color='blue'
+                        onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}
+                      >{this.state.buttonMessage}</Button>}>
                       <Modal.Header>Invite Sent</Modal.Header>
                       <Modal.Content>
                         <Modal.Description>
@@ -287,7 +309,10 @@ class TopBar extends React.Component {
                 </Modal.Content>
                 <Divider />
                 <Modal.Actions>
-                  <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
+                  <Button
+                    color='blue'
+                    onClick={() => this.state.inviteSent ? null : this.sendEmail()}
+                  >{this.state.buttonMessage}</Button>
                 </Modal.Actions>
               </Modal></Transition>)
             : null

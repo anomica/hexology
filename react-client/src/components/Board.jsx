@@ -60,12 +60,13 @@ class Board extends React.Component {
         })
         this.props.setRoom(this.props.location.state ? this.props.location.state.detail : window.location.href.split('?')[1]);
       } else if (!this.props.location.state || this.props.location.state.extra === 'join' && !this.props.location.state.type) {
+        console.log('this.props: ', this.props)
         if (!socket) {
           socket = await socketIOClient('http://127.0.0.1:8080');
           this.props.setSocket(socket);
         }
 
-        if (window.location.href.includes('=')) { // if someone is joining to resume a game via email
+        if (window.location.href && window.location.href.includes('=')) { // if someone is joining to resume a game via email
           let gameIndex = window.location.href.split('=')[1];
           let userJoining = window.location.href.split('=')[2];
           let room = window.location.href.split('?')[1][0] + window.location.href.split('?')[1][1];
@@ -87,6 +88,9 @@ class Board extends React.Component {
 
       } else if (this.props.location.state.extra === 'create') {
         !this.props.playerAssigned && this.props.setUserPlayer('player1');
+        if (this.props.location.state.roomToJoin) { // for player1 when sending a challenge to someone on the leaderbaord
+          this.props.setRoom(this.props.location.state.roomToJoin); // sets the room
+        }
       }
 
       socket.on('loadGameBoard', data => {

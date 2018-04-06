@@ -694,7 +694,6 @@ const loadSelectedGame = async (gameIndex, oldRoom, socketId, newRoom, username)
 }
 
 const moveUnits = async (data, socket, hexbot) => {
-  // THIS LOGIC WILL MOST LIKELY HAPPEN IN TANDEM WITH THE DATABASE, BUT IS WRITTEN IN LOCAL STORAGE FOR NOW
   let updatedOrigin = await data.updatedOrigin; // new origin object as sent by user
   let originIndex = await data.originIndex; // with its index,
   let updatedTarget = await data.updatedTarget; // same for target
