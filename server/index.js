@@ -24,11 +24,18 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(express.static(path.join(__dirname, '../react-client/dist')));
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
-app.use(cors())
+app.use(cors());
 
+app.get('*bundle.js', (req, res, next) => {
+ req.url += '.gz';
+ res.set('Content-Encoding', 'gzip');
+ res.set('Content-Type', 'text/javascript');
+ next();
+});
+
+app.use(express.static(path.join(__dirname, '../react-client/dist')));
 // local Login Strategy
 const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
@@ -59,8 +66,10 @@ app.post('/login', passport.authenticate('local-login'), (req, res) => {
 });
 
 app.post('/logout', isLoggedIn, async (req, res) => {
-  await db.forceEndGame(req.body.gameIndex); // game gets deleted from db
-  await io.to(req.body.room).emit('exitGame');
+  if (req.gameIndex) {
+    await db.forceEndGame(req.body.gameIndex); // game gets deleted from db
+    await io.to(req.body.room).emit('exitGame');
+  }
   res.clearCookie('connect.sid').status(200).redirect('/');
   req.logout();
 });

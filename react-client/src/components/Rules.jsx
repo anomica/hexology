@@ -12,9 +12,10 @@ const Rules = (props) => {
           <List as='ol'>
             <List.Item as='li'> Players take turns purchasing units and moving around the board.</List.Item>
             <List.Item as='li'> Your hexes are filled in blue; your opponent's are red.</List.Item>
-            <List.Item as='li'> If you begin a turn on a resource hex, marked with yellow for gold, green for wood, and grey for metal, you will consume that resource and your appropriate reserve will tick up by 10.</List.Item>
-            <List.Item as='li'> On your turn, you will see a grey "Unit Store" button. Click this and then click a unit type. If you have enough resources, you will get more units!</List.Item>
-            <List.Item as='li'> To move, click on your hex. You will see all possible moves in green. Click on one of them to move, and then decide whether to move all of your units or leave some behind.</List.Item>
+            <List.Item as='li'> If you begin a turn on a resource hex, you will consume that resource and your appropriate reserve will tick up by 10.</List.Item>
+            <List.Item as='li'> On your turn, you will see a grey "Unit Store" button. Click this and then click a unit type. If you have enough resources, you will get more units in your bank!</List.Item>
+            <List.Item as='li'> To deploy units from your bank to a hex, click the "deploy troops" button, select a type and quantity, and then click on a hex you own to deploy those units.</List.Item>
+            <List.Item as='li'> To move, click on a hex you own. You will see all possible moves in green. Click on one of them to move, and then decide whether to move all of your units or leave some behind.</List.Item>
             <List.Item as='li'> When you encounter an opponent, your soldiers will fight to the death! Combat works like this:
                 <List>
                   <List.Item>
@@ -43,8 +44,8 @@ const Rules = (props) => {
                         </List.Description>
                       </List.Content>
                   </List.Item>
-              </List>  
-              </List.Item>   
+              </List>
+              </List.Item>
             <List.Item as='li'> After units have done their specialty damage, the remaining troops will continue to skirmish. Swordsmen will be the first to fall, then archers, and finally, knights.</List.Item>
             <List.Item as='li'> If one player loses all their troops, they have lost the battle and their adversary wins the game! The board will reset and you can try again or jump into a different game.</List.Item>
           </List>

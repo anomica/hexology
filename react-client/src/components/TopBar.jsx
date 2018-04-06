@@ -77,7 +77,7 @@ class TopBar extends React.Component {
 
   exitGame(exit) {
     this.props.initiateExit();
-    setTimeout(() => this.props.initiateExit(), 1000);
+    setTimeout(() => this.props.initiateExit(), 5000);
     if (exit === 'saveOnExit') { // saves the game in the db on exit
       this.props.socket.emit('saveExit', {
         room: this.props.room,
@@ -258,7 +258,7 @@ class TopBar extends React.Component {
                         </Modal.Description>
                       </Modal.Content>
                     </Modal>
-                    
+
                   </Modal.Actions>
                 </Modal></Transition>
               : <Transition animation={'pulse'} duration={5000} visible={true}><Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>

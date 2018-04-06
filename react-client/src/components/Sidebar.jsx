@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal, Transition, Statistic } from 'semantic-ui-react';
+import { Grid, Row, Column, Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal, Transition, Statistic } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
@@ -259,18 +259,11 @@ class SidebarLeft extends React.Component {
               <strong>Hex Legend</strong>
               <p></p>
               <p>Units on Hex:</p>
-              <ul style={{marginLeft: '-40px', listStyleType: 'none'}}>
-                <li><strong>S, A, K</strong></li>
-                <li>Swordsmen</li>
-                <li>Archers</li>
-                <li>Knights</li>
-              </ul>
+              <Image src="./images/legend.png"/>
               <p>Resources:</p>
-              <ul style={{marginLeft: '-40px', listStyleType: 'none'}}>
-                <li style={{color: 'gold'}}>Gold</li>
-                <li style={{color: 'green'}}>Wood</li>
-                <li style={{color: 'grey'}}>Metal</li>
-              </ul>
+              <Image style={{height: '75px', margin: 'auto'}} src="./images/gold-hex.png"/>
+              <Image style={{height: '75px', margin: 'auto'}} src="./images/wood-hex.png"/>
+              <Image style={{height: '75px', margin: 'auto'}} src="./images/metal-hex.png"/>
             </Menu.Item>
           </Sidebar>
 
@@ -283,7 +276,8 @@ class SidebarLeft extends React.Component {
             <Modal.Header>New Game</Modal.Header>
             <Modal.Content>
               <Modal.Description>
-                <Form size={'tiny'} key={'small'}>
+                <Form size={'large'}>
+                  <Form.Group widths='equal'>
                     <Form.Select
                       required
                       label
@@ -292,7 +286,7 @@ class SidebarLeft extends React.Component {
                       name={'gameType'}
                       onChange={this.handleChange.bind(this)}
                       label='Game Type'
-                     />
+                      />
                     <Form.Select
                       required
                       label
@@ -301,7 +295,9 @@ class SidebarLeft extends React.Component {
                       name={'spectators'}
                       onChange={this.handleChange.bind(this)}
                       label='Allow Spectators'
-                     />
+                      />
+                  </Form.Group>
+                  <Form.Group widths='equal'>
                     <Form.Select
                       required
                       label
@@ -310,7 +306,7 @@ class SidebarLeft extends React.Component {
                       name={'timer'}
                       onChange={this.handleChange.bind(this)}
                       label='Play With Timer?'
-                    />
+                      />
                     <Form.Select
                       required
                       label
@@ -319,8 +315,9 @@ class SidebarLeft extends React.Component {
                       name={'hexbot'}
                       onChange={this.handleChange.bind(this)}
                       label='Play Against Hexbot?'
-                     />
-                   <Image src='./images/hexbot.jpg'/>
+                      />
+                  </Form.Group>
+                  <Image style={{margin: 'auto'}} src='./images/hexbot.jpg'/>
                 </Form>
               </Modal.Description>
             </Modal.Content>
